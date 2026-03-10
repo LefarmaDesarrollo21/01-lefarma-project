@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "skills": {
+    "clean-architecture": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "computedHash": "a3b5b920d92339e73b46ea95333646d7d37c868a990be573d5f64bfb27792ea4"
+    },
+    "create-pull-request": {
+      "source": "cline/cline",
+      "sourceType": "github",
+      "computedHash": "d2a0ecdf51b25a15e794156dd2acd179f09783fe92a2ee4f354621fe81ea7313"
+    },
+    "dotnet-backend-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "98495b77cf63cbd36e7f152c61d8eddff20d050f2cbc803b45cc6b5b9526cbf1"
+    },
+    "dotnet-core-expert": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "computedHash": "79efc1aff0c7ff735a004ff7cbb3c0bf1a6f98805b26c8ae36553fc3d0016441"
+    },
+    "e2e-testing": {
+      "source": "hieutrtr/ai1-skills",
+      "sourceType": "github",
+      "computedHash": "589373c5db3a01dcb5dfdd22b8fa7a07ee4b6650056c08742227d5e8996eaa03"
+    },
+    "efcore-patterns": {
+      "source": "aaronontheweb/dotnet-skills",
+      "sourceType": "github",
+      "computedHash": "b3eda88aa97e7255c2b33d8ad5100db863ad36e7e1fe980e57be00b4f6b3606f"
+    },
+    "extracting-pdf-text": {
+      "source": "letta-ai/skills",
+      "sourceType": "github",
+      "computedHash": "599038247cbd98a227878b17a16fb8bdb39293ea73763df2a4f1666c8744f5e7"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "25872a21881a950edc3db1f3329664d60405d539660ce05b3265db2de06a7dfd"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
+    },
+    "gh-cli": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "cbe644b0c6760ae2a1eaafa39133920d889331327065d92a131675a665273e56"
+    },
+    "memory-safety-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "3df08d166f18c95a587ab51d4f22185dc5d7ec79b7d308722b4c69c39ddf79e7"
+    },
+    "parallel-task": {
+      "source": "am-will/swarms",
+      "sourceType": "github",
+      "computedHash": "766cb30f18de3a5cf7b3e8af2d18ddb70e8e5d0fb35cb2d796f5e64894adc48b"
+    },
+    "playwright-skill": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "a34f837b06cd5e3b13948197df671516fe96cc116d1ab73c54a75038cb19a5d6"
+    },
+    "pull-request-automation": {
+      "source": "aj-geddes/useful-ai-prompts",
+      "sourceType": "github",
+      "computedHash": "2b63312e5dbe674d9c6519f8160d457dc14fc4f13c8dbfbfd8cb7a1464088b2c"
+    },
+    "ralph-tui-prd": {
+      "source": "subsy/ralph-tui",
+      "sourceType": "github",
+      "computedHash": "4fcfdc2a8ec3c15b60ac73891e90667debf35fa520c691720cbb424cc45dd608"
+    },
+    "remembering-conversations": {
+      "source": "obra/episodic-memory",
+      "sourceType": "github",
+      "computedHash": "09440c3810401575802350a4d6d0bc3cdb0577dbc5e9aca989a3486472650658"
+    },
+    "shadcn-ui": {
+      "source": "google-labs-code/stitch-skills",
+      "sourceType": "github",
+      "computedHash": "119a14a004bd30fa99d386df599bd0db8d057cca146f7ee08349daed48b2ea55"
+    },
+    "task-coordination-strategies": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "64b27a5d50838f2d8c03bbabcb12ccfbba57afe30b12631405376f4b6b3bd8d5"
+    },
+    "threejs-shaders": {
+      "source": "cloudai-x/threejs-skills",
+      "sourceType": "github",
+      "computedHash": "d95f7e19b4aa4992d3d5dfbdbfeec0d21affd251dc2006dc0d4d4d1a317f1b04"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "61f8c307aa8ce0c4c52da8886d42e344dab83f76f9b5360cf8923b25fb1d67bb"
+    }
+  }
+}

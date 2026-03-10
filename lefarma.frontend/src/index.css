@@ -1,0 +1,65 @@
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Tema Oscuro Café (por defecto) */
+    --background: 30 15% 14%;
+    --foreground: 35 25% 88%;
+    --card: 30 12% 11%;
+    --card-foreground: 35 25% 88%;
+    --popover: 27 14% 20%;
+    --popover-foreground: 35 25% 88%;
+    --primary: 30 55% 55%;
+    --primary-foreground: 30 20% 12%;
+    --secondary: 27 18% 30%;
+    --secondary-foreground: 35 25% 88%;
+    --muted: 27 15% 22%;
+    --muted-foreground: 30 15% 60%;
+    --accent: 27 20% 35%;
+    --accent-foreground: 35 25% 88%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 27 18% 28%;
+    --input: 27 18% 28%;
+    --ring: 30 55% 55%;
+    --chart-1: 30 55% 55%;
+    --chart-2: 28 50% 50%;
+    --chart-3: 26 48% 45%;
+    --chart-4: 32 52% 60%;
+    --chart-5: 35 50% 65%;
+    --radius: 0.7rem;
+    --sidebar: 30 12% 11%;
+    --sidebar-foreground: 35 25% 88%;
+    --sidebar-primary: 30 55% 55%;
+    --sidebar-primary-foreground: 30 20% 12%;
+    --sidebar-accent: 27 18% 30%;
+    --sidebar-accent-foreground: 35 25% 88%;
+    --sidebar-border: 27 18% 28%;
+    --sidebar-ring: 30 55% 55%;
+  }
+  .dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, sans-serif;
+  }
+}

@@ -1,0 +1,17 @@
+namespace Lefarma.API.Domain.Entities.Catalogos
+{
+    public class UnidadMedida
+    {
+        public int IdUnidadMedida { get; set; }
+        public int IdTipoMedida { get; set; }
+        public string Nombre { get; set; } = null!;
+        public string? NombreNormalizado { get; set; }
+        public string? Descripcion { get; set; }
+        public string? DescripcionNormalizada { get; set; }
+        public required string Abreviatura { get; set; } = null!;
+        public bool Activo { get; set; } = true;
+        public DateTime FechaCreacion { get; set; }
+        public DateTime? FechaModificacion { get; set; }
+        public virtual TipoMedida? TipoMedida { get; set; }
+    }
+}

@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lefarma.API/Lefarma.API.csproj" />
+  </Folder>
+</Solution>
