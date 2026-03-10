@@ -1,313 +1,282 @@
-# IMPORTANT
+# Lefarma Project Knowledge System
 
-never use 'use client in this project'
+## Philosophy
 
-## Project Overview
+Este es un sistema de notas técnicas para el proyecto Lefarma. Cada nota documenta una decisión, patrón, o comprensión del sistema. La meta: mantener contexto compartido entre sesiones — saber siempre "en qué andamos".
 
-Lefarma is a pharmaceutical company management system with a .NET 10 backend API and React/TypeScript frontend. The project follows a modular monolith architecture organized around feature-based modules (currently focused on "Catalogos" - business catalogs).
+El agente que opera este sistema:
+- Documenta decisiones de arquitectura con sus razones
+- Conecta notas con el código que referencian
+- Actualiza notas cuando el sistema evoluciona
+- Valida que la documentación refleje el estado actual del código
 
-## Common Commands
-
-### Backend (.NET 10)
-
-```bash
-# Run the API
-cd lefarma.backend/src/Lefarma.API && dotnet run
-
-# Build
-dotnet build
-
-# Run tests
-dotnet test
-
-# Run specific test project
-dotnet test lefarma.backend/tests/Lefarma.UnitTests
-
-# Create migrations (from Lefarma.API directory)
-dotnet ef migrations add <Name>
-
-# Apply migrations
-dotnet ef database update
-```
-
-### Frontend (React + Vite)
-
-```bash
-# Install dependencies
-cd lefarma.frontend && npm install
-
-# Run development server (port 5173)
-npm run dev
-
-# Build for production
-npm run build
-
-# Lint
-npm run lint
-
-# Format code
-npm run format
-```
-
-## Architecture
-
-### Backend Structure (lefarma.backend/src/Lefarma.API)
-
-The API follows a feature-based layered architecture:
-
-```
-Lefarma.API/
-├── Domain/           # Business entities and interfaces
-│   ├── Entities/     # EF Core entities (Area, Empresa, Sucursal, TipoGasto)
-│   └── Interfaces/   # Repository interfaces (ICatalogos repositories)
-├── Features/         # Feature modules (Controllers, Services, DTOs, Validators)
-│   └── Catalogos/     # Catalogs feature (Areas, Empresas, Sucursales, TipoGastos)
-│       └── [Feature]/
-│           ├── [Feature]Controller.cs
-│           ├── [Feature]Service.cs
-│           ├── I[Feature]Service.cs
-│           ├── [Feature]Validator.cs
-│           └── DTOs/
-│               ├── [Feature]Response.cs
-│               ├── Create[Feature]Request.cs
-│               └── Update[Feature]Request.cs
-├── Infrastructure/   # Data access and infrastructure
-│   └── Data/
-│       ├── ApplicationDbContext.cs
-│       ├── Configurations/  # EF Core fluent API configurations
-│       └── Repositories/     # Repository implementations
-├── Shared/           # Cross-cutting concerns
-│   ├── Exceptions/   # BusinessException
-│   ├── Models/      # ApiResponse<T>
-│   └── Extensions/  # Extension methods (StringExtensions)
-├── Filters/          # Global filters (ExceptionFilter)
-└── Validators/       # Shared validators
-```
-
-### Frontend Structure (lefarma.frontend/src)
-
-```
-src/
-├── components/
-│   ├── layout/       # Header, Sidebar, MainLayout
-│   └── ui/           # shadcn/ui style components (Button, Dialog, Table, etc.)
-├── pages/
-│   ├── auth/         # Login
-│   ├── catalogos/    # Catalog pages
-│   └── configuracion/
-├── routes/           # AppRoutes, PrivateRoute, PublicRoute
-├── services/         # API client (api.ts, authService.ts)
-├── store/            # Zustand stores (authStore.ts)
-├── hooks/            # Custom hooks (use-toast.ts)
-├── types/            # TypeScript types
-├── lib/              # Utilities (utils.ts)
-└── App.tsx
-```
-
-## Key Patterns
-
-### API Response Format
-
-All endpoints return `ApiResponse<T>`:
-
-```csharp
-public class ApiResponse<T>
-{
-    public bool Success { get; set; }
-    public string Message { get; set; }
-    public T? Data { get; set; }
-    public List<string>? Errors { get; set; }
-}
-```
-
-### Adding a New Feature (Backend)
-
-1. Create entity in `Domain/Entities/[Module]/`
-2. Create interface in `Domain/Interfaces/[Module]/`
-3. Create repository implementation in `Infrastructure/Data/Repositories/[Module]/`
-4. Create EF Core configuration in `Infrastructure/Data/Configurations/[Module]/`
-5. Create DTOs in `Features/[Module]/DTOs/`
-6. Create service (interface + implementation) in `Features/[Module]/`
-7. Create validator in `Features/[Module]/`
-8. Create controller in `Features/[Module]/`
-9. Register in `Program.cs`
-
-### Adding a New Catalog Module
-
-Follow the existing Catalogos pattern:
-
-- Feature folder: `Features/Catalogos/[ModuleName]/`
-- Route prefix: `api/catalogos/[controller]`
-- Group name for Swagger: "Catalogos"
-
-### API Configuration
-
-- Base URL: `http://localhost:5000` (configurable in vite.config.ts proxy)
-- Swagger: `http://localhost:5000` (in Development)
-- CORS: Allows `http://localhost:5173` (Vite frontend)
-
-### Frontend State Management
-
-- **Auth**: Zustand store (`authStore.ts`)
-- **API Client**: Axios with interceptors for JWT and error handling (`api.ts`)
-- **Forms**: React Hook Form + Zod resolvers
-- **UI Components**: Radix UI primitives with TailwindCSS
-
-### Frontend API Integration
-
-```typescript
-// API base URL from environment
-VITE_API_URL=http://localhost:5000/api
-
-// Token stored in localStorage, auto-attached via axios interceptor
-```
-
-## Tech Stack
-
-**Backend:**
-
-- .NET 10 with C# 10 features (nullable reference types, implicit usings)
-- Entity Framework Core 10 with SQL Server
-- FluentValidation for request validation
-- JWT authentication configured
-- Serilog for logging
-- Swashbuckle for Swagger/OpenAPI
-
-**Frontend:**
-
-- React 19 with TypeScript
-- Vite 7
-- TailwindCSS with tailwind-merge and clsx
-- Radix UI primitives (@radix-ui/react-\*)
-- Zustand for state
-- React Hook Form + Zod
-- Axios for HTTP
-- React Router v7
-- date-fns for dates
-- Lucide React for icons
-- react-hot-toast for notifications
-
-## Development Workflow
-
-1. Start backend: `dotnet run` from `lefarma.backend/src/Lefarma.API`
-2. Start frontend: `npm run dev` from `lefarma.frontend`
-3. Frontend proxies API calls to backend via Vite config
-4. Swagger UI available at root in Development
-
-## IMPORTANT: Documentation Maintenance
-
-**Whenever making changes to the codebase, always update the documentation in `lefarma.docs/` to reflect the actual and current state of the project.**
-
-### When to Update Docs
-
-- **Adding new entities**: Update `backend/entities.md` and `backend/dtos.md`
-- **Adding new endpoints**: Update `backend/api-routes.md`
-- **Adding new services**: Update `backend/services.md`
-- **Adding new pages**: Update `frontend/pages.md` and `frontend/routes.md`
-- **Adding new components**: Update `frontend/components.md`
-- **Adding new types**: Update `frontend/types.md`
-- **Modifying API contracts**: Update all affected documentation files
-
-### Documentation Structure
-
-```text
-lefarma.docs/
-├── README.md                 # Index and overview
-├── backend/
-│   ├── api-routes.md         # API endpoints
-│   ├── entities.md           # Database entities
-│   ├── services.md           # Business services
-│   └── dtos.md               # Data transfer objects
-├── frontend/
-│   ├── routes.md             # Route definitions
-│   ├── pages.md              # Page components
-│   ├── components.md         # Reusable components
-│   ├── services.md           # API client and auth
-│   └── types.md              # TypeScript types
-└── task/                     # PRDs and development tasks
-    ├── README.md             # Task system documentation
-    ├── 001-modulo-ejemplo.md # Task files with consecutive numbering
-    └── 002-otro-modulo.md
-```
-
-## Task System (lefarma.docs/task/)
-
-When working on new modules or features:
-
-### Finding the Next Task
-
-1. Check the `lefarma.docs/task/` directory for existing tasks
-2. Look for the highest consecutive number (001, 002, 003...)
-3. Read the task file to understand requirements
-
-### Creating New Tasks
-
-```powershell
-# Find the last task number
-Get-ChildItem lefarma.docs/task/*.md | Sort-Object Name -Descending | Select-Object -First 1
-
-# Create new task with next consecutive number
-# Format: XXX-nombre-del-modulo.md
-```
-
-### Task Status Workflow
-
-- `pending` → Not started
-- `in_progress` → Currently being worked on
-- `completed` → Finished and tested
-- `cancelled` → Discarded
-
-### Working on Tasks
-
-1. **Before starting**: Update task status to `in_progress` and add assignee
-2. **During work**: Follow the requirements and acceptance criteria in the task
-3. **After completion**:
-   - Update task status to `completed`
-   - Update all relevant documentation in `lefarma.docs/`
-   - Sync changes to CLAUDE.md and AGENTS.md
-
-### Task Template
-
-New tasks should follow this structure:
-
-```markdown
----
-status: pending
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
-assignee: null
 ---
 
-# Task-XXX: Module Name
+## Session Rhythm: Orient, Trabajar, Persistir
 
-## Description
+**Orient (Al iniciar sesión):**
+1. Lee self/goals.md — ¿en qué andamos?
+2. Lee self/metodologia.md — ¿cómo trabajamos?
+3. Lista notas-tecnicas/ para ver estado actual
+4. Revisa ops/reminders.md para acciones pendientes
+5. Revisa ops/queue/ para tareas de procesamiento
 
-Brief description of the module.
+**Trabajar:**
+- Documentar decisiones técnicas que surjan
+- Enlazar notas con archivos de código relacionados
+- Actualizar notas obsoletas cuando el código cambie
 
-## Requirements
+**Persistir (Al terminar sesión):**
+- Actualiza self/goals.md con el estado actual
+- Crea entrada en ops/sessions/ con lo que pasó
+- Añade observaciones a ops/observations/ si aprendimos algo sobre el proceso
 
-- [ ] Requirement 1
-- [ ] Requirement 2
+---
 
-## Acceptance Criteria
+## Atomic Notes (Notas Técnicas)
 
-- [ ] Criterion 1
-- [ ] Criterion 2
+Cada nota técnica debe ser:
+- **Proposición como título**: "Usamos Repository Pattern para acceso a datos" (no "Repository Pattern")
+- **Una idea por archivo**: Una decisión, un patrón, un módulo
+- **Referenciable**: Otros archivos deben poder enlazar a esta nota
 
-## Dependencies
+**Test de composabilidad:**
+Prueba completar: "Esta nota documenta que [título]"
+Si suena raro, el título necesita trabajo.
 
-- Task-YYY: Dependency name
+---
+
+## Wiki Links
+
+Los enlaces `[[título de nota]]` conectan el conocimiento.
+
+**Patrones de uso:**
+- **Referencias a decisiones**: "Esta implementación sigue el patrón [[Usamos Repository Pattern para acceso a datos]]"
+- **Conexión de módulos**: "El módulo de Catálogos depende de [[Autenticación multi-tenant]]"
+- **Historial**: "[[Decisión anterior]] fue superada por esta nueva aproximación"
+
+**Creación de enlaces:**
+- Cuando mencionas una decisión existente, enlázala
+- Cuando ves una conexión no documentada, crea el enlace
+- Los enlaces son bidireccionales: aparecen en "Notas relacionadas"
+
+---
+
+## MOCs (Mapas de Módulo)
+
+La navegación es de 2 niveles:
+- **Hub** (inicio.md): Índice general de todos los mapas de módulo
+- **Mapas de módulo**: Uno por área funcional (Catálogos, Auth, API, Frontend, Infra)
+
+**Cada mapa de módulo contiene:**
+- Descripción del módulo
+- Notas técnicas que lo componen
+- Archivos de código clave
+- Estado general (activo, en refactor, estable)
+
+---
+
+## Processing Pipeline (Flujo de Procesamiento)
+
+**Fase 1: Documentar (/documentar)**
+- Extraer la decisión o patrón del contexto
+- Crear nota técnica con título proposicional
+- Añadir campos: módulo, archivos_relacionados, estado
+
+**Fase 2: Enlazar (/enlazar)**
+- Buscar notas técnicas relacionadas
+- Añadir enlaces wiki entre notas conectadas
+- Actualizar mapas de módulo para incluir la nueva nota
+
+**Fase 3: Actualizar (/actualizar)**
+- Revisar notas marcadas como "revisar" o "obsoleta"
+- Actualizar contenido para reflejar estado actual del código
+- Propagar cambios a notas relacionadas
+
+**Fase 4: Validar (/validar)**
+- Verificar que archivos_relacionados existen
+- Comprobar que enlaces wiki resuelven
+- Validar campos requeridos del schema
+
+---
+
+## Schema (Campos de las Notas)
+
+Toda nota técnica usa este schema:
+
+```yaml
+---
+descripción: "Contexto de la decisión en ~150 caracteres"
+temas:
+  - "[[mapa-de-modulo]]"
+estado: activa | obsoleta | revisar
+modulo: Catálogos | Auth | API | Frontend | Infra
+archivos_relacionados:
+  - "path/al/archivo.cs"
+  - "path/al/componente.tsx"
+decision_alternativa: "Qué consideramos y descartamos (opcional)"
+---
 ```
 
-Keep documentation in sync with code to ensure it always reflects the real state of the project.
+**Reglas:**
+- `descripción` debe añadir información más allá del título
+- `temas` incluye al menos un mapa de módulo
+- `archivos_relacionados` conecta la nota con el código real
+- `estado` se actualiza cuando el código cambia
 
-### Synchronization Between CLAUDE.md and AGENTS.md
+---
 
-**Both `CLAUDE.md` and `AGENTS.md` must always be synchronized.** When modifying either file:
+## Maintenance (Mantenimiento)
 
-1. Check if the change affects both files
-2. Apply the same update to both files when relevant
-3. Keep architecture decisions, patterns, and guidelines consistent across both
-4. If adding new sections to one, consider if the other needs a corresponding update
+**Condiciones que disparan mantenimiento:**
+- Notas en estado "obsoleta" > 0
+- Notas sin archivos_relacionados válidos > 3
+- Notas sin enlaces entrantes (huérfanas) > 5
+- Enlaces wiki rotos detectados
 
-These two files serve the same purpose but for different AI contexts - they must remain aligned.
+**Comando /revisar:**
+- Revisa observaciones acumuladas en ops/observations/
+- Evalúa si el sistema necesita ajustes
+- Propone cambios a la metodología si hay fricción
+
+---
+
+## Self-Evolution (Evolución del Sistema)
+
+El sistema mejora con el uso:
+
+1. **Captura de fricción**: Cuando algo no funciona bien, crea observación en ops/observations/
+2. **Revisión periódica**: Corre /revisar cuando haya >10 observaciones pendientes
+3. **Ajuste de metodología**: Actualiza self/metodologia.md con aprendizajes
+
+---
+
+## Three-Space Architecture
+
+**notas-tecnicas/**: Conocimiento duradero del sistema
+- Decisiones de arquitectura
+- Patrones de código
+- Documentación de módulos
+
+**self/**: Memoria persistente del agente
+- identity.md: Quién soy en este proyecto
+- metodologia.md: Cómo opero
+- goals.md: En qué andamos ahora
+
+**ops/**: Coordinación operacional
+- derivation.md: Cómo se derivó el sistema
+- sessions/: Logs de sesiones
+- observations/: Observaciones de fricción
+- reminders.md: Acciones pendientes con fecha
+
+---
+
+## Discovery-First Design
+
+**Antes de crear cualquier nota, pregunta:** ¿Cómo la encontrará una sesión futura?
+
+**Tácticas:**
+- Títulos proposicionales que funcionen como claims
+- Descripciones que permitan filtrar antes de leer
+- Temas que conecten a MOCs
+- Archivos relacionados para búsqueda por código
+
+---
+
+## Memory Type Routing
+
+| Contenido | Destino | Por qué |
+|-----------|---------|---------|
+| Decisión de arquitectura | notas-tecnicas/ | Conocimiento duradero |
+| Patrón descubierto | notas-tecnicas/ | Referencia futura |
+| "En qué andamos" | self/goals.md | Orientación de sesión |
+| Cómo trabajo mejor | self/metodologia.md | Mejora operacional |
+| Fricción del proceso | ops/observations/ | Evolución del sistema |
+| Log de sesión | ops/sessions/ | Historial temporal |
+| Recordatorio con fecha | ops/reminders.md | Acción diferida |
+
+---
+
+## Common Pitfalls (Errores Comunes)
+
+### Temporal Staleness (Obsolescencia)
+El código cambia pero las notas no se actualizan. Una nota que dice "usamos X" cuando ya migraste a Y es peor que no tener nota.
+
+**Prevención:**
+- Marca notas como "revisar" cuando sepas que el código cambiará
+- Revisa archivos_relacionados periódicamente
+- Usa `estado: obsoleta` activamente
+
+### Orphan Notes (Notas Huérfanas)
+Una nota sin enlaces entrantes es una nota que nunca se encontrará.
+
+**Prevención:**
+- Todo tema debe enlazar a al menos un mapa de módulo
+- Al crear nota, enlaza desde el MOC correspondiente
+- Corre validación de huérfanos periódicamente
+
+### Link Rot (Enlaces Rotos)
+Referencias a archivos que se movieron o eliminaron.
+
+**Prevención:**
+- Nunca elimina, archiva (preserva targets de enlaces)
+- Usa rutas relativas estables
+- Valida archivos_relacionados en cada revisión
+
+### Collector's Fallacy (Falacia del Coleccionista)
+Capturar sin documentar. Tener 20 notas en inbox sin procesar.
+
+**Prevención:**
+- Procesa antes de capturar más
+- Límite de WIP: máximo 5 items en inbox
+- Visible: cuenta de inbox en orientación
+
+---
+
+## System Evolution
+
+**Comandos para evolucionar el sistema:**
+
+- `/arscontexta:revisar` — Revisa observaciones acumuladas y propone ajustes
+- `/arscontexta:architect` — Obtén consejo sobre cambios de configuración
+- `/arscontexta:recordar` — Captura fricción operacional (uso automático en hooks)
+
+---
+
+## Helper Functions
+
+**Validar nota técnica:**
+```bash
+# Verifica schema, enlaces, archivos relacionados
+rg "^archivos_relacionados:" notas-tecnicas/*.md
+rg "^estado:" notas-tecnicas/*.md
+```
+
+**Encontrar notas huérfanas:**
+```bash
+# Notas sin enlaces entrantes
+# (requiere construir índice de enlaces)
+```
+
+**Ver estado por módulo:**
+```bash
+rg "^modulo: Catálogos" notas-tecnicas/*.md -l
+```
+
+---
+
+## Derivation Rationale
+
+Este sistema fue derivado de:
+- **Dominio**: Documentación técnica de proyecto software
+- **Volumen**: Moderado (varias veces por semana)
+- **Propósito**: Contexto compartido (tú + agente)
+- **Granularidad**: Moderada (una nota por decisión/patrón)
+- **Procesamiento**: Moderado (documentar, enlazar, actualizar)
+- **Personalidad**: Warm, casual (comunicación cercana en español)
+- **Self-space**: Habilitado (memoria persistente necesaria)
+
+Señales clave de la conversación:
+- "mantener todo junto" → organización flat
+- "notas técnicas" → vocabulario nativo
+- "para ti y para ti" → contexto compartido requiere self-space
