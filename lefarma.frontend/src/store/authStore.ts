@@ -1,6 +1,18 @@
 import { create } from 'zustand';
 import { AuthState, LoginCredentials, User, Empresa, Sucursal } from '@/types/auth.types';
 import { authService } from '@/services/authService';
+import type { SseUserInfo } from '@/types/sse.types';
+
+function sseUserInfoToUser(sseUser: SseUserInfo): User {
+  return {
+    id: String(sseUser.id),
+    username: sseUser.username,
+    email: sseUser.correo || '',
+    firstName: sseUser.nombre?.split(' ')[0] || '',
+    lastName: sseUser.nombre?.split(' ').slice(1).join(' ') || '',
+    roles: sseUser.roles.map(r => r.nombreRol),
+  };
+}
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -10,9 +22,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: false,
 
-  /**
-   * Iniciar sesión
-   */
   login: async (credentials: LoginCredentials) => {
     set({ isLoading: true });
     try {
@@ -30,9 +39,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  /**
-   * Cerrar sesión
-   */
   logout: () => {
     authService.logout();
     set({
@@ -44,41 +50,32 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
 
-  /**
-   * Establecer empresa seleccionada
-   */
   setEmpresa: (empresa: Empresa) => {
     authService.setEmpresa(empresa);
     set({ empresa });
   },
 
-  /**
-   * Establecer sucursal seleccionada
-   */
   setSucursal: (sucursal: Sucursal) => {
     authService.setSucursal(sucursal);
     set({ sucursal });
   },
 
-  /**
-   * Establecer token manualmente
-   */
   setToken: (token: string) => {
     localStorage.setItem('token', token);
     set({ token, isAuthenticated: true });
   },
 
-  /**
-   * Establecer usuario manualmente
-   */
   setUser: (user: User) => {
     localStorage.setItem('user', JSON.stringify(user));
     set({ user });
   },
 
-  /**
-   * Inicializar estado desde localStorage
-   */
+  updateUserFromSse: (sseUser: SseUserInfo) => {
+    const user = sseUserInfoToUser(sseUser);
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user });
+  },
+
   initialize: () => {
     const token = authService.getToken();
     const user = authService.getCurrentUser();

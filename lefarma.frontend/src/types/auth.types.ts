@@ -1,4 +1,4 @@
-// Tipos relacionados con autenticación
+import type { SseUserInfo } from './sse.types';
 
 export interface User {
   id: string;
@@ -50,5 +50,6 @@ export interface AuthState {
   setSucursal: (sucursal: Sucursal) => void;
   setToken: (token: string) => void;
   setUser: (user: User) => void;
+  updateUserFromSse: (sseUser: SseUserInfo) => void;
   initialize: () => void;
 }

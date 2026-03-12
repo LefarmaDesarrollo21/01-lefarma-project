@@ -17,10 +17,12 @@ namespace Lefarma.API.Features.Auth;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly ISseService _sseService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, ISseService sseService)
     {
         _authService = authService;
+        _sseService = sseService;
     }
 
     /// <summary>
@@ -141,9 +143,27 @@ public class AuthController : ControllerBase
         }));
     }
 
-    /// <summary>
-    /// Gets the client IP address from the request.
+/// <summary>
+    /// SSE endpoint for real-time user synchronization.
     /// </summary>
+    [Authorize]
+    [HttpGet("sse")]
+    [SwaggerOperation(
+        Summary = "SSE: Sincronizacion en tiempo real",
+        Description = "Establece una conexion Server-Sent Events para recibir actualizaciones del usuario en tiempo real.")]
+    [SwaggerResponse(200, "Conexion SSE establecida")]
+    public async Task SseConnect(CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
+        {
+            Response.StatusCode = 401;
+            return;
+        }
+
+        await _sseService.RegisterConnectionAsync(userId, Response, cancellationToken);
+    }
+
     private string? GetClientIpAddress()
     {
         // Check for forwarded headers first (when behind proxy/load balancer)

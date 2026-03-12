@@ -96,6 +96,7 @@ builder.Services.AddActiveDirectoryServices(builder.Configuration);
 builder.Services.AddJwtTokenServices(builder.Configuration);
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+builder.Services.AddSingleton<ISseService, SseService>();
 
 // JWT Bearer Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
