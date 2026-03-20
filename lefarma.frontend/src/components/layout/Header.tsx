@@ -13,12 +13,14 @@ import {
 import { Building2, MapPin, User, LogOut, ChevronDown, Sun, Moon } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useState, useEffect } from 'react';
+import CambiarUbicacionModal from './CambiarUbicacionModal';
 
 export const Header = () => {
   const { user, empresa, sucursal, logout } = useAuthStore();
   const { title, subtitle } = usePageStore();
   const navigate = useNavigate();
   const [isDark, setIsDark] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
    // Detectar el tema actual al cargar
   useEffect(() => {
@@ -120,7 +122,7 @@ export const Header = () => {
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/select-empresa')}>
+            <DropdownMenuItem onClick={() => setModalOpen(true)}>
               <Building2 className="mr-2 h-4 w-4" />
               <span>Cambiar Ubicación</span>
             </DropdownMenuItem>
@@ -132,6 +134,8 @@ export const Header = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <CambiarUbicacionModal open={modalOpen} onOpenChange={setModalOpen} />
     </header>
   );
 };

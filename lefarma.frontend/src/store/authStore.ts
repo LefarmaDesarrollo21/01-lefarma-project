@@ -153,6 +153,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ sucursal });
   },
 
+  changeEmpresaSucursal: (empresa: Empresa, sucursal: Sucursal) => {
+    authService.setEmpresa(empresa);
+    authService.setSucursal(sucursal);
+    set({ empresa, sucursal });
+  },
+
   setToken: (token: string) => {
     localStorage.setItem('accessToken', token);
     set({ token, isAuthenticated: true });
