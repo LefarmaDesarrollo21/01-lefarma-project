@@ -14,6 +14,7 @@ using Lefarma.API.Features.Notifications.Services;
 using Lefarma.API.Features.Notifications.Services.Channels;
 using Lefarma.API.Infrastructure.Data;
 using Lefarma.API.Infrastructure.Data.Repositories.Catalogos;
+using Lefarma.API.Infrastructure.Data.Repositories.Notifications;
 using Lefarma.API.Infrastructure.Data.Seeding;
 using Lefarma.API.Infrastructure.Filters;
 using Lefarma.API.Infrastructure.Middleware;
@@ -94,6 +95,7 @@ builder.Services.AddScoped<IUnidadMedidaRepository, UnidadMedidaRepository>();
 builder.Services.AddScoped<IMedioPagoRepository, MedioPagoRepository>();
 builder.Services.AddScoped<IFormaPagoRepository, FormaPagoRepository>();
 builder.Services.AddScoped<IBancoRepository, BancoRepository>();
+builder.Services.AddScoped<Domain.Interfaces.INotificationRepository, NotificationRepository>();
 
 // Servicios
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
@@ -114,6 +116,7 @@ builder.Services.AddSingleton<ISseService, SseService>();
 
 // Notification Services
 builder.Services.AddScoped<Domain.Interfaces.ITemplateService, TemplateService>();
+builder.Services.AddScoped<Domain.Interfaces.INotificationService, NotificationService>();
 
 // Email Settings configuration
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -123,8 +126,9 @@ builder.Services.AddOptions<EmailSettings>()
     .Validate(x => x.SmtpPort > 0 && x.SmtpPort <= 65535, "SmtpPort must be between 1 and 65535")
     .ValidateOnStart();
 
-// Register Email Notification Channel
-builder.Services.AddScoped<Domain.Interfaces.INotificationChannel, EmailNotificationChannel>();
+// Register channels as KEYED SERVICES for multi-channel support
+builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, EmailNotificationChannel>("email");
+builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, TelegramNotificationChannel>("telegram");
 
 // Telegram Settings configuration
 builder.Services.Configure<TelegramSettings>(builder.Configuration.GetSection("TelegramSettings"));
@@ -132,9 +136,6 @@ builder.Services.AddOptions<TelegramSettings>()
     .Validate(x => !string.IsNullOrWhiteSpace(x.BotToken), "BotToken is required")
     .Validate(x => !string.IsNullOrWhiteSpace(x.ApiUrl), "ApiUrl is required")
     .ValidateOnStart();
-
-// Register Telegram Notification Channel
-builder.Services.AddScoped<Domain.Interfaces.INotificationChannel, TelegramNotificationChannel>();
 
 // JWT Bearer Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
