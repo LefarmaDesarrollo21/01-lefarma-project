@@ -129,6 +129,7 @@ builder.Services.AddOptions<EmailSettings>()
 // Register channels as KEYED SERVICES for multi-channel support
 builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, EmailNotificationChannel>("email");
 builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, TelegramNotificationChannel>("telegram");
+builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, InAppNotificationChannel>("in-app");
 
 // Telegram Settings configuration
 builder.Services.Configure<TelegramSettings>(builder.Configuration.GetSection("TelegramSettings"));
