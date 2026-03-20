@@ -281,12 +281,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-if (app.Environment.IsDevelopment())
-{
-    using var scope = app.Services.CreateScope();
-    var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
-    await seeder.SeedAsync();
-}
+// Database seeding deshabilitado temporalmente
+// if (app.Environment.IsDevelopment())
+// {
+//     using var scope = app.Services.CreateScope();
+//     var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
+//     await seeder.SeedAsync();
+// }
 
 app.Run();
 

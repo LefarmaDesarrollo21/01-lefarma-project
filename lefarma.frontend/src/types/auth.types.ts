@@ -112,6 +112,9 @@ export interface AuthState {
   displayName: string | null;
   pendingUsername: string | null;
 
+  // State for empresa/sucursal selection
+  requiresEmpresaSucursalSelection: boolean;
+
   // Existing actions
   logout: () => Promise<void>;
   setEmpresa: (empresa: Empresa) => void;
@@ -124,6 +127,10 @@ export interface AuthState {
   loginStepOne: (username: string) => Promise<void>;
   loginStepTwo: (password: string, domain: string) => Promise<void>;
   resetLoginFlow: () => void;
+
+  // Actions for empresa/sucursal selection
+  showEmpresaSucursalSelector: () => void;
+  hideEmpresaSucursalSelector: () => void;
 
   // SSE compatibility
   updateUserFromSse: (sseUser: SseUserInfo) => void;
