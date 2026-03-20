@@ -70,4 +70,14 @@ namespace Lefarma.API.Features.Catalogos.Gastos.DTOs
         public bool Activo { get; set; }
         public List<int> UnidadesMedida { get; set; } = [];
     }
+
+    public class GastoRequest
+    {
+        public string? Nombre { get; set; }
+        public bool? RequiereComprobacionPago { get; set; }
+        public bool? RequiereComprobacionGasto { get; set; }
+        public bool? Activo { get; set; }
+        public string? OrderBy { get; set; }
+        public string? OrderDirection { get; set; }
+    }
 }

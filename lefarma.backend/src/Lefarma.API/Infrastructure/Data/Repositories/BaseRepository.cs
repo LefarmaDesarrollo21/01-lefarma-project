@@ -48,5 +48,10 @@ namespace Lefarma.API.Infrastructure.Data.Repositories
         {
             return await _context.Set<T>().AnyAsync(predicate);
         }
+
+        public IQueryable<T> GetQueryable()
+        {
+            return _context.Set<T>().AsQueryable();
+        }
     }
 }

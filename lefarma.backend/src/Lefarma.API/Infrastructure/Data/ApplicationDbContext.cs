@@ -1,5 +1,6 @@
 ﻿using Lefarma.API.Domain.Entities.Catalogos;
 using Lefarma.API.Domain.Entities.Auth;
+using Lefarma.API.Domain.Entities.Logging;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -20,6 +21,7 @@ namespace Lefarma.API.Infrastructure.Data
         public DbSet<Medida> Medidas { get; set; }
         public DbSet<UnidadMedida> UnidadesMedida { get; set; }
         public DbSet<GastoUnidadMedida> GastosUnidadesMedida { get; set; }
+        public DbSet<UsuarioDetalle> UsuariosDetalle { get; set; }
 
         // DbSets - Auth/Identity
         public DbSet<Usuario> Usuarios { get; set; }
@@ -32,6 +34,9 @@ namespace Lefarma.API.Infrastructure.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<DominioConfig> DominioConfigs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+
+        // DbSets - Logging
+        public DbSet<ErrorLog> ErrorLogs { get; set; }
 
         // DbSets - Views (read-only)
         public DbSet<VwDirectorioActivo> VwDirectorioActivo { get; set; }

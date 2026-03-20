@@ -5,7 +5,7 @@ namespace Lefarma.API.Features.Catalogos.Sucursales
 {
     public interface ISucursalService
     {
-        Task<ErrorOr<IEnumerable<SucursalResponse>>> GetAllAsync();
+        Task<ErrorOr<IEnumerable<SucursalResponse>>> GetAllAsync(SucursalRequest query);
         Task<ErrorOr<SucursalResponse>> GetByIdAsync(int id);
         Task<ErrorOr<SucursalResponse>> CreateAsync(CreateSucursalRequest request);
         Task<ErrorOr<SucursalResponse>> UpdateAsync(int id, UpdateSucursalRequest request);

@@ -21,10 +21,10 @@ public class GastosController : ControllerBase
     }
 
     [HttpGet]
-    [SwaggerOperation(Summary = "Obtener todos los gastos", Description = "Retorna la lista completa de gastos")]
-    public async Task<IActionResult> GetAll()
+    [SwaggerOperation(Summary = "Obtener todos los gastos", Description = "Retorna la lista completa de gastos con filtros opcionales")]
+    public async Task<IActionResult> GetAll([FromQuery] GastoRequest query)
     {
-        var result = await _gastoService.GetAllAsync();
+        var result = await _gastoService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<GastoResponse>>
         {

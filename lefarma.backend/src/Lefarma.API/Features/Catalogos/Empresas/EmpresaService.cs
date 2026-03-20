@@ -28,31 +28,72 @@ namespace Lefarma.API.Features.Catalogos.Empresas
             _logger = logger;
         }
 
-        public async Task<ErrorOr<IEnumerable<EmpresaResponse>>> GetAllAsync()
+        public async Task<ErrorOr<IEnumerable<EmpresaResponse>>> GetAllAsync(EmpresaRequest query)
         {
             try
             {
-                var result = await _empresaRepository.GetAllAsync();
-                if (result == null || !result.Any())
+                var empresasQuery = _empresaRepository.GetQueryable();
+
+                // Aplicar filtros
+                if (!string.IsNullOrWhiteSpace(query.Nombre))
                 {
-                    //_logger.LogDebug("No se encontraron empresas");
-                    EnrichWideEvent(action: "GetAll", count: 0);
+                    empresasQuery = empresasQuery.Where(e => e.Nombre.Contains(query.Nombre));
+                }
+
+                if (!string.IsNullOrWhiteSpace(query.RFC))
+                {
+                    empresasQuery = empresasQuery.Where(e => e.RFC != null && e.RFC.Contains(query.RFC));
+                }
+
+                if (!string.IsNullOrWhiteSpace(query.Ciudad))
+                {
+                    empresasQuery = empresasQuery.Where(e => e.Ciudad != null && e.Ciudad.Contains(query.Ciudad));
+                }
+
+                if (query.Activo.HasValue)
+                {
+                    empresasQuery = empresasQuery.Where(e => e.Activo == query.Activo.Value);
+                }
+
+                // Aplicar ordenamiento
+                empresasQuery = query.OrderBy?.ToLower() switch
+                {
+                    "nombre" => query.OrderDirection?.ToLower() == "desc"
+                        ? empresasQuery.OrderByDescending(e => e.Nombre)
+                        : empresasQuery.OrderBy(e => e.Nombre),
+                    "fechacreacion" => query.OrderDirection?.ToLower() == "desc"
+                        ? empresasQuery.OrderByDescending(e => e.FechaCreacion)
+                        : empresasQuery.OrderBy(e => e.FechaCreacion),
+                    "ciudad" => query.OrderDirection?.ToLower() == "desc"
+                        ? empresasQuery.OrderByDescending(e => e.Ciudad)
+                        : empresasQuery.OrderBy(e => e.Ciudad),
+                    _ => empresasQuery.OrderBy(e => e.Nombre)
+                };
+
+                var empresas = await empresasQuery.ToListAsync();
+
+                if (!empresas.Any())
+                {
+                    EnrichWideEvent(action: "GetAll", count: 0, additionalContext: new Dictionary<string, object>
+                    {
+                        ["filters"] = new { query.Nombre, query.RFC, query.Ciudad, query.Activo }
+                    });
                     return CommonErrors.NotFound("Empresas");
                 }
 
-                var response = result
-                    .Where(e => !string.IsNullOrWhiteSpace(e.Nombre))
-                    .Select(e => e.ToResponse())
-                    .OrderBy(e => e.Nombre)
-                    .ToList();
+                var response = empresas.Select(e => e.ToResponse()).ToList();
 
-                EnrichWideEvent(action: "GetAll", count: response.Count, items: response.Select(e => e.Nombre).ToList());
+                EnrichWideEvent(action: "GetAll", count: response.Count, additionalContext: new Dictionary<string, object>
+                {
+                    ["filters"] = new { query.Nombre, query.RFC, query.Ciudad, query.Activo },
+                    ["items"] = response.Select(e => e.Nombre).ToList()
+                });
+
                 return response;
             }
             catch (Exception ex)
             {
-                //_logger.LogError(ex, "Error al obtener las empresas");
-                EnrichWideEvent(action: "GetAll", error: ex.Message);
+                EnrichWideEvent(action: "GetAll", error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError("obtener las empresas");
             }
         }
@@ -76,7 +117,7 @@ namespace Lefarma.API.Features.Catalogos.Empresas
             catch (Exception ex)
             {
                 //_logger.LogError(ex, "Error al obtener empresa {EmpresaId}", id);
-                EnrichWideEvent(action: "GetById", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "GetById", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"obtener la empresa");
             }
         }
@@ -121,20 +162,13 @@ namespace Lefarma.API.Features.Catalogos.Empresas
             }
             catch (DbUpdateException ex)
             {
-                var errorMessage = $"Exception Type: {ex.GetType().Name}, Message: {ex.Message}";
-
-                if (ex.InnerException != null)
-                {
-                    errorMessage += $" | Inner Exception: {ex.InnerException.Message}";
-                }
-
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: errorMessage);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"guardar la empresa");
             }
             catch (Exception ex)
             {
                 //_logger.LogError(ex, "Error inesperado al crear empresa: {EmpresaNombre}", request.Nombre);
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.Message);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al crear la empresa.");
             }
         }
@@ -184,32 +218,18 @@ namespace Lefarma.API.Features.Catalogos.Empresas
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                var errorMessage = $"Exception Type: {ex.GetType().Name}, Message: {ex.Message}";
-
-                if (ex.InnerException != null)
-                {
-                    errorMessage += $" | Inner Exception: {ex.InnerException.Message}";
-                }
-
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: errorMessage);
+                EnrichWideEvent(action: "Update", entityId: id, nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.ConcurrencyError("empresa");
             }
             catch (DbUpdateException ex)
             {
-                var errorMessage = $"Exception Type: {ex.GetType().Name}, Message: {ex.Message}";
-
-                if (ex.InnerException != null)
-                {
-                    errorMessage += $" | Inner Exception: {ex.InnerException.Message}";
-                }
-
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: errorMessage);
+                EnrichWideEvent(action: "Update", entityId: id, nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"actualizar la empresa");
             }
             catch (Exception ex)
             {
                 //_logger.LogError(ex, "Error inesperado al actualizar empresa: {EmpresaId}", id);
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al actualizar la empresa.");
             }
         }
@@ -240,13 +260,13 @@ namespace Lefarma.API.Features.Catalogos.Empresas
             catch (DbUpdateException ex)
             {
                 //_logger.LogError(ex, "Error de base de datos al eliminar empresa: {EmpresaId}", id);
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"eliminar la empresa");
             }
             catch (Exception ex)
             {
                 //_logger.LogError(ex, "Error inesperado al eliminar empresa: {EmpresaId}", id);
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al eliminar la empresa.");
             }
         }

@@ -30,4 +30,12 @@ namespace Lefarma.API.Features.Catalogos.Medidas.DTOs
         public bool Activo { get; set; }
         public List<int> UnidadesMedida { get; set; } = [];
     }
+
+    public class MedidaRequest
+    {
+        public string? Nombre { get; set; }
+        public bool? Activo { get; set; }
+        public string? OrderBy { get; set; }
+        public string? OrderDirection { get; set; }
+    }
 }

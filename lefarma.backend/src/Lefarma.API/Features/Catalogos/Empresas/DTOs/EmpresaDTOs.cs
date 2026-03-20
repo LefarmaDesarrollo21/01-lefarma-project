@@ -22,6 +22,16 @@ namespace Lefarma.API.Features.Catalogos.Empresas.DTOs
         public DateTime? FechaModificacion { get; set; }
     }
 
+    public class EmpresaRequest
+    {
+        public string? Nombre { get; set; }
+        public string? RFC { get; set; }
+        public string? Ciudad { get; set; }
+        public bool? Activo { get; set; }
+        public string? OrderBy { get; set; } = "Nombre";
+        public string? OrderDirection { get; set; } = "asc";
+    }
+
     public class CreateEmpresaRequest
     {
         public required string Nombre { get; set; }

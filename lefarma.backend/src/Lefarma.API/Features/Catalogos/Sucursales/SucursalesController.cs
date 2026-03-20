@@ -21,10 +21,10 @@ public class SucursalesController : ControllerBase
     }
 
     [HttpGet]
-    [SwaggerOperation(Summary = "Obtener todas las sucursales", Description = "Retorna la lista completa de sucursales")]
-    public async Task<IActionResult> GetAll()
+    [SwaggerOperation(Summary = "Obtener todas las sucursales", Description = "Retorna la lista completa de sucursales con filtros opcionales")]
+    public async Task<IActionResult> GetAll([FromQuery] SucursalRequest query)
     {
-        var result = await _sucursalService.GetAllAsync();
+        var result = await _sucursalService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<SucursalResponse>>
         {

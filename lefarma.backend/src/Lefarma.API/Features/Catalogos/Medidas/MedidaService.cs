@@ -31,29 +31,50 @@ namespace Lefarma.API.Features.Catalogos.Medidas
             _logger = logger;
         }
 
-        public async Task<ErrorOr<IEnumerable<MedidaResponse>>> GetAllAsync()
+        public async Task<ErrorOr<IEnumerable<MedidaResponse>>> GetAllAsync(MedidaRequest query)
         {
             try
             {
-                var result = await _medidaRepository.GetAllConUnidadesAsync(); 
-                if (result == null || !result.Any())
+                IQueryable<Medida> queryable = _medidaRepository.GetQueryable()
+                    .Include(m => m.UnidadesMedida);
+
+                if (!string.IsNullOrWhiteSpace(query.Nombre))
+                    queryable = queryable.Where(m => m.Nombre.Contains(query.Nombre));
+
+                if (query.Activo.HasValue)
+                    queryable = queryable.Where(m => m.Activo == query.Activo.Value);
+
+                queryable = (query.OrderBy?.ToLower(), query.OrderDirection?.ToLower()) switch
                 {
-                    EnrichWideEvent(action: "GetAll", count: 0);
+                    ("nombre", "desc") => queryable.OrderByDescending(m => m.Nombre),
+                    ("fechacreacion", "asc") => queryable.OrderBy(m => m.FechaCreacion),
+                    ("fechacreacion", "desc") => queryable.OrderByDescending(m => m.FechaCreacion),
+                    _ => queryable.OrderBy(m => m.Nombre)
+                };
+
+                var result = await queryable.ToListAsync();
+
+                if (!result.Any())
+                {
+                    EnrichWideEvent(action: "GetAll", count: 0, additionalContext: new Dictionary<string, object>
+                    {
+                        ["filters"] = new { query.Nombre, query.Activo, query.OrderBy, query.OrderDirection }
+                    });
                     return CommonErrors.NotFound("Medidas");
                 }
 
-                var response = result
-                    .Where(e => !string.IsNullOrWhiteSpace(e.Nombre))
-                    .Select(e => e.ToResponse())
-                    .OrderBy(e => e.Nombre)
-                    .ToList();
+                var response = result.Select(m => m.ToResponse()).ToList();
 
-                EnrichWideEvent(action: "GetAll", count: response.Count, items: response.Select(e => e.Nombre).ToList());
+                EnrichWideEvent(action: "GetAll", count: response.Count, additionalContext: new Dictionary<string, object>
+                {
+                    ["filters"] = new { query.Nombre, query.Activo, query.OrderBy, query.OrderDirection },
+                    ["items"] = response.Select(m => m.Nombre).ToList()
+                });
                 return response;
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "GetAll", error: ex.Message);
+                EnrichWideEvent(action: "GetAll", error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError("obtener las medidas");
             }
         }
@@ -75,7 +96,7 @@ namespace Lefarma.API.Features.Catalogos.Medidas
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "GetById", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "GetById", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"obtener la medida");
             }
         }
@@ -111,12 +132,12 @@ namespace Lefarma.API.Features.Catalogos.Medidas
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.Message);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"guardar la medida");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.Message);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al crear la medida.");
             }
         }
@@ -155,17 +176,17 @@ namespace Lefarma.API.Features.Catalogos.Medidas
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.ConcurrencyError("medida");
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"actualizar la medida");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al actualizar la medida.");
             }
         }
@@ -193,12 +214,12 @@ namespace Lefarma.API.Features.Catalogos.Medidas
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"eliminar la medida");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al eliminar la medida.");
             }
         }

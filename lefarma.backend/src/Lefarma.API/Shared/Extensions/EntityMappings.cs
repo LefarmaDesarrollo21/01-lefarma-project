@@ -1,9 +1,11 @@
+using Lefarma.API.Domain.Entities.Auth;
 using Lefarma.API.Domain.Entities.Catalogos;
+using Lefarma.API.Features.Admin.DTOs;
 using Lefarma.API.Features.Catalogos.Areas.DTOs;
 using Lefarma.API.Features.Catalogos.Empresas.DTOs;
-using Lefarma.API.Features.Catalogos.Sucursales.DTOs;
-using Lefarma.API.Features.Catalogos.Medidas.DTOs;
 using Lefarma.API.Features.Catalogos.Gastos.DTOs;
+using Lefarma.API.Features.Catalogos.Medidas.DTOs;
+using Lefarma.API.Features.Catalogos.Sucursales.DTOs;
 using Lefarma.API.Features.Catalogos.UnidadesMedida.DTOs;
 
 namespace Lefarma.API.Shared.Extensions
@@ -144,6 +146,124 @@ namespace Lefarma.API.Shared.Extensions
             Activo = entity.Activo,
             FechaCreacion = entity.FechaCreacion,
             FechaModificacion = entity.FechaModificacion
+        };
+
+        #endregion
+
+        #region UsuarioDetalle Mappings
+
+        public static UsuarioDetalleResponse ToResponse(this UsuarioDetalle entity) => new()
+        {
+            IdUsuario = entity.IdUsuario,
+            IdEmpresa = entity.IdEmpresa,
+            IdSucursal = entity.IdSucursal,
+            IdArea = entity.IdArea,
+            IdCentroCosto = entity.IdCentroCosto,
+            Puesto = entity.Puesto,
+            NumeroEmpleado = entity.NumeroEmpleado,
+            FirmaDigital = entity.FirmaDigital,
+            TelefonoOficina = entity.TelefonoOficina,
+            Extension = entity.Extension,
+            Celular = entity.Celular,
+            TelegramChat = entity.TelegramChat,
+            NotificarEmail = entity.NotificarEmail,
+            NotificarApp = entity.NotificarApp,
+            NotificarWhatsapp = entity.NotificarWhatsapp,
+            NotificarSms = entity.NotificarSms,
+            NotificarTelegram = entity.NotificarTelegram,
+            NotificarSoloUrgentes = entity.NotificarSoloUrgentes,
+            NotificarResumenDiario = entity.NotificarResumenDiario,
+            NotificarRechazos = entity.NotificarRechazos,
+            NotificarVencimientos = entity.NotificarVencimientos,
+            IdUsuarioDelegado = entity.IdUsuarioDelegado,
+            DelegacionHasta = entity.DelegacionHasta,
+            AvatarUrl = entity.AvatarUrl,
+            TemaInterfaz = entity.TemaInterfaz,
+            DashboardInicio = entity.DashboardInicio,
+            Activo = entity.Activo
+        };
+
+        #endregion
+
+        #region Usuario Mappings
+
+        public static UsuarioResponse ToResponse(this Usuario entity, UsuarioDetalle? detalle = null) => new()
+        {
+            IdUsuario = entity.IdUsuario,
+            SamAccountName = entity.SamAccountName,
+            Dominio = entity.Dominio,
+            NombreCompleto = entity.NombreCompleto,
+            Correo = entity.Correo,
+            EsAnonimo = entity.EsAnonimo,
+            EsActivo = entity.EsActivo,
+            EsRobot = entity.EsRobot,
+            FechaCreacion = entity.FechaCreacion,
+            UltimoLogin = entity.UltimoLogin,
+            Roles = entity.UsuariosRoles
+                .Where(ur => ur.Rol.EsActivo)
+                .Select(ur => ur.Rol.ToRolBasicoResponse())
+                .ToList(),
+            PermisosDirectos = entity.UsuariosPermisos
+                .Where(up => up.Permiso.EsActivo)
+                .Select(up => up.Permiso.ToPermisoBasicoResponse())
+                .ToList(),
+            Detalle = detalle?.ToResponse()
+        };
+
+        #endregion
+
+        #region Rol Mappings
+
+        public static RolResponse ToResponse(this Rol entity) => new()
+        {
+            IdRol = entity.IdRol,
+            NombreRol = entity.NombreRol,
+            Descripcion = entity.Descripcion,
+            EsActivo = entity.EsActivo,
+            EsSistema = entity.EsSistema,
+            FechaCreacion = entity.FechaCreacion,
+            CantidadUsuarios = entity.UsuariosRoles.Count,
+            Permisos = entity.RolesPermisos
+                .Where(rp => rp.Permiso.EsActivo)
+                .Select(rp => rp.Permiso.ToPermisoBasicoResponse())
+                .ToList()
+        };
+
+        public static RolBasicoResponse ToRolBasicoResponse(this Rol entity) => new()
+        {
+            IdRol = entity.IdRol,
+            NombreRol = entity.NombreRol,
+            Descripcion = entity.Descripcion,
+            EsActivo = entity.EsActivo
+        };
+
+        #endregion
+
+        #region Permiso Mappings
+
+        public static PermisoResponse ToResponse(this Permiso entity) => new()
+        {
+            IdPermiso = entity.IdPermiso,
+            CodigoPermiso = entity.CodigoPermiso,
+            NombrePermiso = entity.NombrePermiso,
+            Descripcion = entity.Descripcion,
+            Categoria = entity.Categoria,
+            Recurso = entity.Recurso,
+            Accion = entity.Accion,
+            EsActivo = entity.EsActivo,
+            EsSistema = entity.EsSistema,
+            FechaCreacion = entity.FechaCreacion,
+            CantidadRoles = entity.RolesPermisos.Count
+        };
+
+        public static PermisoBasicoResponse ToPermisoBasicoResponse(this Permiso entity) => new()
+        {
+            IdPermiso = entity.IdPermiso,
+            CodigoPermiso = entity.CodigoPermiso,
+            NombrePermiso = entity.NombrePermiso,
+            Categoria = entity.Categoria,
+            Recurso = entity.Recurso,
+            Accion = entity.Accion
         };
 
         #endregion

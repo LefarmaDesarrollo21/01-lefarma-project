@@ -35,4 +35,13 @@ namespace Lefarma.API.Features.Catalogos.Areas.DTOs
         public int NumeroEmpleados { get; set; }
         public bool Activo { get; set; }
     }
+
+    public class AreaRequest
+    {
+        public int? IdEmpresa { get; set; }
+        public string? Nombre { get; set; }
+        public bool? Activo { get; set; }
+        public string? OrderBy { get; set; }
+        public string? OrderDirection { get; set; }
+    }
 }

@@ -77,5 +77,23 @@ namespace Lefarma.API.Features.Catalogos.Sucursales
             RuleFor(x => x.NumeroEmpleados)
                 .GreaterThanOrEqualTo(0).WithMessage("El número de empleados debe ser mayor o igual a 0");
         }
+    }
+
+    public class SucursalRequestValidator : AbstractValidator<SucursalRequest>
+    {
+        public SucursalRequestValidator()
+        {
+            RuleFor(x => x.OrderBy)
+                .Must(value => string.IsNullOrWhiteSpace(value) || 
+                    new[] { "nombre", "ciudad", "estado", "fechacreacion" }.Contains(value.ToLower()))
+                .WithMessage("OrderBy debe ser uno de: nombre, ciudad, estado, fechacreacion")
+                .When(x => !string.IsNullOrWhiteSpace(x.OrderBy));
+
+            RuleFor(x => x.OrderDirection)
+                .Must(value => string.IsNullOrWhiteSpace(value) || 
+                    new[] { "asc", "desc" }.Contains(value.ToLower()))
+                .WithMessage("OrderDirection debe ser 'asc' o 'desc'")
+                .When(x => !string.IsNullOrWhiteSpace(x.OrderDirection));
+        }
     }   
 }

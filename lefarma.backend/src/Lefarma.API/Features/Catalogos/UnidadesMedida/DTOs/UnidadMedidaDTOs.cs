@@ -31,4 +31,14 @@ namespace Lefarma.API.Features.Catalogos.UnidadesMedida.DTOs
         public required string Abreviatura { get; set; } = null!;
         public bool Activo { get; set; }
     }
+
+    public class UnidadMedidaRequest
+    {
+        public int? IdMedida { get; set; }
+        public string? Nombre { get; set; }
+        public string? Abreviatura { get; set; }
+        public bool? Activo { get; set; }
+        public string? OrderBy { get; set; }
+        public string? OrderDirection { get; set; }
+    }
 }

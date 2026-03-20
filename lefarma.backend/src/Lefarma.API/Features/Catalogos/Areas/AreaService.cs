@@ -32,29 +32,52 @@ namespace Lefarma.API.Features.Catalogos.Areas
             _logger = logger;
         }
 
-        public async Task<ErrorOr<IEnumerable<AreaResponse>>> GetAllAsync()
+        public async Task<ErrorOr<IEnumerable<AreaResponse>>> GetAllAsync(AreaRequest query)
         {
             try
             {
-                var result = await _areaRepository.GetAllAsync();
-                if (result == null)//!result.Any()
+                var queryable = _areaRepository.GetQueryable();
+
+                if (query.IdEmpresa.HasValue)
+                    queryable = queryable.Where(a => a.IdEmpresa == query.IdEmpresa.Value);
+
+                if (!string.IsNullOrWhiteSpace(query.Nombre))
+                    queryable = queryable.Where(a => a.Nombre.Contains(query.Nombre));
+
+                if (query.Activo.HasValue)
+                    queryable = queryable.Where(a => a.Activo == query.Activo.Value);
+
+                queryable = (query.OrderBy?.ToLower(), query.OrderDirection?.ToLower()) switch
                 {
-                    EnrichWideEvent(action: "GetAll", count: 0);
-                    return CommonErrors.NotFound("Sucursales");
+                    ("nombre", "desc") => queryable.OrderByDescending(a => a.Nombre),
+                    ("fechacreacion", "asc") => queryable.OrderBy(a => a.FechaCreacion),
+                    ("fechacreacion", "desc") => queryable.OrderByDescending(a => a.FechaCreacion),
+                    _ => queryable.OrderBy(a => a.Nombre)
+                };
+
+                var result = await queryable.ToListAsync();
+
+                if (!result.Any())
+                {
+                    EnrichWideEvent(action: "GetAll", count: 0, additionalContext: new Dictionary<string, object>
+                    {
+                        ["filters"] = new { query.IdEmpresa, query.Nombre, query.Activo, query.OrderBy, query.OrderDirection }
+                    });
+                    return CommonErrors.NotFound("Áreas");
                 }
 
-                var response = result
-                    .Where(e => !string.IsNullOrWhiteSpace(e.Nombre))
-                    .Select(e => e.ToResponse())
-                    .OrderBy(e => e.Nombre)
-                    .ToList();
+                var response = result.Select(a => a.ToResponse()).ToList();
 
-                EnrichWideEvent(action: "GetAll", count: response.Count, items: response.Select(e => e.Nombre).ToList());
+                EnrichWideEvent(action: "GetAll", count: response.Count, additionalContext: new Dictionary<string, object>
+                {
+                    ["filters"] = new { query.IdEmpresa, query.Nombre, query.Activo, query.OrderBy, query.OrderDirection },
+                    ["items"] = response.Select(a => a.Nombre).ToList()
+                });
                 return response;
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "GetAll", error: ex.Message);
+                EnrichWideEvent(action: "GetAll", error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError("obtener las areas");
             }
         }
@@ -77,7 +100,7 @@ namespace Lefarma.API.Features.Catalogos.Areas
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "GetById", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "GetById", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"obtener el area");
             }
         }
@@ -118,12 +141,12 @@ namespace Lefarma.API.Features.Catalogos.Areas
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.Message);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"guardar el area");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.Message);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al crear el area.");
             }
         }
@@ -167,17 +190,17 @@ namespace Lefarma.API.Features.Catalogos.Areas
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.ConcurrencyError("area");
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"actualizar el area");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al actualizar el area.");
             }
         }
@@ -205,12 +228,12 @@ namespace Lefarma.API.Features.Catalogos.Areas
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"eliminar el area");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al eliminar el area.");
             }
         }
