@@ -138,6 +138,21 @@ else
     Log.Warning("JWT settings not configured properly. Authentication will not work.");
 }
 
+// TODO: Uncomment when Notifications feature is implemented
+// // Telegram Settings validation
+// builder.Services.Configure<Features.Notifications.Services.Channels.TelegramSettings>(
+//     builder.Configuration.GetSection("TelegramSettings"));
+// builder.Services.AddOptions<Features.Notifications.Services.Channels.TelegramSettings>()
+//     .Validate(x => !string.IsNullOrWhiteSpace(x.BotToken), "BotToken is required")
+//     .ValidateOnStart();
+//
+// // Notification Settings validation
+// builder.Services.Configure<Features.Notifications.DTOs.NotificationSettings>(
+//     builder.Configuration.GetSection("NotificationSettings"));
+// builder.Services.AddOptions<Features.Notifications.DTOs.NotificationSettings>()
+//     .Validate(x => x.MaxRetryCount > 0 && x.MaxRetryCount <= 10, "MaxRetryCount must be 1-10")
+//     .ValidateOnStart();
+
 // Authorization Policies
 builder.Services.AddAuthorization(options =>
 {
