@@ -94,7 +94,7 @@ builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 builder.Services.AddScoped<IMedidaRepository, MedidaRepository>();
 builder.Services.AddScoped<IUnidadMedidaRepository, UnidadMedidaRepository>();
 builder.Services.AddScoped<IMedioPagoRepository, MedioPagoRepository>();
-// builder.Services.AddScoped<IFormaPagoRepository, FormaPagoRepository>(); // TODO: Uncomment when FormaPago is complete
+builder.Services.AddScoped<IFormaPagoRepository, FormaPagoRepository>();
 builder.Services.AddScoped<IBancoRepository, BancoRepository>();
 // builder.Services.AddScoped<Domain.Interfaces.INotificationRepository, NotificationRepository>(); // TODO: Uncomment when notifications are complete
 
@@ -106,7 +106,7 @@ builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IMedidaService, MedidaService>();
 builder.Services.AddScoped<IUnidadMedidaService, UnidadMedidaService>();
 builder.Services.AddScoped<IMedioPagoService, MedioPagoService>();
-// builder.Services.AddScoped<IFormaPagoService, FormaPagoService>(); // TODO: Uncomment when FormaPago is complete
+builder.Services.AddScoped<IFormaPagoService, FormaPagoService>();
 builder.Services.AddScoped<IBancoService, BancoService>();
 
 builder.Services.AddActiveDirectoryServices(builder.Configuration);
