@@ -1,5 +1,6 @@
 ﻿using Lefarma.API.Domain.Entities.Catalogos;
 using Lefarma.API.Domain.Entities.Auth;
+using Lefarma.API.Domain.Entities.Notifications;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -32,6 +33,11 @@ namespace Lefarma.API.Infrastructure.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<DominioConfig> DominioConfigs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+
+        // DbSets - Notifications
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationChannel> NotificationChannels { get; set; }
+        public DbSet<UserNotification> UserNotifications { get; set; }
 
         // DbSets - Views (read-only)
         public DbSet<VwDirectorioActivo> VwDirectorioActivo { get; set; }
