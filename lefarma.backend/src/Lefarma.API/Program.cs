@@ -7,6 +7,9 @@ using Lefarma.API.Features.Catalogos.Sucursales;
 using Lefarma.API.Features.Catalogos.Gastos;
 using Lefarma.API.Features.Catalogos.Medidas;
 using Lefarma.API.Features.Catalogos.UnidadesMedida;
+using Lefarma.API.Features.Catalogos.MediosPago;
+using Lefarma.API.Features.Catalogos.FormasPago;
+using Lefarma.API.Features.Notifications.Services;
 using Lefarma.API.Infrastructure.Data;
 using Lefarma.API.Infrastructure.Data.Repositories.Catalogos;
 using Lefarma.API.Infrastructure.Data.Seeding;
@@ -83,6 +86,8 @@ builder.Services.AddScoped<IGastoRepository, GastoRepository>();
 builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 builder.Services.AddScoped<IMedidaRepository, MedidaRepository>();
 builder.Services.AddScoped<IUnidadMedidaRepository, UnidadMedidaRepository>();
+builder.Services.AddScoped<IMedioPagoRepository, MedioPagoRepository>();
+builder.Services.AddScoped<IFormaPagoRepository, FormaPagoRepository>();
 
 // Servicios
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
@@ -91,12 +96,17 @@ builder.Services.AddScoped<IGastoService, GastoService>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IMedidaService, MedidaService>();
 builder.Services.AddScoped<IUnidadMedidaService, UnidadMedidaService>();
+builder.Services.AddScoped<IMedioPagoService, MedioPagoService>();
+builder.Services.AddScoped<IFormaPagoService, FormaPagoService>();
 
 builder.Services.AddActiveDirectoryServices(builder.Configuration);
 builder.Services.AddJwtTokenServices(builder.Configuration);
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 builder.Services.AddSingleton<ISseService, SseService>();
+
+// Notification Services
+builder.Services.AddScoped<Domain.Interfaces.ITemplateService, TemplateService>();
 
 // JWT Bearer Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
@@ -208,11 +218,12 @@ builder.Services.AddAuthorization(options =>
 // Register permission handler
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
-// Controllers
+// Controllers with Razor Runtime Compilation for notification templates
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
-});
+})
+.AddRazorRuntimeCompilation();
 
 // Validators
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
