@@ -1,0 +1,27 @@
+@model Lefarma.API.Application.Notifications.Models.NotificationTemplateViewModel
+
+@{
+    Layout = null;
+}
+
+@if (!string.IsNullOrEmpty(Model.CustomerName))
+{
+    @:👋 Hola *@Model.CustomerName*!
+}
+else
+{
+    @:👋 Hola!
+}
+
+@if (!string.IsNullOrEmpty(Model.Title))
+{
+    @:\n\n📌 *@Model.Title*
+}
+
+@:
+@Html.Raw(Model.Message)
+
+@:
+@:\n\n---
+@:\n🏥 *Lefarma* - Sistema de Gestión Farmacéutica
+@:\n_Este es un mensaje automático_
