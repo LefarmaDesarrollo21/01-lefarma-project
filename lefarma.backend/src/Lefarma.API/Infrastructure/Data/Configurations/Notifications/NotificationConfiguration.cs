@@ -40,7 +40,8 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.TemplateId)
             .HasMaxLength(100);
 
-        builder.Property(n => n.TemplateData);
+        builder.Property(n => n.TemplateData)
+            .HasColumnType("nvarchar(max)");
 
         builder.Property(n => n.CreatedBy)
             .IsRequired()
@@ -63,11 +64,19 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .HasDefaultValueSql("GETUTCDATE()");
 
         // Relationships
+        /// <summary>
+        /// Cascade is safe here as Notification is the root entity.
+        /// When a Notification is deleted, all its channels and user notifications should be deleted.
+        /// </summary>
         builder.HasMany(n => n.Channels)
             .WithOne(c => c.Notification)
             .HasForeignKey(c => c.NotificationId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        /// <summary>
+        /// Cascade is safe here as Notification is the root entity.
+        /// When a Notification is deleted, all its user notifications should be deleted.
+        /// </summary>
         builder.HasMany(n => n.UserNotifications)
             .WithOne(un => un.Notification)
             .HasForeignKey(un => un.NotificationId)
@@ -82,5 +91,13 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 
         builder.HasIndex(n => n.ExpiresAt)
             .HasDatabaseName("IX_Notifications_ExpiresAt");
+
+        // For dashboard queries by type and date
+        builder.HasIndex(n => new { n.Type, n.CreatedAt })
+            .HasDatabaseName("IX_Notifications_Type_CreatedAt");
+
+        // For scheduled notification processing
+        builder.HasIndex(n => new { n.ScheduledFor, n.Priority })
+            .HasDatabaseName("IX_Notifications_ScheduledFor_Priority");
     }
 }
