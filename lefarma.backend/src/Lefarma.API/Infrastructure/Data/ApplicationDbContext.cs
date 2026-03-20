@@ -21,7 +21,6 @@ namespace Lefarma.API.Infrastructure.Data
         public DbSet<Medida> Medidas { get; set; }
         public DbSet<UnidadMedida> UnidadesMedida { get; set; }
         public DbSet<GastoUnidadMedida> GastosUnidadesMedida { get; set; }
-        public DbSet<Banco> Bancos { get; set; }
         public DbSet<FormaPago> FormasPago { get; set; }
 
         // DbSets - Auth/Identity
