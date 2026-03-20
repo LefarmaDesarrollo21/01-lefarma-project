@@ -61,15 +61,6 @@ export default function Login() {
     return String(s.idEmpresa) === String(selectedEmpresa);
   });
 
-  // Debug logging
-  useEffect(() => {
-    if (loginStep === 3 && selectedEmpresa) {
-      console.log('Sucursales totales:', sucursales);
-      console.log('Empresa seleccionada:', selectedEmpresa);
-      console.log('Sucursales filtradas:', sucursalesFiltradas);
-    }
-  }, [loginStep, selectedEmpresa, sucursales, sucursalesFiltradas]);
-
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
@@ -93,8 +84,6 @@ export default function Login() {
     if (loginStep === 3) {
       // Filtrar empresas válidas (con id)
       const empresasValidas = empresas.filter((e) => e.idEmpresa && e.idEmpresa !== undefined);
-      console.log('Empresas:', empresas);
-      console.log('Empresas válidas:', empresasValidas);
       if (empresasValidas.length === 1) {
         setSelectedEmpresa(String(empresasValidas[0].idEmpresa));
       }

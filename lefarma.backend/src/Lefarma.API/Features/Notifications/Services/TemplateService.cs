@@ -1,37 +1,32 @@
 using Lefarma.API.Domain.Interfaces;
 using Lefarma.API.Features.Notifications.DTOs;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.Razor;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
+using System.Dynamic;
 
 namespace Lefarma.API.Features.Notifications.Services;
 
 /// <summary>
 /// Service for rendering Razor templates for notifications.
-/// Uses IRazorViewEngine to compile and render .cshtml templates at runtime.
+/// Uses IRazorViewEngine for rendering .cshtml templates with strongly-typed models.
 /// </summary>
 public class TemplateService : ITemplateService
 {
-    private readonly IRazorViewEngine _razorViewEngine;
-    private readonly ITempDataProvider _tempDataProvider;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<TemplateService> _logger;
+    private readonly IRazorViewEngine _razorViewEngine;
     private readonly Dictionary<string, (string Content, TemplateType Type)> _databaseTemplates;
 
     public TemplateService(
-        IRazorViewEngine razorViewEngine,
-        ITempDataProvider tempDataProvider,
         IServiceProvider serviceProvider,
-        ILogger<TemplateService> logger)
+        ILogger<TemplateService> logger,
+        IRazorViewEngine razorViewEngine)
     {
-        _razorViewEngine = razorViewEngine;
-        _tempDataProvider = tempDataProvider;
         _serviceProvider = serviceProvider;
         _logger = logger;
-        _databaseTemplates = new Dictionary<string, (string, TemplateType)>(StringComparer.OrdinalIgnoreCase);
+        _razorViewEngine = razorViewEngine;
+        _databaseTemplates = new Dictionary<string, (string Content, TemplateType Type)>(StringComparer.OrdinalIgnoreCase);
     }
 
     /// <inheritdoc/>
@@ -41,39 +36,31 @@ public class TemplateService : ITemplateService
 
         try
         {
-            // Build view path based on template ID
-            var viewPath = GetViewPath(templateId);
-
-            // Try to find the view in the file system
-            var viewEngineResult = _razorViewEngine.FindView(
-                actionContext: GetActionContext(),
-                viewName: viewPath,
-                isMainPage: false);
-
-            // If not found in file system, check database templates
-            if (!viewEngineResult.Success)
+            // Create HttpContext for rendering
+            var httpContext = _serviceProvider.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()?.HttpContext;
+            if (httpContext == null)
             {
-                _logger.LogDebug("View not found in file system: {ViewPath}", viewPath);
-
-                if (_databaseTemplates.TryGetValue(templateId, out var dbTemplate))
-                {
-                    // For database templates, we use simple variable substitution
-                    return await RenderDatabaseTemplateAsync(dbTemplate.Content, data, ct);
-                }
-
-                throw new InvalidOperationException(
-                    $"Template '{templateId}' not found. Expected path: {viewPath}");
+                throw new InvalidOperationException("HttpContext is not available. TemplateService requires an active HttpContext.");
             }
 
-            // Create ViewModel from data
-            var viewModel = CreateViewModel(data);
+            // Try to find file-based Razor template first
+            var viewName = $"/Views/Notifications/{templateId}.cshtml";
+            var viewEngineResult = _razorViewEngine.FindView(httpContext, viewName, isMainPage: false);
 
-            // Render the Razor view
-            var htmlContent = await RenderViewAsync(viewEngineResult.View, viewModel);
+            if (viewEngineResult.Success)
+            {
+                return await RenderRazorAsync(viewEngineResult.View, data, httpContext, ct);
+            }
 
-            _logger.LogDebug("Template rendered successfully: {TemplateId}", templateId);
+            // Fallback to database-registered template
+            if (_databaseTemplates.TryGetValue(templateId, out var template))
+            {
+                return await RenderDatabaseTemplateAsync(template, data, ct);
+            }
 
-            return htmlContent;
+            throw new InvalidOperationException(
+                $"Template '{templateId}' not found. " +
+                $"Expected file: {viewName} or register using RegisterTemplateAsync() first.");
         }
         catch (Exception ex)
         {
@@ -85,21 +72,28 @@ public class TemplateService : ITemplateService
     /// <inheritdoc/>
     public async Task<bool> TemplateExistsAsync(string templateId, CancellationToken ct = default)
     {
-        var viewPath = GetViewPath(templateId);
-
-        // Check file system
-        var viewEngineResult = _razorViewEngine.FindView(
-            actionContext: GetActionContext(),
-            viewName: viewPath,
-            isMainPage: false);
-
-        if (viewEngineResult.Success)
+        try
         {
-            return true;
-        }
+            var httpContext = _serviceProvider.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()?.HttpContext;
+            if (httpContext == null)
+            {
+                return await Task.FromResult(false);
+            }
 
-        // Check database templates
-        return await Task.FromResult(_databaseTemplates.ContainsKey(templateId));
+            var viewName = $"/Views/Notifications/{templateId}.cshtml";
+            var viewEngineResult = _razorViewEngine.FindView(httpContext, viewName, isMainPage: false);
+
+            if (viewEngineResult.Success)
+            {
+                return true;
+            }
+
+            return await Task.FromResult(_databaseTemplates.ContainsKey(templateId));
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <inheritdoc/>
@@ -117,122 +111,54 @@ public class TemplateService : ITemplateService
             throw new ArgumentException("Template content cannot be null or empty.", nameof(content));
         }
 
-        // For Razor templates, we'll store them but they won't be compiled at runtime
-        // This is a limitation - runtime compilation of Razor from strings requires additional setup
-        if (type == TemplateType.Html)
-        {
-            _logger.LogWarning(
-                "Dynamic Razor templates cannot be compiled at runtime. " +
-                "Template '{TemplateId}' will use simple substitution. " +
-                "For full Razor support, create .cshtml files in Views/Notifications/",
-                templateId);
-        }
-
         _databaseTemplates[templateId] = (content, type);
-
         await Task.CompletedTask;
     }
 
     /// <summary>
-    /// Gets the view path for a template ID.
-    /// Maps template IDs to Razor view file paths.
+    /// Renders a Razor view (.cshtml file) with the provided data.
     /// </summary>
-    private static string GetViewPath(string templateId)
+    private async Task<string> RenderRazorAsync(
+        Microsoft.AspNetCore.Mvc.ViewEngines.IView view,
+        Dictionary<string, object> data,
+        Microsoft.AspNetCore.Http.HttpContext httpContext,
+        CancellationToken ct)
     {
-        // Convert template ID to view path
-        // Examples:
-        // "OrderCreated" -> "/Views/Notifications/OrderCreated.cshtml"
-        // "Email/Welcome" -> "/Views/Notifications/Email/Welcome.cshtml"
-        // "Telegram/Alert" -> "/Views/Notifications/Telegram/Alert.cshtml"
+        using var writer = new StringWriter();
 
-        return $"/Views/Notifications/{templateId}";
-    }
-
-    /// <summary>
-    /// Creates a ViewModel from the data dictionary.
-    /// </summary>
-    private static NotificationTemplateViewModel CreateViewModel(Dictionary<string, object> data)
-    {
-        var viewModel = new NotificationTemplateViewModel();
-
-        if (data.TryGetValue("customerName", out var customerName))
+        // Create ViewDataDictionary with the view model
+        var viewData = new ViewDataDictionary(new Microsoft.AspNetCore.Mvc.ModelMetadata.EmptyTypeModelMetadataProvider(), new ModelStateDictionary())
         {
-            viewModel.CustomerName = customerName?.ToString();
-        }
-
-        if (data.TryGetValue("orderId", out var orderId))
-        {
-            viewModel.OrderId = orderId?.ToString();
-        }
-
-        if (data.TryGetValue("totalAmount", out var totalAmount) && totalAmount != null)
-        {
-            if (totalAmount is decimal decimalAmount)
-            {
-                viewModel.TotalAmount = decimalAmount;
-            }
-            else if (decimal.TryParse(totalAmount.ToString(), out var parsedAmount))
-            {
-                viewModel.TotalAmount = parsedAmount;
-            }
-        }
-
-        if (data.TryGetValue("items", out var items) && items is List<NotificationItemViewModel> itemsList)
-        {
-            viewModel.Items = itemsList;
-        }
-
-        if (data.TryGetValue("message", out var message))
-        {
-            viewModel.Message = message?.ToString();
-        }
-
-        // All remaining data goes to CustomData
-        viewModel.CustomData = data
-            .Where(kvp => !new[] { "customerName", "orderId", "totalAmount", "items", "message" }
-                .Contains(kvp.Key, StringComparer.OrdinalIgnoreCase))
-            .ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value);
-
-        return viewModel;
-    }
-
-    /// <summary>
-    /// Renders a Razor view to string.
-    /// </summary>
-    private async Task<string> RenderViewAsync(IRazorView view, NotificationTemplateViewModel viewModel)
-    {
-        using var stringWriter = new StringWriter();
-
-        var viewContext = new ViewContext
-        {
-            View = view,
-            ViewData = new ViewDataDictionary<NotificationTemplateViewModel>(
-                metadataProvider: new EmptyModelMetadataProvider(),
-                modelState: new ModelStateDictionary())
-            {
-                Model = viewModel
-            },
-            Writer = stringWriter,
-            HttpContext = GetActionContext().HttpContext,
-            RouteData = new Microsoft.AspNetCore.Routing.RouteData(),
-            ActionDescriptor = new Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor()
+            Model = CreateViewModel(data)
         };
 
-        await view.RenderAsync(viewContext);
+        // Create ViewContext
+        var viewContext = new ViewContext(
+            view,
+            new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(viewData),
+            new Microsoft.AspNetCore.Mvc.Razor.TextWriter(writer)
+        )
+        {
+            HttpContext = httpContext,
+            RouteData = httpContext.GetRouteData()
+        };
 
-        return stringWriter.ToString();
+        await view.RenderAsync(viewContext, ct);
+
+        return writer.ToString();
     }
 
     /// <summary>
-    /// Renders a database template using simple variable substitution.
-    /// Supports {{variableName}} syntax.
+    /// Renders a database-stored template with simple variable substitution.
     /// </summary>
-    private static async Task<string> RenderDatabaseTemplateAsync(string content, Dictionary<string, object> data, CancellationToken ct)
+    private async Task<string> RenderDatabaseTemplateAsync(
+        (string Content, TemplateType Type) template,
+        Dictionary<string, object> data,
+        CancellationToken ct)
     {
-        var result = content;
+        var result = template.Content;
 
+        // Simple {{variable}} substitution
         foreach (var kvp in data)
         {
             var placeholder = $"{{{{{kvp.Key}}}}}";
@@ -244,18 +170,68 @@ public class TemplateService : ITemplateService
     }
 
     /// <summary>
-    /// Creates an ActionContext for view rendering.
+    /// Creates a NotificationTemplateViewModel from the data dictionary.
     /// </summary>
-    private Microsoft.AspNetCore.Mvc.ActionContext GetActionContext()
+    private NotificationTemplateViewModel CreateViewModel(Dictionary<string, object> data)
     {
-        var httpContext = new DefaultHttpContext
-        {
-            RequestServices = _serviceProvider
-        };
+        var viewModel = new NotificationTemplateViewModel();
 
-        return new Microsoft.AspNetCore.Mvc.ActionContext(
-            httpContext,
-            new Microsoft.AspNetCore.Routing.RouteData(),
-            new Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor());
+        if (data.TryGetValue("Title", out var title))
+            viewModel.Title = title?.ToString() ?? string.Empty;
+
+        if (data.TryGetValue("Message", out var message))
+            viewModel.Message = message?.ToString() ?? string.Empty;
+
+        if (data.TryGetValue("Priority", out var priority))
+            viewModel.Priority = priority?.ToString() ?? "normal";
+
+        if (data.TryGetValue("Category", out var category))
+            viewModel.Category = category?.ToString() ?? "system";
+
+        if (data.TryGetValue("Type", out var type))
+            viewModel.Type = type?.ToString() ?? "info";
+
+        if (data.TryGetValue("SenderName", out var senderName))
+            viewModel.SenderName = senderName?.ToString();
+
+        if (data.TryGetValue("SenderEmail", out var senderEmail))
+            viewModel.SenderEmail = senderEmail?.ToString();
+
+        if (data.TryGetValue("CustomerName", out var customerName))
+            viewModel.CustomerName = customerName?.ToString();
+
+        if (data.TryGetValue("ActionUrl", out var actionUrl))
+            viewModel.ActionUrl = actionUrl?.ToString();
+
+        if (data.TryGetValue("ActionText", out var actionText))
+            viewModel.ActionText = actionText?.ToString();
+
+        if (data.TryGetValue("Icon", out var icon))
+            viewModel.Icon = icon?.ToString();
+
+        if (data.TryGetValue("NotificationId", out var notificationId))
+            viewModel.NotificationId = Convert.ToInt32(notificationId);
+
+        if (data.TryGetValue("CreatedAt", out var createdAt))
+            viewModel.CreatedAt = createdAt is DateTime date ? date : DateTime.UtcNow;
+
+        // Legacy properties
+        if (data.TryGetValue("OrderId", out var orderId))
+            viewModel.OrderId = orderId?.ToString();
+
+        if (data.TryGetValue("TotalAmount", out var totalAmount))
+            viewModel.TotalAmount = Convert.ToDecimal(totalAmount);
+
+        if (data.TryGetValue("Items", out var items) && items is List<NotificationItemViewModel> itemsList)
+            viewModel.Items = itemsList;
+
+        // Additional data
+        if (data.TryGetValue("AdditionalData", out var additionalData) && additionalData is Dictionary<string, object> additionalDataDict)
+            viewModel.AdditionalData = additionalDataDict;
+
+        if (data.TryGetValue("CustomData", out var customData) && customData is Dictionary<string, object> customDataDict)
+            viewModel.CustomData = customDataDict;
+
+        return viewModel;
     }
 }

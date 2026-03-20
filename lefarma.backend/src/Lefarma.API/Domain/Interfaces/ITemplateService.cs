@@ -8,9 +8,11 @@ public interface ITemplateService
 {
     /// <summary>
     /// Renders a template with the provided data.
-    /// Templates use Handlebars-like syntax: {{variableName}}
+    /// Templates use Razor (.cshtml) syntax with NotificationTemplateViewModel as the model.
+    /// File-based templates are loaded from /Views/Notifications/{templateId}.cshtml
+    /// Database-registered templates support simple {{variable}} substitution.
     /// </summary>
-    /// <param name="templateId">Template identifier (e.g., "welcome-email", "order-confirmation")</param>
+    /// <param name="templateId">Template identifier (e.g., "Email/DefaultEmail", "Telegram/DefaultTelegram")</param>
     /// <param name="data">Dictionary of key-value pairs for template substitution</param>
     /// <param name="ct">Cancellation token for async operation</param>
     /// <returns>Rendered template content</returns>
@@ -25,10 +27,11 @@ public interface ITemplateService
     Task<bool> TemplateExistsAsync(string templateId, CancellationToken ct = default);
 
     /// <summary>
-    /// Registers a new template in the system.
+    /// Registers a new template in the system for database-stored templates.
+    /// For Razor templates, create .cshtml files in /Views/Notifications/ instead.
     /// </summary>
     /// <param name="templateId">Unique template identifier (e.g., "welcome-email", "order-confirmation")</param>
-    /// <param name="content">Template content with variable placeholders (e.g., "Hello {{userName}}")</param>
+    /// <param name="content">Template content with simple variable placeholders (e.g., "Hello {{CustomerName}}")</param>
     /// <param name="type">Template type determining the rendering format</param>
     Task RegisterTemplateAsync(string templateId, string content, TemplateType type);
 }

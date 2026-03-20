@@ -93,9 +93,9 @@ builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 builder.Services.AddScoped<IMedidaRepository, MedidaRepository>();
 builder.Services.AddScoped<IUnidadMedidaRepository, UnidadMedidaRepository>();
 builder.Services.AddScoped<IMedioPagoRepository, MedioPagoRepository>();
-builder.Services.AddScoped<IFormaPagoRepository, FormaPagoRepository>();
+// builder.Services.AddScoped<IFormaPagoRepository, FormaPagoRepository>(); // TODO: Uncomment when FormaPago is complete
 builder.Services.AddScoped<IBancoRepository, BancoRepository>();
-builder.Services.AddScoped<Domain.Interfaces.INotificationRepository, NotificationRepository>();
+// builder.Services.AddScoped<Domain.Interfaces.INotificationRepository, NotificationRepository>(); // TODO: Uncomment when notifications are complete
 
 // Servicios
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
@@ -105,7 +105,7 @@ builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IMedidaService, MedidaService>();
 builder.Services.AddScoped<IUnidadMedidaService, UnidadMedidaService>();
 builder.Services.AddScoped<IMedioPagoService, MedioPagoService>();
-builder.Services.AddScoped<IFormaPagoService, FormaPagoService>();
+// builder.Services.AddScoped<IFormaPagoService, FormaPagoService>(); // TODO: Uncomment when FormaPago is complete
 builder.Services.AddScoped<IBancoService, BancoService>();
 
 builder.Services.AddActiveDirectoryServices(builder.Configuration);
@@ -114,9 +114,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 builder.Services.AddSingleton<ISseService, SseService>();
 
-// Notification Services
-builder.Services.AddScoped<Domain.Interfaces.ITemplateService, TemplateService>();
-builder.Services.AddScoped<Domain.Interfaces.INotificationService, NotificationService>();
+// Notification Services - TODO: Uncomment when notifications are complete
+// builder.Services.AddScoped<Domain.Interfaces.ITemplateService, TemplateService>();
+// builder.Services.AddScoped<Domain.Interfaces.INotificationService, NotificationService>();
 
 // Email Settings configuration
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -127,9 +127,10 @@ builder.Services.AddOptions<EmailSettings>()
     .ValidateOnStart();
 
 // Register channels as KEYED SERVICES for multi-channel support
-builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, EmailNotificationChannel>("email");
-builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, TelegramNotificationChannel>("telegram");
-builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, InAppNotificationChannel>("in-app");
+// TODO: Uncomment when notification channels are properly implemented
+// builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, EmailNotificationChannel>("email");
+// builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, TelegramNotificationChannel>("telegram");
+// builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, InAppNotificationChannel>("in-app");
 
 // Telegram Settings configuration
 builder.Services.Configure<TelegramSettings>(builder.Configuration.GetSection("TelegramSettings"));
@@ -248,12 +249,11 @@ builder.Services.AddAuthorization(options =>
 // Register permission handler
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
-// Controllers with Razor Runtime Compilation for notification templates
+// Controllers
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
-})
-.AddRazorRuntimeCompilation();
+});
 
 // Validators
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

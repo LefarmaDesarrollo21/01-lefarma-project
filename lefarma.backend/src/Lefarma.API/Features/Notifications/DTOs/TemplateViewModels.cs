@@ -6,10 +6,76 @@ namespace Lefarma.API.Features.Notifications.DTOs;
 public class NotificationTemplateViewModel
 {
     /// <summary>
-    /// Customer or user name
+    /// Notification title
+    /// </summary>
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Notification message body
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Notification priority (low, normal, high, urgent)
+    /// </summary>
+    public string Priority { get; set; } = "normal";
+
+    /// <summary>
+    /// Notification category (system, order, payment, alert)
+    /// </summary>
+    public string Category { get; set; } = "system";
+
+    /// <summary>
+    /// Notification type (info, warning, error, success)
+    /// </summary>
+    public string Type { get; set; } = "info";
+
+    /// <summary>
+    /// Sender name
+    /// </summary>
+    public string? SenderName { get; set; }
+
+    /// <summary>
+    /// Sender email
+    /// </summary>
+    public string? SenderEmail { get; set; }
+
+    /// <summary>
+    /// Customer or user name for personalization
     /// </summary>
     public string? CustomerName { get; set; }
 
+    /// <summary>
+    /// Action URL for button/link
+    /// </summary>
+    public string? ActionUrl { get; set; }
+
+    /// <summary>
+    /// Action text for button
+    /// </summary>
+    public string? ActionText { get; set; }
+
+    /// <summary>
+    /// Icon name/class for the notification
+    /// </summary>
+    public string? Icon { get; set; }
+
+    /// <summary>
+    /// Notification ID
+    /// </summary>
+    public int NotificationId { get; set; }
+
+    /// <summary>
+    /// Created timestamp
+    /// </summary>
+    public DateTime? CreatedAt { get; set; }
+
+    /// <summary>
+    /// Additional custom data for the template
+    /// </summary>
+    public Dictionary<string, object>? AdditionalData { get; set; }
+
+    // Legacy properties for backward compatibility
     /// <summary>
     /// Order or reference ID
     /// </summary>
@@ -26,12 +92,7 @@ public class NotificationTemplateViewModel
     public List<NotificationItemViewModel>? Items { get; set; }
 
     /// <summary>
-    /// Custom message to display
-    /// </summary>
-    public string? Message { get; set; }
-
-    /// <summary>
-    /// Additional custom data for the template
+    /// Custom data (alias for AdditionalData)
     /// </summary>
     public Dictionary<string, object>? CustomData { get; set; }
 }

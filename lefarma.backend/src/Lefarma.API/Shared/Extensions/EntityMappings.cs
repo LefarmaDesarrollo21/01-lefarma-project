@@ -1,10 +1,12 @@
 using Lefarma.API.Domain.Entities.Catalogos;
 using Lefarma.API.Features.Catalogos.Areas.DTOs;
+using Lefarma.API.Features.Catalogos.Bancos.DTOs;
 using Lefarma.API.Features.Catalogos.Empresas.DTOs;
 using Lefarma.API.Features.Catalogos.Sucursales.DTOs;
 using Lefarma.API.Features.Catalogos.Medidas.DTOs;
 using Lefarma.API.Features.Catalogos.Gastos.DTOs;
 using Lefarma.API.Features.Catalogos.UnidadesMedida.DTOs;
+using Lefarma.API.Features.Catalogos.MediosPago.DTOs;
 
 namespace Lefarma.API.Shared.Extensions
 {
@@ -141,6 +143,37 @@ namespace Lefarma.API.Shared.Extensions
             Nombre = entity.Nombre,
             Descripcion = entity.Descripcion ?? string.Empty,
             Abreviatura = entity.Abreviatura,
+            Activo = entity.Activo,
+            FechaCreacion = entity.FechaCreacion,
+            FechaModificacion = entity.FechaModificacion
+        };
+
+        #endregion
+
+        #region Banco Mappings
+
+        public static BancoResponse ToResponse(this Banco entity) => new()
+        {
+            IdBanco = entity.IdBanco,
+            Nombre = entity.Nombre,
+            Clave = entity.Clave ?? string.Empty,
+            CodigoSWIFT = entity.CodigoSWIFT ?? string.Empty,
+            Descripcion = entity.Descripcion ?? string.Empty,
+            Activo = entity.Activo,
+            FechaCreacion = entity.FechaCreacion,
+            FechaModificacion = entity.FechaModificacion
+        };
+
+        #endregion
+
+        #region MedioPago Mappings
+
+        public static MedioPagoResponse ToResponse(this MedioPago entity) => new()
+        {
+            IdMedioPago = entity.IdMedioPago,
+            Nombre = entity.Nombre,
+            Clave = entity.Clave ?? string.Empty,
+            Descripcion = entity.Descripcion ?? string.Empty,
             Activo = entity.Activo,
             FechaCreacion = entity.FechaCreacion,
             FechaModificacion = entity.FechaModificacion
