@@ -49,8 +49,8 @@ export default function Login() {
   const [username, setUsername] = useState(pendingUsername || '');
   const [password, setPassword] = useState('');
   const [selectedDomain, setSelectedDomain] = useState('');
-  const [selectedEmpresa, setSelectedEmpresa] = useState<string | number>('');
-  const [selectedSucursal, setSelectedSucursal] = useState<string | number>('');
+  const [selectedEmpresa, setSelectedEmpresa] = useState('');
+  const [selectedSucursal, setSelectedSucursal] = useState('');
   const [error, setError] = useState('');
 
   // Sucursales filtradas por empresa
@@ -163,8 +163,7 @@ export default function Login() {
     }
 
     try {
-      // Convertir a string para consistencia
-      await loginStepThree(String(selectedEmpresa), String(selectedSucursal));
+      await loginStepThree(selectedEmpresa, selectedSucursal);
       navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       const message =
