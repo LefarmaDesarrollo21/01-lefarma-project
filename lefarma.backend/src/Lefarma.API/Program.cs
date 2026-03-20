@@ -116,28 +116,32 @@ builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 builder.Services.AddSingleton<ISseService, SseService>();
 
 // Notification Services
-builder.Services.AddScoped<Domain.Interfaces.ITemplateService, TemplateService>();
-builder.Services.AddScoped<Domain.Interfaces.INotificationService, NotificationService>();
+// TODO: Uncomment when notification interfaces are implemented
+// builder.Services.AddScoped<Lefarma.API.Domain.Interfaces.ITemplateService, TemplateService>();
+// builder.Services.AddScoped<Lefarma.API.Domain.Interfaces.INotificationService, NotificationService>();
 
 // Email Settings configuration
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-builder.Services.AddOptions<EmailSettings>()
-    .Validate(x => !string.IsNullOrWhiteSpace(x.SmtpServer), "SmtpServer is required")
-    .Validate(x => !string.IsNullOrWhiteSpace(x.FromEmail), "FromEmail is required")
-    .Validate(x => x.SmtpPort > 0 && x.SmtpPort <= 65535, "SmtpPort must be between 1 and 65535")
-    .ValidateOnStart();
+// TODO: Uncomment when email settings are configured
+// builder.Services.AddOptions<EmailSettings>()
+//     .Validate(x => !string.IsNullOrWhiteSpace(x.SmtpServer), "SmtpServer is required")
+//     .Validate(x => !string.IsNullOrWhiteSpace(x.FromEmail), "FromEmail is required")
+//     .Validate(x => x.SmtpPort > 0 && x.SmtpPort <= 65535, "SmtpPort must be between 1 and 65535")
+//     .ValidateOnStart();
 
 // Register channels as KEYED SERVICES for multi-channel support
-builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, EmailNotificationChannel>("email");
-builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, TelegramNotificationChannel>("telegram");
-builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, InAppNotificationChannel>("in-app");
+// TODO: Uncomment when notification channels are implemented
+// builder.Services.AddKeyedScoped<Lefarma.API.Domain.Interfaces.INotificationChannel, Lefarma.API.Features.Notifications.Services.Channels.EmailNotificationChannel>("email");
+// builder.Services.AddKeyedScoped<Lefarma.API.Domain.Interfaces.INotificationChannel, Lefarma.API.Features.Notifications.Services.Channels.TelegramNotificationChannel>("telegram");
+// builder.Services.AddKeyedScoped<Lefarma.API.Domain.Interfaces.INotificationChannel, Lefarma.API.Features.Notifications.Services.Channels.InAppNotificationChannel>("in-app");
 
 // Telegram Settings configuration
 builder.Services.Configure<TelegramSettings>(builder.Configuration.GetSection("TelegramSettings"));
-builder.Services.AddOptions<TelegramSettings>()
-    .Validate(x => !string.IsNullOrWhiteSpace(x.BotToken), "BotToken is required")
-    .Validate(x => !string.IsNullOrWhiteSpace(x.ApiUrl), "ApiUrl is required")
-    .ValidateOnStart();
+// TODO: Uncomment when telegram bot is configured
+// builder.Services.AddOptions<TelegramSettings>()
+//     .Validate(x => !string.IsNullOrWhiteSpace(x.BotToken), "BotToken is required")
+//     .Validate(x => !string.IsNullOrWhiteSpace(x.ApiUrl), "ApiUrl is required")
+//     .ValidateOnStart();
 
 // JWT Bearer Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
