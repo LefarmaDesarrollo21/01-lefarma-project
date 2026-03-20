@@ -25,9 +25,9 @@
     {
         <div class="notification-actions">
             <a href="@Model.ActionUrl" class="notification-action-btn">
-                @if (!string.IsNullOrEmpty(Model.ActionLabel))
+                @if (!string.IsNullOrEmpty(Model.ActionText))
                 {
-                    @Model.ActionLabel
+                    @Model.ActionText
                 }
                 else
                 {
@@ -70,7 +70,7 @@
         border-left-color: #4CAF50;
     }
 
-    @keyframes slideIn {
+    @@keyframes slideIn {
         from {
             opacity: 0;
             transform: translateX(20px);

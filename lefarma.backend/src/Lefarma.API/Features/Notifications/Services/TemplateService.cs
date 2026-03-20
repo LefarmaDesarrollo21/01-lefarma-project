@@ -1,9 +1,9 @@
 using Lefarma.API.Domain.Interfaces;
 using Lefarma.API.Features.Notifications.DTOs;
-using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using System.Dynamic;
 
 namespace Lefarma.API.Features.Notifications.Services;
 
@@ -36,20 +36,27 @@ public class TemplateService : ITemplateService
 
         try
         {
-            // Create HttpContext for rendering
-            var httpContext = _serviceProvider.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()?.HttpContext;
+            // Get required services
+            var httpContextAccessor = _serviceProvider.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+            var httpContext = httpContextAccessor?.HttpContext;
             if (httpContext == null)
             {
                 throw new InvalidOperationException("HttpContext is not available. TemplateService requires an active HttpContext.");
             }
 
+            var actionContext = new ActionContext(
+                httpContext,
+                httpContext.GetRouteData(),
+                new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
+            );
+
             // Try to find file-based Razor template first
             var viewName = $"/Views/Notifications/{templateId}.cshtml";
-            var viewEngineResult = _razorViewEngine.FindView(httpContext, viewName, isMainPage: false);
+            var viewEngineResult = _razorViewEngine.FindView(actionContext, viewName, isMainPage: false);
 
-            if (viewEngineResult.Success)
+            if (viewEngineResult.Success && viewEngineResult.View != null)
             {
-                return await RenderRazorAsync(viewEngineResult.View, data, httpContext, ct);
+                return await RenderRazorViewAsync(viewEngineResult.View, actionContext, data, ct);
             }
 
             // Fallback to database-registered template
@@ -74,14 +81,21 @@ public class TemplateService : ITemplateService
     {
         try
         {
-            var httpContext = _serviceProvider.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()?.HttpContext;
+            var httpContextAccessor = _serviceProvider.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+            var httpContext = httpContextAccessor?.HttpContext;
             if (httpContext == null)
             {
                 return await Task.FromResult(false);
             }
 
+            var actionContext = new ActionContext(
+                httpContext,
+                httpContext.GetRouteData(),
+                new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
+            );
+
             var viewName = $"/Views/Notifications/{templateId}.cshtml";
-            var viewEngineResult = _razorViewEngine.FindView(httpContext, viewName, isMainPage: false);
+            var viewEngineResult = _razorViewEngine.FindView(actionContext, viewName, isMainPage: false);
 
             if (viewEngineResult.Success)
             {
@@ -118,29 +132,33 @@ public class TemplateService : ITemplateService
     /// <summary>
     /// Renders a Razor view (.cshtml file) with the provided data.
     /// </summary>
-    private async Task<string> RenderRazorAsync(
+    private async Task<string> RenderRazorViewAsync(
         Microsoft.AspNetCore.Mvc.ViewEngines.IView view,
+        Microsoft.AspNetCore.Mvc.ActionContext actionContext,
         Dictionary<string, object> data,
-        Microsoft.AspNetCore.Http.HttpContext httpContext,
         CancellationToken ct)
     {
         using var writer = new StringWriter();
 
         // Create ViewDataDictionary with the view model
-        var viewData = new ViewDataDictionary(new Microsoft.AspNetCore.Mvc.ModelMetadata.EmptyTypeModelMetadataProvider(), new ModelStateDictionary())
+        var viewData = new ViewDataDictionary(new Microsoft.AspNetCore.Mvc.ModelBinding.CompositeModelMetadataProvider(
+                System.Linq.Enumerable.Empty<Microsoft.AspNetCore.Mvc.ModelBinding.IModelMetadataProvider>()),
+            new Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary())
         {
             Model = CreateViewModel(data)
         };
 
-        // Create ViewContext
+        // Create ViewContext with minimal required properties
         var viewContext = new ViewContext(
             view,
-            new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(viewData),
-            new Microsoft.AspNetCore.Mvc.Razor.TextWriter(writer)
+            viewData,
+            new TempDataDictionary(actionContext.HttpContext),
+            writer,
+            new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(viewData)
         )
         {
-            HttpContext = httpContext,
-            RouteData = httpContext.GetRouteData()
+            RouteData = actionContext.RouteData,
+            ActionDescriptor = actionContext.ActionDescriptor
         };
 
         await view.RenderAsync(viewContext, ct);
@@ -233,5 +251,46 @@ public class TemplateService : ITemplateService
             viewModel.CustomData = customDataDict;
 
         return viewModel;
+    }
+
+    /// <summary>
+    /// Simple EmptyModelMetadataProvider for ViewDataDictionary creation.
+    /// </summary>
+    private class EmptyModelMetadataProvider : Microsoft.AspNetCore.Mvc.ModelBinding.IModelMetadataProvider
+    {
+        public Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata GetMetadataForType(Type modelType)
+        {
+            return new Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata(
+                this,
+                null,
+                null,
+                modelType,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
+        }
+
+        public System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata> GetMetadataForProperties(Type modelType)
+        {
+            return System.Linq.Enumerable.Empty<Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata>();
+        }
+
+        public Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata GetMetadataForProperty(Func<object> modelAccessor, Type containerType, Type propertyType, string propertyName)
+        {
+            return GetMetadataForType(propertyType);
+        }
     }
 }

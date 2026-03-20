@@ -1,7 +1,8 @@
 import { useConfigStore } from '@/store/configStore';
+import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Lock, Clock, HardDrive, Globe, Shield, DollarSign } from 'lucide-react';
 import { useState } from 'react';
 
 const ENVIRONMENT_BADGES = {
@@ -11,8 +12,10 @@ const ENVIRONMENT_BADGES = {
 };
 
 export function SistemaConfig() {
-  const { sistema } = useConfigStore();
+  const { sistema, globalConfig } = useConfigStore();
+  const { user } = useAuthStore();
   const [copied, setCopied] = useState<string | null>(null);
+  const isAdmin = user?.roles?.some(r => r.nombreRol === 'Administrador') || false;
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -20,15 +23,18 @@ export function SistemaConfig() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const InfoRow = ({ label, value, copyKey }: { label: string; value: string; copyKey?: string }) => (
+  const InfoRow = ({ label, value, copyKey, icon: Icon }: { label: string; value: string | number; copyKey?: string; icon?: React.ElementType }) => (
     <div className="flex items-center justify-between py-3 border-b border-border last:border-0">
-      <div className="space-y-1">
-        <Label className="text-sm font-normal text-muted-foreground">{label}</Label>
-        <p className="text-sm font-medium">{value || 'No disponible'}</p>
+      <div className="flex items-center gap-3">
+        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+        <div className="space-y-1">
+          <Label className="text-sm font-normal text-muted-foreground">{label}</Label>
+          <p className="text-sm font-medium">{value ?? 'No disponible'}</p>
+        </div>
       </div>
       {copyKey && (
         <button
-          onClick={() => handleCopy(value, copyKey)}
+          onClick={() => handleCopy(String(value), copyKey)}
           className="p-2 rounded-md hover:bg-muted transition-colors"
           title="Copiar"
         >
@@ -46,16 +52,16 @@ export function SistemaConfig() {
 
   return (
     <div className="space-y-6">
-      {/* Información del Sistema */}
+      {/* Información del Sistema (info técnica del build) */}
       <Card>
         <CardHeader>
           <CardTitle>Información del Sistema</CardTitle>
-          <CardDescription>Datos técnicos y versión de la aplicación</CardDescription>
+          <CardDescription>Datos técnicos de la aplicación (información del build)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-1">
             <InfoRow label="Versión" value={sistema.version} copyKey="version" />
-            <InfoRow label="Nombre de la Aplicación" value={sistema.appName} copyKey="appName" />
+            <InfoRow label="Nombre" value={sistema.appName} copyKey="appName" />
             <InfoRow label="Entorno" value={envBadge.label} />
             <InfoRow label="API URL" value={sistema.apiUrl} copyKey="apiUrl" />
             {sistema.buildDate && <InfoRow label="Fecha de Build" value={sistema.buildDate} />}
@@ -66,61 +72,171 @@ export function SistemaConfig() {
         </CardContent>
       </Card>
 
-      {/* Variables de Entorno (Solo Lectura) */}
+      {/* Configuración Global (variables configurables en runtime) */}
       <Card>
         <CardHeader>
-          <CardTitle>Variables de Entorno</CardTitle>
-          <CardDescription>
-            Configuración global del sistema (solo lectura, requiere acceso de administrador para modificar)
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Configuración Global
+              </CardTitle>
+              <CardDescription>
+                Variables que afectan a toda la aplicación en runtime
+              </CardDescription>
+            </div>
+            {!isAdmin && (
+              <div className="px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 text-xs font-medium">
+                Solo lectura
+              </div>
+            )}
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">VITE_API_URL</Label>
-                <span className="text-xs font-mono bg-background px-2 py-1 rounded">{sistema.apiUrl}</span>
-              </div>
-              <p className="text-xs text-muted-foreground">URL base para las llamadas a la API</p>
+        <CardContent className="space-y-6">
+          {/* Configuración de Sesión */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Clock className="h-4 w-4" />
+              Configuración de Sesión
             </div>
-
-            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">VITE_APP_NAME</Label>
-                <span className="text-xs font-mono bg-background px-2 py-1 rounded">{sistema.appName}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Timeout de Sesión</p>
+                <p className="text-sm font-medium">{globalConfig.sessionTimeout} minutos</p>
               </div>
-              <p className="text-xs text-muted-foreground">Nombre de la aplicación</p>
-            </div>
-
-            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">VITE_APP_VERSION</Label>
-                <span className="text-xs font-mono bg-background px-2 py-1 rounded">{sistema.version}</span>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Alerta de Timeout</p>
+                <p className="text-sm font-medium">{globalConfig.sessionWarning} minutos antes</p>
               </div>
-              <p className="text-xs text-muted-foreground">Versión actual de la aplicación</p>
-            </div>
-
-            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">MODE</Label>
-                <span className={`text-xs font-mono px-2 py-1 rounded ${envBadge.color}`}>
-                  {sistema.environment}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">Entorno de ejecución</p>
             </div>
           </div>
 
-          <div className="mt-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
-              <strong>Nota:</strong> Estas variables se definen en el archivo <code>.env</code> y requieren
-              reiniciar la aplicación para cambiar. Contacta al administrador del sistema para modificaciones.
-            </p>
+          {/* Configuración de Archivos */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <HardDrive className="h-4 w-4" />
+              Configuración de Archivos
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Tamaño Máximo</p>
+                <p className="text-sm font-medium">{globalConfig.maxFileSize} MB</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Formatos Permitidos</p>
+                <p className="text-sm font-medium">{globalConfig.allowedFileTypes.length} tipos</p>
+              </div>
+            </div>
+            <div className="pl-6">
+              <p className="text-xs text-muted-foreground font-mono">
+                {globalConfig.allowedFileTypes.join(', ')}
+              </p>
+            </div>
           </div>
+
+          {/* Configuración de UI Global */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Globe className="h-4 w-4" />
+              Configuración de UI Global
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Moneda por Defecto</p>
+                <p className="text-sm font-medium">{globalConfig.defaultCurrency}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Formato de Fecha</p>
+                <p className="text-sm font-medium">{globalConfig.defaultDateFormat}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Formato de Hora</p>
+                <p className="text-sm font-medium">{globalConfig.defaultTimeFormat}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Items por Página</p>
+                <p className="text-sm font-medium">{globalConfig.defaultPageSize}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Configuración de Negocio */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <DollarSign className="h-4 w-4" />
+              Configuración de Negocio
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Tipo de Cambio (LPS/USD)</p>
+                <p className="text-sm font-medium">L{globalConfig.tipoCambioDefecto.toFixed(2)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Impuesto (ISV/IVA)</p>
+                <p className="text-sm font-medium">{globalConfig.impuestoPorDefecto}%</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Notificaciones Globales</p>
+                <p className="text-sm font-medium">{globalConfig.notificacionesEnabled ? 'Habilitadas' : 'Deshabilitadas'}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Schedule de Job</p>
+                <p className="text-sm font-medium font-mono">{globalConfig.notificacionesJobSchedule}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Configuración de Seguridad */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Shield className="h-4 w-4" />
+              Configuración de Seguridad
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Longitud Mínima de Contraseña</p>
+                <p className="text-sm font-medium">{globalConfig.passwordMinLength} caracteres</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Intentos Máximos de Login</p>
+                <p className="text-sm font-medium">{globalConfig.maxLoginAttempts} intentos</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Bloqueo por</p>
+                <p className="text-sm font-medium">{globalConfig.lockoutDuration} minutos</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Requisitos de Contraseña</p>
+                <p className="text-xs text-muted-foreground">
+                  {globalConfig.passwordRequireUppercase && 'Mayúsculas ✓ '}
+                  {globalConfig.passwordRequireLowercase && 'Minúsculas ✓ '}
+                  {globalConfig.passwordRequireNumbers && 'Números ✓ '}
+                  {globalConfig.passwordRequireSpecialChars && 'Especiales ✓'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Metadata */}
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Última actualización: {new Date(globalConfig.metadata.updatedAt).toLocaleString('es-HN')}</span>
+              <span>Por: {globalConfig.metadata.updatedBy}</span>
+            </div>
+          </div>
+
+          {!isAdmin && (
+            <div className="mt-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                <strong>Nota:</strong> Estas variables de configuración global son de solo lectura para usuarios estándar.
+                Solo los administradores pueden modificar estos valores, los cuales afectan a toda la aplicación en tiempo de ejecución.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Estado de Conexión */}
+      {/* Estado de Servicios */}
       <Card>
         <CardHeader>
           <CardTitle>Estado de Servicios</CardTitle>

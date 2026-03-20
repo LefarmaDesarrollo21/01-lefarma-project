@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ConfigState, UIConfig, PerfilConfig, SistemaConfig } from '@/types/config.types';
+import type { ConfigState, UIConfig, PerfilConfig, SistemaInfo, ConfiguracionGlobal } from '@/types/config.types';
 import { useAuthStore } from './authStore';
 
 const DEFAULT_UI_CONFIG: UIConfig = {
@@ -16,13 +16,46 @@ const DEFAULT_UI_CONFIG: UIConfig = {
   },
 };
 
-const DEFAULT_SISTEMA_CONFIG: SistemaConfig = {
+const DEFAULT_SISTEMA_INFO: SistemaInfo = {
   version: import.meta.env.VITE_APP_VERSION || '1.0.0',
   apiUrl: import.meta.env.VITE_API_URL || '/api',
   appName: import.meta.env.VITE_APP_NAME || 'Lefarma',
-  environment: (import.meta.env.MODE as SistemaConfig['environment']) || 'development',
+  environment: (import.meta.env.MODE as SistemaInfo['environment']) || 'development',
   buildDate: import.meta.env.VITE_BUILD_DATE,
   gitCommit: import.meta.env.VITE_GIT_COMMIT,
+};
+
+// Configuración global por defecto (valores iniciales, después vendrían del backend)
+const DEFAULT_GLOBAL_CONFIG: ConfiguracionGlobal = {
+  sessionTimeout: 480, // 8 horas
+  sessionWarning: 10, // 10 minutos antes
+
+  maxFileSize: 10, // 10 MB
+  allowedFileTypes: ['.pdf', '.xlsx', '.xls', '.jpg', '.jpeg', '.png', '.doc', '.docx'],
+
+  defaultCurrency: 'LPS',
+  defaultDateFormat: 'DD/MM/YYYY',
+  defaultTimeFormat: '24h',
+  defaultPageSize: 20,
+
+  notificacionesEnabled: true,
+  notificacionesJobSchedule: '0 8 * * *', // 8:00 AM diario
+
+  tipoCambioDefecto: 24.50,
+  impuestoPorDefecto: 15.0,
+
+  passwordMinLength: 8,
+  passwordRequireUppercase: true,
+  passwordRequireLowercase: true,
+  passwordRequireNumbers: true,
+  passwordRequireSpecialChars: true,
+  maxLoginAttempts: 5,
+  lockoutDuration: 15, // 15 minutos
+
+  metadata: {
+    updatedAt: new Date().toISOString(),
+    updatedBy: 'system',
+  },
 };
 
 export const useConfigStore = create<ConfigState>()(
@@ -36,7 +69,9 @@ export const useConfigStore = create<ConfigState>()(
         notificacionPreferida: 'in-app',
       },
 
-      sistema: DEFAULT_SISTEMA_CONFIG,
+      sistema: DEFAULT_SISTEMA_INFO,
+
+      globalConfig: DEFAULT_GLOBAL_CONFIG,
 
       setTema: (tema: UIConfig['tema']) => {
         set((state) => ({
@@ -100,6 +135,19 @@ export const useConfigStore = create<ConfigState>()(
         }));
       },
 
+      updateGlobalConfig: (configUpdates) => {
+        set((state) => ({
+          globalConfig: {
+            ...state.globalConfig,
+            ...configUpdates,
+            metadata: {
+              updatedAt: new Date().toISOString(),
+              updatedBy: useAuthStore.getState().user?.username || 'unknown',
+            },
+          },
+        }));
+      },
+
       resetConfig: () => {
         const user = useAuthStore.getState().user;
         set({
@@ -117,7 +165,7 @@ export const useConfigStore = create<ConfigState>()(
       partialize: (state) => ({
         ui: state.ui,
         perfil: state.perfil,
-      }), // No persistir sistema (se lee de env vars)
+      }), // No persistir sistema (se lee de env vars) ni globalConfig (vendría del backend)
     }
   )
 );
