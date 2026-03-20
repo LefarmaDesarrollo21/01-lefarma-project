@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -11,12 +12,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { User, Mail, Phone, Bell } from 'lucide-react';
+import { User, Mail, Phone, Bell, Bell as BellIcon, Mail as MailIcon, Send, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { usePageStore } from '@/store/pageStore';
 
+const NOTIFICACIONES_CONFIG = [
+  { tipo: 'in-app' as const, label: 'Notificaciones en App', icon: BellIcon, description: 'Muestra notificaciones dentro de la aplicación' },
+  { tipo: 'email' as const, label: 'Correo Electrónico', icon: MailIcon, description: 'Recibe notificaciones por email' },
+  { tipo: 'telegram' as const, label: 'Telegram', icon: Send, description: 'Recibe notificaciones vía Telegram bot' },
+  { tipo: 'whatsapp' as const, label: 'WhatsApp', icon: MessageSquare, description: 'Recibe notificaciones por WhatsApp' },
+];
+
 export function PerfilConfig() {
-  const { perfil, updatePerfil, setNotificacionPreferida } = useConfigStore();
+  const { perfil, ui, updatePerfil, setNotificacionPreferida, updateNotificacion } = useConfigStore();
   const { user } = useAuthStore();
   const { setTitle } = usePageStore();
 
@@ -34,6 +42,10 @@ export function PerfilConfig() {
   const handleCancel = () => {
     setTempPerfil(perfil);
     setEditMode(false);
+  };
+
+  const handleNotificacionChange = (tipo: string, checked: boolean) => {
+    updateNotificacion(tipo as any, checked);
   };
 
   return (
@@ -122,6 +134,44 @@ export function PerfilConfig() {
         </CardContent>
       </Card>
 
+      {/* Configuración de Notificaciones */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Notificaciones
+          </CardTitle>
+          <CardDescription>Selecciona cómo deseas recibir notificaciones</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {NOTIFICACIONES_CONFIG.map((config) => {
+            const Icon = config.icon;
+            const isEnabled = ui.notificaciones.preferencias.find((p) => p.tipo === config.tipo)?.enabled || false;
+
+            return (
+              <div key={config.tipo} className="flex items-start gap-4 p-4 rounded-lg border border-border">
+                <div className="shrink-0">
+                  <div className={`p-2 rounded-full ${isEnabled ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Label htmlFor={`perfil-notif-${config.tipo}`} className="font-medium cursor-pointer">
+                    {config.label}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">{config.description}</p>
+                </div>
+                <Switch
+                  id={`perfil-notif-${config.tipo}`}
+                  checked={isEnabled}
+                  onCheckedChange={(checked) => handleNotificacionChange(config.tipo, checked)}
+                />
+              </div>
+            );
+          )}
+        </CardContent>
+      </Card>
+
       {/* Preferencias de Notificación */}
       <Card>
         <CardHeader>
@@ -147,7 +197,7 @@ export function PerfilConfig() {
             </SelectContent>
           </Select>
           <p className="text-sm text-muted-foreground mt-2">
-            Las notificaciones importantes se enviarán优先通过 este canal
+            Las notificaciones importantes se enviarán prioritariamente por este canal
           </p>
         </CardContent>
       </Card>

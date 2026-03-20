@@ -114,9 +114,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 builder.Services.AddSingleton<ISseService, SseService>();
 
-// Notification Services - TODO: Uncomment when notifications are complete
-// builder.Services.AddScoped<Domain.Interfaces.ITemplateService, TemplateService>();
-// builder.Services.AddScoped<Domain.Interfaces.INotificationService, NotificationService>();
+// Notification Services
+builder.Services.AddScoped<Domain.Interfaces.ITemplateService, TemplateService>();
+builder.Services.AddScoped<Domain.Interfaces.INotificationService, NotificationService>();
 
 // Email Settings configuration
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -127,10 +127,9 @@ builder.Services.AddOptions<EmailSettings>()
     .ValidateOnStart();
 
 // Register channels as KEYED SERVICES for multi-channel support
-// TODO: Uncomment when notification channels are properly implemented
-// builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, EmailNotificationChannel>("email");
-// builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, TelegramNotificationChannel>("telegram");
-// builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, InAppNotificationChannel>("in-app");
+builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, EmailNotificationChannel>("email");
+builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, TelegramNotificationChannel>("telegram");
+builder.Services.AddKeyedScoped<Domain.Interfaces.INotificationChannel, InAppNotificationChannel>("in-app");
 
 // Telegram Settings configuration
 builder.Services.Configure<TelegramSettings>(builder.Configuration.GetSection("TelegramSettings"));

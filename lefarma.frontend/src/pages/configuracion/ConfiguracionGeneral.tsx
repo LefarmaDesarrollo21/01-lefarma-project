@@ -35,9 +35,9 @@ export default function ConfiguracionGeneral() {
         {/* UI Tab */}
         <TabsContent value="ui" className="space-y-6">
           <div className="border-l-4 border-primary pl-4 py-2">
-            <h2 className="text-xl font-semibold">Configuración de Interfaz</h2>
+            <h2 className="text-xl font-semibold">Apariencia</h2>
             <p className="text-muted-foreground text-sm">
-              Personaliza el tema visual y las notificaciones de la aplicación
+              Personaliza el tema visual de la aplicación
             </p>
           </div>
           <UIConfig />
@@ -48,7 +48,7 @@ export default function ConfiguracionGeneral() {
           <div className="border-l-4 border-primary pl-4 py-2">
             <h2 className="text-xl font-semibold">Mi Perfil</h2>
             <p className="text-muted-foreground text-sm">
-              Actualiza tu información personal y preferencias de notificación
+              Actualiza tu información personal y configura tus preferencias de notificación
             </p>
           </div>
           <PerfilConfig />

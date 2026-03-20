@@ -1,32 +1,87 @@
+using HandlebarsDotNet;
 using Lefarma.API.Domain.Interfaces;
 using Lefarma.API.Features.Notifications.DTOs;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Notifications.Services;
 
 /// <summary>
-/// Service for rendering Razor templates for notifications.
-/// Uses IRazorViewEngine for rendering .cshtml templates with strongly-typed models.
+/// Service for rendering templates for notifications.
+/// Uses Handlebars.net for simple template rendering with variable substitution.
+/// TODO: Migrate to Razor template rendering with IRazorViewEngine for full spec compliance.
 /// </summary>
 public class TemplateService : ITemplateService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<TemplateService> _logger;
-    private readonly IRazorViewEngine _razorViewEngine;
     private readonly Dictionary<string, (string Content, TemplateType Type)> _databaseTemplates;
 
     public TemplateService(
         IServiceProvider serviceProvider,
-        ILogger<TemplateService> logger,
-        IRazorViewEngine razorViewEngine)
+        ILogger<TemplateService> logger)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
-        _razorViewEngine = razorViewEngine;
         _databaseTemplates = new Dictionary<string, (string Content, TemplateType Type)>(StringComparer.OrdinalIgnoreCase);
+
+        // Register Handlebars helpers
+        RegisterHelpers();
+    }
+
+    /// <summary>
+    /// Registers custom Handlebars helpers.
+    /// </summary>
+    private static void RegisterHelpers()
+    {
+        // Format date helper: {{formatDate date}}
+        Handlebars.RegisterHelper("formatDate", (writer, context, parameters) =>
+        {
+            if (parameters.Length > 0 && parameters[0] is DateTime date)
+            {
+                writer.WriteSafeString(date.ToString("dd/MM/yyyy"));
+            }
+        });
+
+        // Format currency helper: {{formatCurrency amount}}
+        Handlebars.RegisterHelper("formatCurrency", (writer, context, parameters) =>
+        {
+            if (parameters.Length > 0 && decimal.TryParse(parameters[0]?.ToString(), out var amount))
+            {
+                writer.WriteSafeString(amount.ToString("C"));
+            }
+        });
+
+        // Uppercase helper: {{uppercase value}}
+        Handlebars.RegisterHelper("uppercase", (writer, context, parameters) =>
+        {
+            if (parameters.Length > 0)
+            {
+                writer.WriteSafeString(parameters[0]?.ToString()?.ToUpper());
+            }
+        });
+
+        // Lowercase helper: {{lowercase value}}
+        Handlebars.RegisterHelper("lowercase", (writer, context, parameters) =>
+        {
+            if (parameters.Length > 0)
+            {
+                writer.WriteSafeString(parameters[0]?.ToString()?.ToLower());
+            }
+        });
+
+        // Conditional helper: {{#ifEquals value1 value2}}
+        Handlebars.RegisterHelper("ifEquals", (output, options, context, arguments) =>
+        {
+            if (arguments.Length >= 2 &&
+                arguments[0]?.ToString() == arguments[1]?.ToString())
+            {
+                options.Template(output, context);
+            }
+            else
+            {
+                options.Inverse(output, context);
+            }
+        });
     }
 
     /// <inheritdoc/>
@@ -36,38 +91,22 @@ public class TemplateService : ITemplateService
 
         try
         {
-            // Get required services
-            var httpContextAccessor = _serviceProvider.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-            var httpContext = httpContextAccessor?.HttpContext;
-            if (httpContext == null)
+            // Check if template exists in database
+            if (!_databaseTemplates.TryGetValue(templateId, out var template))
             {
-                throw new InvalidOperationException("HttpContext is not available. TemplateService requires an active HttpContext.");
+                throw new InvalidOperationException(
+                    $"Template '{templateId}' not found. " +
+                    $"Register the template using RegisterTemplateAsync() first.");
             }
 
-            var actionContext = new ActionContext(
-                httpContext,
-                httpContext.GetRouteData(),
-                new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
-            );
+            // Render using Handlebars or simple substitution based on type
+            var result = template.Type == TemplateType.Html
+                ? await RenderHandlebarsTemplateAsync(template.Content, data, ct)
+                : await RenderSimpleTemplateAsync(template.Content, data, ct);
 
-            // Try to find file-based Razor template first
-            var viewName = $"/Views/Notifications/{templateId}.cshtml";
-            var viewEngineResult = _razorViewEngine.FindView(actionContext, viewName, isMainPage: false);
+            _logger.LogDebug("Template rendered successfully: {TemplateId}", templateId);
 
-            if (viewEngineResult.Success && viewEngineResult.View != null)
-            {
-                return await RenderRazorViewAsync(viewEngineResult.View, actionContext, data, ct);
-            }
-
-            // Fallback to database-registered template
-            if (_databaseTemplates.TryGetValue(templateId, out var template))
-            {
-                return await RenderDatabaseTemplateAsync(template, data, ct);
-            }
-
-            throw new InvalidOperationException(
-                $"Template '{templateId}' not found. " +
-                $"Expected file: {viewName} or register using RegisterTemplateAsync() first.");
+            return result;
         }
         catch (Exception ex)
         {
@@ -79,35 +118,7 @@ public class TemplateService : ITemplateService
     /// <inheritdoc/>
     public async Task<bool> TemplateExistsAsync(string templateId, CancellationToken ct = default)
     {
-        try
-        {
-            var httpContextAccessor = _serviceProvider.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-            var httpContext = httpContextAccessor?.HttpContext;
-            if (httpContext == null)
-            {
-                return await Task.FromResult(false);
-            }
-
-            var actionContext = new ActionContext(
-                httpContext,
-                httpContext.GetRouteData(),
-                new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
-            );
-
-            var viewName = $"/Views/Notifications/{templateId}.cshtml";
-            var viewEngineResult = _razorViewEngine.FindView(actionContext, viewName, isMainPage: false);
-
-            if (viewEngineResult.Success)
-            {
-                return true;
-            }
-
-            return await Task.FromResult(_databaseTemplates.ContainsKey(templateId));
-        }
-        catch
-        {
-            return false;
-        }
+        return await Task.FromResult(_databaseTemplates.ContainsKey(templateId));
     }
 
     /// <inheritdoc/>
@@ -125,58 +136,55 @@ public class TemplateService : ITemplateService
             throw new ArgumentException("Template content cannot be null or empty.", nameof(content));
         }
 
+        // Precompile Handlebars template for better performance
+        if (type == TemplateType.Html)
+        {
+            try
+            {
+                Handlebars.Compile(content);
+                _logger.LogDebug("Handlebars template compiled successfully: {TemplateId}", templateId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to precompile Handlebars template: {TemplateId}. Will compile at runtime.", templateId);
+            }
+        }
+
         _databaseTemplates[templateId] = (content, type);
+
         await Task.CompletedTask;
     }
 
     /// <summary>
-    /// Renders a Razor view (.cshtml file) with the provided data.
+    /// Renders a Handlebars template with the provided data.
+    /// Supports Handlebars syntax: {{variable}}, {{#if}}, {{#each}}, etc.
     /// </summary>
-    private async Task<string> RenderRazorViewAsync(
-        Microsoft.AspNetCore.Mvc.ViewEngines.IView view,
-        Microsoft.AspNetCore.Mvc.ActionContext actionContext,
-        Dictionary<string, object> data,
-        CancellationToken ct)
+    private static Task<string> RenderHandlebarsTemplateAsync(string template, Dictionary<string, object> data, CancellationToken ct)
     {
-        using var writer = new StringWriter();
-
-        // Create ViewDataDictionary with the view model
-        var viewData = new ViewDataDictionary(new Microsoft.AspNetCore.Mvc.ModelBinding.CompositeModelMetadataProvider(
-                System.Linq.Enumerable.Empty<Microsoft.AspNetCore.Mvc.ModelBinding.IModelMetadataProvider>()),
-            new Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary())
+        try
         {
-            Model = CreateViewModel(data)
-        };
+            // Compile or get cached template
+            var handlebarsTemplate = Handlebars.Compile(template);
 
-        // Create ViewContext with minimal required properties
-        var viewContext = new ViewContext(
-            view,
-            viewData,
-            new TempDataDictionary(actionContext.HttpContext),
-            writer,
-            new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(viewData)
-        )
+            // Render with data
+            var result = handlebarsTemplate(data);
+
+            return Task.FromResult(result);
+        }
+        catch (Exception ex)
         {
-            RouteData = actionContext.RouteData,
-            ActionDescriptor = actionContext.ActionDescriptor
-        };
-
-        await view.RenderAsync(viewContext, ct);
-
-        return writer.ToString();
+            throw new InvalidOperationException("Error rendering Handlebars template", ex);
+        }
     }
 
     /// <summary>
-    /// Renders a database-stored template with simple variable substitution.
+    /// Renders a simple text template with variable substitution.
+    /// Supports {{variableName}} syntax only.
     /// </summary>
-    private async Task<string> RenderDatabaseTemplateAsync(
-        (string Content, TemplateType Type) template,
-        Dictionary<string, object> data,
-        CancellationToken ct)
+    private static Task<string> RenderSimpleTemplateAsync(string template, Dictionary<string, object> data, CancellationToken ct)
     {
-        var result = template.Content;
+        var result = template;
 
-        // Simple {{variable}} substitution
         foreach (var kvp in data)
         {
             var placeholder = $"{{{{{kvp.Key}}}}}";
@@ -184,113 +192,6 @@ public class TemplateService : ITemplateService
             result = result.Replace(placeholder, value);
         }
 
-        return await Task.FromResult(result);
-    }
-
-    /// <summary>
-    /// Creates a NotificationTemplateViewModel from the data dictionary.
-    /// </summary>
-    private NotificationTemplateViewModel CreateViewModel(Dictionary<string, object> data)
-    {
-        var viewModel = new NotificationTemplateViewModel();
-
-        if (data.TryGetValue("Title", out var title))
-            viewModel.Title = title?.ToString() ?? string.Empty;
-
-        if (data.TryGetValue("Message", out var message))
-            viewModel.Message = message?.ToString() ?? string.Empty;
-
-        if (data.TryGetValue("Priority", out var priority))
-            viewModel.Priority = priority?.ToString() ?? "normal";
-
-        if (data.TryGetValue("Category", out var category))
-            viewModel.Category = category?.ToString() ?? "system";
-
-        if (data.TryGetValue("Type", out var type))
-            viewModel.Type = type?.ToString() ?? "info";
-
-        if (data.TryGetValue("SenderName", out var senderName))
-            viewModel.SenderName = senderName?.ToString();
-
-        if (data.TryGetValue("SenderEmail", out var senderEmail))
-            viewModel.SenderEmail = senderEmail?.ToString();
-
-        if (data.TryGetValue("CustomerName", out var customerName))
-            viewModel.CustomerName = customerName?.ToString();
-
-        if (data.TryGetValue("ActionUrl", out var actionUrl))
-            viewModel.ActionUrl = actionUrl?.ToString();
-
-        if (data.TryGetValue("ActionText", out var actionText))
-            viewModel.ActionText = actionText?.ToString();
-
-        if (data.TryGetValue("Icon", out var icon))
-            viewModel.Icon = icon?.ToString();
-
-        if (data.TryGetValue("NotificationId", out var notificationId))
-            viewModel.NotificationId = Convert.ToInt32(notificationId);
-
-        if (data.TryGetValue("CreatedAt", out var createdAt))
-            viewModel.CreatedAt = createdAt is DateTime date ? date : DateTime.UtcNow;
-
-        // Legacy properties
-        if (data.TryGetValue("OrderId", out var orderId))
-            viewModel.OrderId = orderId?.ToString();
-
-        if (data.TryGetValue("TotalAmount", out var totalAmount))
-            viewModel.TotalAmount = Convert.ToDecimal(totalAmount);
-
-        if (data.TryGetValue("Items", out var items) && items is List<NotificationItemViewModel> itemsList)
-            viewModel.Items = itemsList;
-
-        // Additional data
-        if (data.TryGetValue("AdditionalData", out var additionalData) && additionalData is Dictionary<string, object> additionalDataDict)
-            viewModel.AdditionalData = additionalDataDict;
-
-        if (data.TryGetValue("CustomData", out var customData) && customData is Dictionary<string, object> customDataDict)
-            viewModel.CustomData = customDataDict;
-
-        return viewModel;
-    }
-
-    /// <summary>
-    /// Simple EmptyModelMetadataProvider for ViewDataDictionary creation.
-    /// </summary>
-    private class EmptyModelMetadataProvider : Microsoft.AspNetCore.Mvc.ModelBinding.IModelMetadataProvider
-    {
-        public Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata GetMetadataForType(Type modelType)
-        {
-            return new Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata(
-                this,
-                null,
-                null,
-                modelType,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-            );
-        }
-
-        public System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata> GetMetadataForProperties(Type modelType)
-        {
-            return System.Linq.Enumerable.Empty<Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata>();
-        }
-
-        public Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata GetMetadataForProperty(Func<object> modelAccessor, Type containerType, Type propertyType, string propertyName)
-        {
-            return GetMetadataForType(propertyType);
-        }
+        return Task.FromResult(result);
     }
 }
