@@ -2,7 +2,7 @@ import { useConfigStore } from '@/store/configStore';
 import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Copy, Check, Lock, Clock, HardDrive, Globe, Shield, DollarSign } from 'lucide-react';
+import { Copy, Check, Lock, Clock, HardDrive, Globe, Shield, DollarSign, FileCode } from 'lucide-react';
 import { useState } from 'react';
 
 const ENVIRONMENT_BADGES = {
@@ -68,6 +68,34 @@ export function SistemaConfig() {
             {sistema.gitCommit && (
               <InfoRow label="Git Commit" value={sistema.gitCommit.substring(0, 7)} copyKey="gitCommit" />
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Variables de Entorno Frontend */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileCode className="h-5 w-5" />
+            Variables de Entorno (Frontend)
+          </CardTitle>
+          <CardDescription>
+            Variables definidas en el archivo .env - Se leen al iniciar la aplicación
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-1">
+            <InfoRow label="VITE_API_URL" value={sistema.apiUrl} copyKey="apiUrl" />
+            <InfoRow label="VITE_APP_NAME" value={sistema.appName} copyKey="appName" />
+            <InfoRow label="VITE_APP_VERSION" value={sistema.version} copyKey="version" />
+            <InfoRow label="MODE" value={sistema.environment} />
+          </div>
+
+          <div className="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+            <p className="text-xs text-amber-800 dark:text-amber-300">
+              <strong>⚠️ Solo lectura:</strong> Estas variables se leen del archivo <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40">.env</code> al iniciar la aplicación.
+              Para modificarlas, edita el archivo <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40">.env</code> y reinicia el servidor de desarrollo.
+            </p>
           </div>
         </CardContent>
       </Card>
