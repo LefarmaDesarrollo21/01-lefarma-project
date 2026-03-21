@@ -21,10 +21,10 @@ public class MedidasController : ControllerBase
     }
 
     [HttpGet]
-    [SwaggerOperation(Summary = "Obtener todos las medidas", Description = "Retorna la lista completa de medidas")]
-    public async Task<IActionResult> GetAll()
+    [SwaggerOperation(Summary = "Obtener todos las medidas", Description = "Retorna la lista completa de medidas con filtros opcionales")]
+    public async Task<IActionResult> GetAll([FromQuery] MedidaRequest query)
     {
-        var result = await _service.GetAllAsync();
+        var result = await _service.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<MedidaResponse>>
         {

@@ -21,10 +21,10 @@ public class UnidadesMedidaController : ControllerBase
     }
 
     [HttpGet]
-    [SwaggerOperation(Summary = "Obtener todas las unidades de medida", Description = "Retorna la lista completa de unidades de medida")]
-    public async Task<IActionResult> GetAll()
+    [SwaggerOperation(Summary = "Obtener todas las unidades de medida", Description = "Retorna la lista completa de unidades de medida con filtros opcionales")]
+    public async Task<IActionResult> GetAll([FromQuery] UnidadMedidaRequest query)
     {
-        var result = await _service.GetAllAsync();
+        var result = await _service.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<UnidadMedidaResponse>>
         {

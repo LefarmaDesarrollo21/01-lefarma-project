@@ -57,4 +57,15 @@ namespace Lefarma.API.Features.Catalogos.Sucursales.DTOs
         public int? NumeroEmpleados { get; set; }
         public bool Activo { get; set; }
     }
+
+    public class SucursalRequest
+    {
+        public int? IdEmpresa { get; set; }
+        public string? Nombre { get; set; }
+        public string? Ciudad { get; set; }
+        public string? Estado { get; set; }
+        public bool? Activo { get; set; }
+        public string? OrderBy { get; set; }
+        public string? OrderDirection { get; set; }
+    }
 }

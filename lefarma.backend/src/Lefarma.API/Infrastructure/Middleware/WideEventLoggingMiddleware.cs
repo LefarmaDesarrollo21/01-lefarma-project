@@ -1,3 +1,4 @@
+using Lefarma.API.Domain.Interfaces.Logging;
 using Lefarma.API.Shared.Logging;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -13,13 +14,18 @@ namespace Lefarma.API.Infrastructure.Middleware;
 /// 1. Create WideEvent at start -> store in HttpContext.Items
 /// 2. Services can enrich it via IWideEventAccessor
 /// 3. Emit ONE single log at the end (finally block)
+/// 4. If error occurs, persist to database via ErrorLogService
 /// </summary>
-public sealed class WideEventLoggingMiddleware(RequestDelegate next, ILogger<WideEventLoggingMiddleware> logger)
+public sealed class WideEventLoggingMiddleware(
+    RequestDelegate next, 
+    ILogger<WideEventLoggingMiddleware> logger,
+    IServiceScopeFactory scopeFactory)
 {
     private const string WideEventKey = "WideEvent";
     private readonly RequestDelegate _next = next;
     private readonly ILogger<WideEventLoggingMiddleware> _logger = logger;
     private readonly Serilog.ILogger _serilogLogger = Log.ForContext<WideEventLoggingMiddleware>();
+    private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
 
     public async Task InvokeAsync(HttpContext context)
     {

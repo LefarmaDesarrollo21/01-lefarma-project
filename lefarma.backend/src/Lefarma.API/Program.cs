@@ -1,6 +1,9 @@
 using FluentValidation;
+using Lefarma.API.Domain.Interfaces.Admin;
 using Lefarma.API.Domain.Interfaces;
 using Lefarma.API.Domain.Interfaces.Catalogos;
+using Lefarma.API.Domain.Interfaces.Logging;
+using Lefarma.API.Features.Admin;
 using Lefarma.API.Features.Auth;
 using Lefarma.API.Features.Catalogos.Areas;
 using Lefarma.API.Features.Catalogos.Bancos;
@@ -9,11 +12,13 @@ using Lefarma.API.Features.Catalogos.Sucursales;
 using Lefarma.API.Features.Catalogos.Gastos;
 using Lefarma.API.Features.Catalogos.Medidas;
 using Lefarma.API.Features.Catalogos.UnidadesMedida;
+using Lefarma.API.Features.Logging;
 using Lefarma.API.Features.Catalogos.MediosPago;
 using Lefarma.API.Features.Catalogos.FormasPago;
 using Lefarma.API.Features.Notifications.Services;
 using Lefarma.API.Features.Notifications.Services.Channels;
 using Lefarma.API.Infrastructure.Data;
+using Lefarma.API.Infrastructure.Data.Repositories.Admin;
 using Lefarma.API.Infrastructure.Data.Repositories.Catalogos;
 using Lefarma.API.Infrastructure.Data.Repositories.Notifications;
 using Lefarma.API.Infrastructure.Data.Seeding;
@@ -93,6 +98,7 @@ builder.Services.AddScoped<IGastoRepository, GastoRepository>();
 builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 builder.Services.AddScoped<IMedidaRepository, MedidaRepository>();
 builder.Services.AddScoped<IUnidadMedidaRepository, UnidadMedidaRepository>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IMedioPagoRepository, MedioPagoRepository>();
 builder.Services.AddScoped<IFormaPagoRepository, FormaPagoRepository>();
 builder.Services.AddScoped<IBancoRepository, BancoRepository>();
@@ -109,9 +115,13 @@ builder.Services.AddScoped<IMedioPagoService, MedioPagoService>();
 builder.Services.AddScoped<IFormaPagoService, FormaPagoService>();
 builder.Services.AddScoped<IBancoService, BancoService>();
 
+// Logging Services
+builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
+
 builder.Services.AddActiveDirectoryServices(builder.Configuration);
 builder.Services.AddJwtTokenServices(builder.Configuration);
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 builder.Services.AddSingleton<ISseService, SseService>();
 

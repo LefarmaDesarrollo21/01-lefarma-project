@@ -21,5 +21,8 @@ namespace Lefarma.API.Domain.Interfaces
 
         //Metodo para verificar si un registro existe
         Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
+
+        //Metodo para obtener un IQueryable para filtros personalizados
+        IQueryable<T> GetQueryable();
     }
 }

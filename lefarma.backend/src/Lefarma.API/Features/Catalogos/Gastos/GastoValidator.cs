@@ -121,4 +121,22 @@ namespace Lefarma.API.Features.Catalogos.Gastos
                 .NotNull().WithMessage("El valor de 'Activo' es obligatorio");
         }
     }
+
+    public class GastoRequestValidator : AbstractValidator<GastoRequest>
+    {
+        public GastoRequestValidator()
+        {
+            RuleFor(x => x.OrderBy)
+                .Must(value => string.IsNullOrWhiteSpace(value) || 
+                    new[] { "nombre", "fechacreacion" }.Contains(value.ToLower()))
+                .WithMessage("OrderBy debe ser uno de: nombre, fechacreacion")
+                .When(x => !string.IsNullOrWhiteSpace(x.OrderBy));
+
+            RuleFor(x => x.OrderDirection)
+                .Must(value => string.IsNullOrWhiteSpace(value) || 
+                    new[] { "asc", "desc" }.Contains(value.ToLower()))
+                .WithMessage("OrderDirection debe ser 'asc' o 'desc'")
+                .When(x => !string.IsNullOrWhiteSpace(x.OrderDirection));
+        }
+    }
 }

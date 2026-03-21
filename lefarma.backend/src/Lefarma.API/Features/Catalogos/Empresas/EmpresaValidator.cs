@@ -3,6 +3,24 @@ using Lefarma.API.Features.Catalogos.Empresas.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.Empresas
 {
+    public class EmpresaQueryRequestValidator : AbstractValidator<EmpresaRequest>
+    {
+        public EmpresaQueryRequestValidator()
+        {
+            RuleFor(x => x.OrderBy)
+                .Must(value => string.IsNullOrEmpty(value) || 
+                    new[] { "nombre", "fechacreacion", "ciudad" }.Contains(value.ToLower()))
+                .WithMessage("OrderBy debe ser 'nombre', 'fechacreacion' o 'ciudad'")
+                .When(x => !string.IsNullOrEmpty(x.OrderBy));
+
+            RuleFor(x => x.OrderDirection)
+                .Must(value => string.IsNullOrEmpty(value) || 
+                    new[] { "asc", "desc" }.Contains(value.ToLower()))
+                .WithMessage("OrderDirection debe ser 'asc' o 'desc'")
+                .When(x => !string.IsNullOrEmpty(x.OrderDirection));
+        }
+    }
+
     public class CreateEmpresaRequestValidator : AbstractValidator<CreateEmpresaRequest>
     {
         public CreateEmpresaRequestValidator()

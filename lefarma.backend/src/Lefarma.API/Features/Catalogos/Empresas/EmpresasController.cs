@@ -21,10 +21,10 @@ public class EmpresasController : ControllerBase
     }
 
     [HttpGet]
-    [SwaggerOperation(Summary = "Obtener todas las empresas", Description = "Retorna la lista completa de empresas")]
-    public async Task<IActionResult> GetAll()
+    [SwaggerOperation(Summary = "Obtener todas las empresas con filtros", Description = "Retorna la lista de empresas aplicando filtros opcionales")]
+    public async Task<IActionResult> GetAll([FromQuery] EmpresaRequest query)
     {
-        var result = await _empresaService.GetAllAsync();
+        var result = await _empresaService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<EmpresaResponse>>
         {

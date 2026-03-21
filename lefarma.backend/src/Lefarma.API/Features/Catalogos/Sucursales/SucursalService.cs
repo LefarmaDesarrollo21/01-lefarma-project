@@ -32,29 +32,62 @@ namespace Lefarma.API.Features.Catalogos.Sucursales
             _logger = logger;
         }
 
-        public async Task<ErrorOr<IEnumerable<SucursalResponse>>> GetAllAsync()
+        public async Task<ErrorOr<IEnumerable<SucursalResponse>>> GetAllAsync(SucursalRequest query)
         {
             try
             {
-                var result = await _sucursalRepository.GetAllAsync();
-                if (result == null || !result.Any())
+                var queryable = _sucursalRepository.GetQueryable();
+
+                if (query.IdEmpresa.HasValue)
+                    queryable = queryable.Where(s => s.IdEmpresa == query.IdEmpresa.Value);
+
+                if (!string.IsNullOrWhiteSpace(query.Nombre))
+                    queryable = queryable.Where(s => s.Nombre.Contains(query.Nombre));
+
+                if (!string.IsNullOrWhiteSpace(query.Ciudad))
+                    queryable = queryable.Where(s => s.Ciudad.Contains(query.Ciudad));
+
+                if (!string.IsNullOrWhiteSpace(query.Estado))
+                    queryable = queryable.Where(s => s.Estado.Contains(query.Estado));
+
+                if (query.Activo.HasValue)
+                    queryable = queryable.Where(s => s.Activo == query.Activo.Value);
+
+                queryable = (query.OrderBy?.ToLower(), query.OrderDirection?.ToLower()) switch
                 {
-                    EnrichWideEvent(action: "GetAll", count: 0);
+                    ("nombre", "desc") => queryable.OrderByDescending(s => s.Nombre),
+                    ("ciudad", "asc") => queryable.OrderBy(s => s.Ciudad),
+                    ("ciudad", "desc") => queryable.OrderByDescending(s => s.Ciudad),
+                    ("estado", "asc") => queryable.OrderBy(s => s.Estado),
+                    ("estado", "desc") => queryable.OrderByDescending(s => s.Estado),
+                    ("fechacreacion", "asc") => queryable.OrderBy(s => s.FechaCreacion),
+                    ("fechacreacion", "desc") => queryable.OrderByDescending(s => s.FechaCreacion),
+                    _ => queryable.OrderBy(s => s.Nombre)
+                };
+
+                var result = await queryable.ToListAsync();
+
+                if (!result.Any())
+                {
+                    EnrichWideEvent(action: "GetAll", count: 0, additionalContext: new Dictionary<string, object>
+                    {
+                        ["filters"] = new { query.IdEmpresa, query.Nombre, query.Ciudad, query.Estado, query.Activo, query.OrderBy, query.OrderDirection }
+                    });
                     return CommonErrors.NotFound("Sucursales");
                 }
 
-                var response = result
-                    .Where(e => !string.IsNullOrWhiteSpace(e.Nombre))
-                    .Select(e => e.ToResponse())
-                    .OrderBy(e => e.Nombre)
-                    .ToList();
+                var response = result.Select(s => s.ToResponse()).ToList();
 
-                EnrichWideEvent(action: "GetAll", count: response.Count, items: response.Select(e => e.Nombre).ToList());
+                EnrichWideEvent(action: "GetAll", count: response.Count, additionalContext: new Dictionary<string, object>
+                {
+                    ["filters"] = new { query.IdEmpresa, query.Nombre, query.Ciudad, query.Estado, query.Activo, query.OrderBy, query.OrderDirection },
+                    ["items"] = response.Select(s => s.Nombre).ToList()
+                });
                 return response;
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "GetAll", error: ex.Message);
+                EnrichWideEvent(action: "GetAll", error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError("obtener las sucursales");
             }
         }
@@ -76,7 +109,7 @@ namespace Lefarma.API.Features.Catalogos.Sucursales
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "GetById", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "GetById", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"obtener la sucursal");
             }
         }
@@ -126,12 +159,12 @@ namespace Lefarma.API.Features.Catalogos.Sucursales
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.Message);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"guardar la sucursal");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.Message);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al crear la sucursal.");
             }
         }
@@ -184,17 +217,17 @@ namespace Lefarma.API.Features.Catalogos.Sucursales
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.ConcurrencyError("sucursal");
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"actualizar la sucursal");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al actualizar la sucursal.");
             }
         }
@@ -222,16 +255,16 @@ namespace Lefarma.API.Features.Catalogos.Sucursales
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"eliminar la sucursal");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al eliminar la sucursal.");
             }
         }
 
-        
+
     }
 }

@@ -27,30 +27,58 @@ namespace Lefarma.API.Features.Catalogos.Gastos
             _logger = logger;
         }
 
-        public async Task<ErrorOr<IEnumerable<GastoResponse>>> GetAllAsync()
+        public async Task<ErrorOr<IEnumerable<GastoResponse>>> GetAllAsync(GastoRequest query)
         {
             try
             {
-                var result = await _gastoRepository.GetAllConUnidadesAsync();
-                if (result == null || !result.Any())
+                IQueryable<Gasto> queryable = _gastoRepository.GetQueryable()
+                    .Include(g => g.GastoUnidadesMedida)
+                        .ThenInclude(gum => gum.UnidadMedida);
+
+                if (!string.IsNullOrWhiteSpace(query.Nombre))
+                    queryable = queryable.Where(g => g.Nombre.Contains(query.Nombre));
+
+                if (query.RequiereComprobacionPago.HasValue)
+                    queryable = queryable.Where(g => g.RequiereComprobacionPago == query.RequiereComprobacionPago.Value);
+
+                if (query.RequiereComprobacionGasto.HasValue)
+                    queryable = queryable.Where(g => g.RequiereComprobacionGasto == query.RequiereComprobacionGasto.Value);
+
+                if (query.Activo.HasValue)
+                    queryable = queryable.Where(g => g.Activo == query.Activo.Value);
+
+                queryable = (query.OrderBy?.ToLower(), query.OrderDirection?.ToLower()) switch
                 {
-                    EnrichWideEvent(action: "GetAll", count: 0);
+                    ("nombre", "desc") => queryable.OrderByDescending(g => g.Nombre),
+                    ("fechacreacion", "asc") => queryable.OrderBy(g => g.FechaCreacion),
+                    ("fechacreacion", "desc") => queryable.OrderByDescending(g => g.FechaCreacion),
+                    _ => queryable.OrderBy(g => g.Nombre)
+                };
+
+                var result = await queryable.ToListAsync();
+
+                if (!result.Any())
+                {
+                    EnrichWideEvent(action: "GetAll", count: 0, additionalContext: new Dictionary<string, object>
+                    {
+                        ["filters"] = new { query.Nombre, query.RequiereComprobacionPago, query.RequiereComprobacionGasto, query.Activo, query.OrderBy, query.OrderDirection }
+                    });
                     return CommonErrors.NotFound("Gastos");
                 }
 
-                var response = result
-                    .Where(e => !string.IsNullOrWhiteSpace(e.Nombre))
-                    .Select(e => e.ToResponse())
-                    .OrderBy(e => e.Nombre)
-                    .ToList();
+                var response = result.Select(g => g.ToResponse()).ToList();
 
-                EnrichWideEvent(action: "GetAll", count: response.Count, items: response.Select(e => e.Nombre).ToList());
+                EnrichWideEvent(action: "GetAll", count: response.Count, additionalContext: new Dictionary<string, object>
+                {
+                    ["filters"] = new { query.Nombre, query.RequiereComprobacionPago, query.RequiereComprobacionGasto, query.Activo, query.OrderBy, query.OrderDirection },
+                    ["items"] = response.Select(g => g.Nombre).ToList()
+                });
                 return response;
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "GetAll", error: ex.Message);
-                return CommonErrors.DatabaseError("obtener los gasto");
+                EnrichWideEvent(action: "GetAll", error: ex.GetDetailedMessage());
+                return CommonErrors.DatabaseError("obtener los gastos");
             }
         }
 
@@ -71,7 +99,7 @@ namespace Lefarma.API.Features.Catalogos.Gastos
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "GetById", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "GetById", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"obtener el gasto");
             }
         }
@@ -117,12 +145,12 @@ namespace Lefarma.API.Features.Catalogos.Gastos
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.Message);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"guardar el gasto");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.Message);
+                EnrichWideEvent(action: "Create", nombre: request.Nombre, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al crear el gasto.");
             }
         }
@@ -170,17 +198,17 @@ namespace Lefarma.API.Features.Catalogos.Gastos
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.ConcurrencyError("gasto");
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"actualizar el gasto");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Update", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Update", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al actualizar el gasto.");
             }
         }
@@ -208,14 +236,14 @@ namespace Lefarma.API.Features.Catalogos.Gastos
             }
             catch (DbUpdateException ex)
             {
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.DatabaseError($"eliminar el gasto");
             }
             catch (Exception ex)
             {
-                EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
+                EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
                 return CommonErrors.InternalServerError($"Error inesperado al eliminar el gasto.");
             }
-        }    
+        }
     }
 }

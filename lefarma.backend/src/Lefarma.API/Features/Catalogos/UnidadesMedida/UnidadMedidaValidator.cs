@@ -39,4 +39,22 @@ namespace Lefarma.API.Features.Catalogos.UnidadesMedida
                 .GreaterThan(0).WithMessage("La medida es obligatoria");
         }
     }
+
+    public class UnidadMedidaRequestValidator : AbstractValidator<UnidadMedidaRequest>
+    {
+        public UnidadMedidaRequestValidator()
+        {
+            RuleFor(x => x.OrderBy)
+                .Must(value => string.IsNullOrWhiteSpace(value) || 
+                    new[] { "nombre", "abreviatura", "fechacreacion" }.Contains(value.ToLower()))
+                .WithMessage("OrderBy debe ser uno de: nombre, abreviatura, fechacreacion")
+                .When(x => !string.IsNullOrWhiteSpace(x.OrderBy));
+
+            RuleFor(x => x.OrderDirection)
+                .Must(value => string.IsNullOrWhiteSpace(value) || 
+                    new[] { "asc", "desc" }.Contains(value.ToLower()))
+                .WithMessage("OrderDirection debe ser 'asc' o 'desc'")
+                .When(x => !string.IsNullOrWhiteSpace(x.OrderDirection));
+        }
+    }
 }
