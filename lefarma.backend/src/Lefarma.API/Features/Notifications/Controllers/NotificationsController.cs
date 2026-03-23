@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Lefarma.API.Domain.Interfaces;
 using Lefarma.API.Features.Notifications.DTOs;
-using Lefarma.API.Features.Notifications.Services;
 
 namespace Lefarma.API.Features.Notifications.Controllers;
 
