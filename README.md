@@ -183,7 +183,7 @@ lefarma-project/
 cd lefarma.backend/src/Lefarma.API
 
 # Ejecutar API (recomendado: libera puerto primero)
-fuser -k 5000/tcp 2>/dev/null; clear; dotnet run
+fuser -k 5134/tcp 2>/dev/null; clear; dotnet run
 
 # Otros comandos
 dotnet build                  # Compilar
@@ -192,8 +192,8 @@ dotnet ef migrations add Name # Crear migración
 dotnet ef database update     # Aplicar migraciones
 ```
 
-**Nota:** El comando `fuser -k 5000/tcp 2>/dev/null; clear; dotnet run` hace 3 cosas en uno:
-1. **Elimina cualquier proceso usando el puerto 5000** (evita error "port already in use")
+**Nota:** El comando `fuser -k 5134/tcp 2>/dev/null; clear; dotnet run` hace 3 cosas en uno:
+1. **Elimina cualquier proceso usando el puerto 5134** (evita error "port already in use")
 2. **Limpia la terminal** (clear)
 3. **Ejecuta la API** (dotnet run)
 
