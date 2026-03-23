@@ -70,11 +70,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     setError(undefined);
     onConnectionChange?.(true);
 
-    // Actualizar conteo de no leídas al conectar
-    if (user?.id) {
-      refreshUnreadCount(user.id);
-    }
-  }, [setConnected, setError, onConnectionChange, refreshUnreadCount, user?.id]);
+    // NO llamar a refreshUnreadCount automáticamente para evitar loops infinitos
+    // El conteo se actualizará cuando lleguen notificaciones vía SSE
+  }, [setConnected, setError, onConnectionChange]);
 
   /**
    * Maneja errores de la conexión SSE
