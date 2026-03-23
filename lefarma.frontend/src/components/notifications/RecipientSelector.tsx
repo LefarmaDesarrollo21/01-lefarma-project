@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Check, ChevronsUpDown, Users } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -50,6 +51,7 @@ export function RecipientSelector({
   onRoleNamesChange,
   disabled = false,
 }: RecipientSelectorProps) {
+  const { token } = useAuthStore();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [roles, setRoles] = useState<Rol[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,7 +67,7 @@ export function RecipientSelector({
         // Cargar usuarios
         const usuariosRes = await fetch(`${apiUrl}/auth/usuarios`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         if (usuariosRes.ok) {
@@ -76,7 +78,7 @@ export function RecipientSelector({
         // Cargar roles
         const rolesRes = await fetch(`${apiUrl}/auth/roles`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         if (rolesRes.ok) {
