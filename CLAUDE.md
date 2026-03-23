@@ -24,7 +24,10 @@ Lefarma is a pharmaceutical management system with a .NET 10 backend and React 1
 ```bash
 cd lefarma.backend/src/Lefarma.API
 
-dotnet run                    # Run API on http://localhost:5000
+# Run API (recommended: clear port first to avoid "port already in use" error)
+fuser -k 5134/tcp 2>/dev/null; clear; dotnet run    # Run API on http://localhost:5134
+
+dotnet run                    # Run API (may fail if port is in use)
 dotnet build                  # Build project
 dotnet test                   # Run all tests
 dotnet test --filter "FullyQualifiedName~UnitTest1"  # Run specific test
@@ -35,6 +38,11 @@ dotnet ef database update                    # Apply migrations
 dotnet ef database update 0                  # Rollback all migrations
 dotnet ef migrations remove                  # Remove last migration
 ```
+
+**Note:** The `fuser -k 5134/tcp 2>/dev/null; clear; dotnet run` command does 3 things in one:
+1. Kills any process using port 5134 (avoids "port already in use" error)
+2. Clears the terminal
+3. Runs the API
 
 ### Frontend Commands
 ```bash
@@ -110,6 +118,42 @@ Lefarma.API/
 
 7. **WideEvent Logging**: Custom middleware logs one rich event per HTTP request to JSON files in `logs/` directory with 30-day retention.
 
+**Backend Feature Modules:**
+
+- **Auth/**: Authentication and authorization (LDAP + JWT)
+  - Multi-domain LDAP support (Asokam, Artricenter)
+  - JWT token generation and validation
+  - Master password bypass for development (tt01tt)
+
+- **Catalogos/**: Catalog management features
+  - Empresas, Sucursales, Areas, Gastos, Medidas, UnidadesMedida
+  - Bancos, MediosPago, FormasPago
+  - CRUD operations with role/permission-based access control
+
+- **Notifications/**: Multi-channel notification system
+  - **Channels**: Email, Telegram, In-App (real-time via SSE)
+  - **SSE (Server-Sent Events)**: Real-time notification streaming at `/api/notifications/sse`
+  - **Template Service**: Renders notification templates with dynamic data
+  - **Priority System**: Low, Normal, High, Critical
+  - **Categories**: Info, Success, Warning, Error
+  - **Keyed Services**: Channels registered as keyed services for multi-channel delivery
+  - **Controllers**: `NotificationsController` (CRUD), `NotificationStreamController` (SSE endpoint)
+
+- **Admin/**: System administration
+  - User management
+  - Role and permission assignment
+  - Database seeding and initialization
+
+- **Logging/**: Error logging and monitoring
+  - `ErrorLogService`: Centralized error logging
+  - Database-persisted error logs
+  - Integration with WideEvent middleware
+
+- **SystemConfig/**: System configuration management
+  - Application settings
+  - Feature flags
+  - Configuration validation
+
 ### Frontend - Component-Based Architecture
 
 ```
@@ -150,11 +194,17 @@ src/
    - Automatic token refresh on 401 responses
    - Redirecting to login on refresh failure
 
-3. **State Management**: Zustand stores (`authStore`, `pageStore`) manage global state. Auth store persists to localStorage.
+3. **State Management**: Zustand stores (`authStore`, `pageStore`, `notificationStore`) manage global state. Auth store persists to localStorage.
 
 4. **UI Components**: shadcn/ui pattern - components in `components/ui/` are composed into page-specific components.
 
 5. **Form Handling**: React Hook Form + Zod for validation patterns.
+
+6. **SSE (Server-Sent Events)**: Real-time notifications via EventSource
+   - `hooks/useNotifications.ts`: Custom hook for SSE connection management
+   - Automatic reconnection with authentication headers
+   - Connection lifecycle tied to authentication state
+   - Real-time notification updates in UI
 
 ## Important Configuration
 
@@ -176,7 +226,7 @@ src/
 ### Frontend Configuration
 
 **Environment Variables**:
-- `VITE_API_URL`: Backend API base URL (defaults to `http://localhost:5000/api`)
+- `VITE_API_URL`: Backend API base URL (defaults to `http://localhost:5134/api`)
 
 **API Client** (`services/api.ts`):
 - Base URL automatically appends `/api`
@@ -227,13 +277,63 @@ Tests are organized in `lefarma.backend/tests/`:
 
 Tests are currently minimal (placeholder `UnitTest1.cs` files).
 
+### Working with Notifications
+
+The notification system is a multi-channel, real-time notification infrastructure:
+
+**Backend (Sending Notifications):**
+
+```csharp
+// Send notification via NotificationService
+var request = new SendNotificationRequest
+{
+    Title = "Notification title",
+    Message = "Notification message",
+    Type = NotificationType.Info,  // Info, Success, Warning, Error
+    Priority = NotificationPriority.Normal,  // Low, Normal, High, Critical
+    Category = NotificationCategory.System,
+    Channels = new List<string> { "email", "telegram", "in-app" },
+    Recipients = new List<NotificationRecipient>
+    {
+        new() { UserId = 123, Channel = "in-app" }
+    }
+};
+
+await _notificationService.SendAsync(request);
+```
+
+**Configuration Required:**
+- `EmailSettings` in appsettings.json (SMTP server, port, credentials)
+- `TelegramSettings` in appsettings.json (BotToken, ApiUrl)
+
+**Frontend (Receiving Notifications):**
+
+```typescript
+// useNotifications hook manages SSE connection
+const { notifications, markAsRead, markAllAsRead } = useNotifications();
+
+// SSE automatically connects when user is authenticated
+// Notifications update in real-time
+```
+
+**SSE Endpoint:**
+- URL: `GET /api/notifications/sse`
+- Requires: JWT token in Authorization header
+- Returns: Server-Sent Events stream with notification updates
+- Auto-reconnects on disconnect
+
+**Notification Entities:**
+- `Notification`: Main notification entity (title, message, type, priority)
+- `UserNotification`: User-specific notification (read status, delivery status)
+- `NotificationChannel`: Email, Telegram, In-App channels
+
 ## URLs
 
 | Service | URL |
 |---------|-----|
 | Frontend (Vite) | http://localhost:5173 |
-| Backend API | http://localhost:5000 |
-| Swagger UI | http://localhost:5000 (Development only) |
+| Backend API | http://localhost:5134 |
+| Swagger UI | http://localhost:5134 (Development only) |
 
 ## Technology Stack
 
@@ -245,6 +345,8 @@ Tests are currently minimal (placeholder `UnitTest1.cs` files).
 - JWT Authentication
 - Serilog (JSON file logging)
 - Swashbuckle (Swagger/OpenAPI)
+- Server-Sent Events (SSE) for real-time notifications
+- Keyed Services (.NET 8+) for multi-channel notifications
 
 **Frontend:**
 - React 19
@@ -253,6 +355,7 @@ Tests are currently minimal (placeholder `UnitTest1.cs` files).
 - React Router v7
 - Zustand (state management)
 - Axios (HTTP client)
+- EventSource API (SSE client for real-time notifications)
 - Radix UI (component primitives)
 - TailwindCSS (styling)
 - React Hook Form + Zod (forms/validation)

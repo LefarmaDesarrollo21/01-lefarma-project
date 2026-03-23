@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Lefarma.API.Domain.Interfaces;
@@ -326,10 +327,22 @@ public class NotificationsController : ControllerBase
                 return BadRequest(ModelState);
             }
 
+            // Get current user ID if UserIds not provided
+            if ((request.UserIds == null || !request.UserIds.Any()) &&
+                (request.RoleNames == null || !request.RoleNames.Any()))
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out var currentUserId))
+                {
+                    request.UserIds = new List<int> { currentUserId };
+                }
+            }
+
             _logger.LogInformation(
-                "POST /api/notifications/test - Channel: {ChannelType}, Recipient: {Recipient}",
+                "POST /api/notifications/test - Channel: {ChannelType}, UserIds: {UserIds}, RoleNames: {RoleNames}",
                 request.ChannelType,
-                request.Recipient);
+                request.UserIds != null ? string.Join(",", request.UserIds) : "none",
+                request.RoleNames != null ? string.Join(",", request.RoleNames) : "none");
 
             // Create a test notification
             var testRequest = new SendNotificationRequest
@@ -344,7 +357,8 @@ public class NotificationsController : ControllerBase
                     new()
                     {
                         ChannelType = request.ChannelType,
-                        Recipients = request.Recipient
+                        UserIds = request.UserIds,
+                        RoleNames = request.RoleNames
                     }
                 }
             };
