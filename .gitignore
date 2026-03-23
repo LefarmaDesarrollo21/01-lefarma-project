@@ -35,6 +35,10 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Test results
+test-results/
+**/test-results/
+
 # Backend specific
 *.user
 *.suo
