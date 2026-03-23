@@ -58,6 +58,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
   const reconnectAttemptsRef = useRef(0);
   const isMountedRef = useRef(true);
   const connectRef = useRef<(() => void) | null>(null);
+  const disconnectRef = useRef<(() => void) | null>(null);
 
   /**
    * Maneja la apertura de la conexión SSE
@@ -243,6 +244,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     }
   }, [setConnected]);
 
+  // Guardar la referencia actual de disconnect
+  disconnectRef.current = disconnect;
+
   /**
    * Reconecta manualmente
    */
@@ -253,15 +257,16 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
 
   // Efecto principal: conectar/desconectar según autenticación
   // Incluimos 'token' para reconectar cuando se actualice (ej. después de un refresh)
+  // Usamos refs para connect/disconnect para evitar loops infinitos
   useEffect(() => {
     if (autoConnect && isAuthenticated) {
-      connect();
+      connectRef.current?.();
     }
 
     return () => {
-      disconnect(false); // No actualizar estado en cleanup
+      disconnectRef.current?.(false); // No actualizar estado en cleanup
     };
-  }, [autoConnect, isAuthenticated, token, connect, disconnect]);
+  }, [autoConnect, isAuthenticated, token]);
 
   // Cleanup al desmontar
   useEffect(() => {
@@ -269,9 +274,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
 
     return () => {
       isMountedRef.current = false;
-      disconnect(false); // No actualizar estado en cleanup
+      disconnectRef.current?.(false); // No actualizar estado en cleanup
     };
-  }, [disconnect]);
+  }, []);
 
   // Solicitar permiso para notificaciones del navegador
   useEffect(() => {
@@ -284,8 +289,8 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
 
   // Wrapper público para disconnect que siempre actualiza el estado
   const publicDisconnect = useCallback(() => {
-    disconnect(true);
-  }, [disconnect]);
+    disconnectRef.current?.(true);
+  }, []);
 
   return {
     isConnected: useNotificationStore((state) => state.isConnected),
