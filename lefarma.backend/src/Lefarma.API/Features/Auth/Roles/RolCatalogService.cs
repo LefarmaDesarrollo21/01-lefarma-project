@@ -9,9 +9,9 @@ namespace Lefarma.API.Features.Auth.Roles;
 /// </summary>
 public class RolCatalogService : IRolCatalogService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly AsokamDbContext _context;
 
-    public RolCatalogService(ApplicationDbContext context)
+    public RolCatalogService(AsokamDbContext context)
     {
         _context = context;
     }

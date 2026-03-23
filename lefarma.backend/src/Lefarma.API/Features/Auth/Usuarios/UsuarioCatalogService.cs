@@ -9,9 +9,9 @@ namespace Lefarma.API.Features.Auth.Usuarios;
 /// </summary>
 public class UsuarioCatalogService : IUsuarioCatalogService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly AsokamDbContext _context;
 
-    public UsuarioCatalogService(ApplicationDbContext context)
+    public UsuarioCatalogService(AsokamDbContext context)
     {
         _context = context;
     }
