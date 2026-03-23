@@ -138,12 +138,15 @@ export const useNotificationStore = create<NotificationState>()(
         try {
           const targetUserId = userId || 1; // TODO: Get from auth store
           const notifications = await notificationService.getUserNotifications(targetUserId, filter);
-          const unreadCount = notifications.filter((n) => !n.isRead).length;
-          set({ notifications, unreadCount, isLoading: false });
+          // Defensive: ensure notifications is always an array
+          const safeNotifications = Array.isArray(notifications) ? notifications : [];
+          const unreadCount = safeNotifications.filter((n) => !n.isRead).length;
+          set({ notifications: safeNotifications, unreadCount, isLoading: false });
         } catch (error) {
           set({
             error: 'Error al cargar notificaciones',
             isLoading: false,
+            notifications: [], // Ensure notifications is always an array
           });
           console.error('Error loading notifications:', error);
         }

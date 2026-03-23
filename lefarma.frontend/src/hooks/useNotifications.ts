@@ -256,8 +256,8 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
   }, [connect]);
 
   // Efecto principal: conectar/desconectar según autenticación
-  // Incluimos 'token' para reconectar cuando se actualice (ej. después de un refresh)
-  // Usamos refs para connect/disconnect para evitar loops infinitos
+  // NO incluimos 'token' en las dependencias para evitar reconexiones infinitas
+  // connect() ya lee el token actual del store directamente
   useEffect(() => {
     if (autoConnect && isAuthenticated) {
       connectRef.current?.();
@@ -266,7 +266,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     return () => {
       disconnectRef.current?.(false); // No actualizar estado en cleanup
     };
-  }, [autoConnect, isAuthenticated, token]);
+  }, [autoConnect, isAuthenticated]); // Quitar 'token' para evitar bucle infinito
 
   // Cleanup al desmontar
   useEffect(() => {
