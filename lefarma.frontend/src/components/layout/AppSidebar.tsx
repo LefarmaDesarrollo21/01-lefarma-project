@@ -14,6 +14,11 @@ import {
   Users,
   CreditCard,
   Bell,
+  MapPin,
+  FileText,
+  List,
+  Building,
+  UserCircle,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -58,6 +63,11 @@ const menuItems = [
       { title: 'Gastos', icon: Wallet, path: '/catalogos/gastos' },
       { title: 'Medidas', icon: Ruler, path: '/catalogos/medidas' },
       { title: 'Formas de Pago', icon: CreditCard, path: '/catalogos/formas-pago' },
+      { title: 'Centros de Costo', icon: MapPin, path: '/catalogos/centros-costo' },
+      { title: 'Cuentas Contables', icon: FileText, path: '/catalogos/cuentas-contables' },
+      { title: 'Estatus de Orden', icon: List, path: '/catalogos/estatus-orden' },
+      { title: 'Proveedores', icon: Building, path: '/catalogos/proveedores' },
+      { title: 'Regímenes Fiscales', icon: UserCircle, path: '/catalogos/regimenes-fiscales' },
     ],
   },
   {
