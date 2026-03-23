@@ -26,7 +26,7 @@ class NotificationService {
    */
   async sendNotification(request: SendNotificationRequest): Promise<SendNotificationResponse> {
     const response = await API.post<ApiResponse<SendNotificationResponse>>(
-      this.basePath,
+      `${this.basePath}/send`,
       request
     );
     return response.data.data;
@@ -37,7 +37,7 @@ class NotificationService {
    */
   async sendBulkNotification(request: BulkNotificationRequest): Promise<SendNotificationResponse> {
     const response = await API.post<ApiResponse<SendNotificationResponse>>(
-      `${this.basePath}/bulk`,
+      `${this.basePath}/send-bulk`,
       request
     );
     return response.data.data;
@@ -48,7 +48,7 @@ class NotificationService {
    */
   async sendByRole(request: RoleNotificationRequest): Promise<SendNotificationResponse> {
     const response = await API.post<ApiResponse<SendNotificationResponse>>(
-      `${this.basePath}/by-role`,
+      `${this.basePath}/send-by-role`,
       request
     );
     return response.data.data;
@@ -94,14 +94,14 @@ class NotificationService {
    * Marca una notificación como leída
    */
   async markAsRead(notificationId: number, userId: number): Promise<void> {
-    await API.post(`${this.basePath}/${notificationId}/read/${userId}`);
+    await API.patch(`${this.basePath}/${notificationId}/read`, { userId });
   }
 
   /**
    * Marca todas las notificaciones del usuario como leídas
    */
   async markAllAsRead(userId: number): Promise<void> {
-    await API.post(`${this.basePath}/read-all/${userId}`);
+    await API.patch(`${this.basePath}/user/${userId}/read-all`);
   }
 
   /**
