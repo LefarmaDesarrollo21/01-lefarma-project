@@ -7,6 +7,11 @@ using Lefarma.API.Features.Admin;
 using Lefarma.API.Features.Auth;
 using Lefarma.API.Features.Catalogos.Areas;
 using Lefarma.API.Features.Catalogos.Bancos;
+using Lefarma.API.Features.Catalogos.CentrosCosto;
+using Lefarma.API.Features.Catalogos.CuentasContables;
+using Lefarma.API.Features.Catalogos.EstatusOrden;
+using Lefarma.API.Features.Catalogos.Proveedores;
+using Lefarma.API.Features.Catalogos.RegimenesFiscales;
 using Lefarma.API.Features.Catalogos.Empresas;
 using Lefarma.API.Features.Catalogos.Sucursales;
 using Lefarma.API.Features.Catalogos.Gastos;
@@ -104,6 +109,13 @@ builder.Services.AddScoped<IFormaPagoRepository, FormaPagoRepository>();
 builder.Services.AddScoped<IBancoRepository, BancoRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
+// Catálogos Faltantes
+builder.Services.AddScoped<ICentroCostoRepository, CentroCostoRepository>();
+builder.Services.AddScoped<IEstatusOrdenRepository, EstatusOrdenRepository>();
+builder.Services.AddScoped<IRegimenFiscalRepository, RegimenFiscalRepository>();
+builder.Services.AddScoped<IProveedorRepository, ProveedorRepository>();
+builder.Services.AddScoped<ICuentaContableRepository, CuentaContableRepository>();
+
 // Servicios
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<ISucursalService, SucursalService>();
@@ -114,6 +126,15 @@ builder.Services.AddScoped<IUnidadMedidaService, UnidadMedidaService>();
 builder.Services.AddScoped<IMedioPagoService, MedioPagoService>();
 builder.Services.AddScoped<IFormaPagoService, FormaPagoService>();
 builder.Services.AddScoped<IBancoService, BancoService>();
+builder.Services.AddScoped<Lefarma.API.Features.Catalogos.Usuarios.IUsuarioCatalogService, Lefarma.API.Features.Catalogos.Usuarios.UsuarioCatalogService>();
+builder.Services.AddScoped<Lefarma.API.Features.Catalogos.Roles.IRolCatalogService, Lefarma.API.Features.Catalogos.Roles.RolCatalogService>();
+
+// Catálogos Faltantes
+builder.Services.AddScoped<ICentroCostoService, CentroCostoService>();
+builder.Services.AddScoped<IEstatusOrdenService, EstatusOrdenService>();
+builder.Services.AddScoped<IRegimenFiscalService, RegimenFiscalService>();
+builder.Services.AddScoped<IProveedorService, ProveedorService>();
+builder.Services.AddScoped<ICuentaContableService, CuentaContableService>();
 
 // Logging Services
 builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
