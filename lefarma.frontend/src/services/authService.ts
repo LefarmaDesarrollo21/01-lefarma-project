@@ -16,6 +16,7 @@ const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
 const EMPRESA_KEY = 'empresa';
 const SUCURSAL_KEY = 'sucursal';
+const AUTH_FLOW_COMPLETED_KEY = 'authFlowCompleted';
 
 export const authService = {
   loginStepOne: async (username: string): Promise<LoginStepOneResponse> => {
@@ -67,6 +68,7 @@ export const authService = {
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(EMPRESA_KEY);
       localStorage.removeItem(SUCURSAL_KEY);
+      localStorage.removeItem(AUTH_FLOW_COMPLETED_KEY);
     }
   },
 
@@ -128,6 +130,15 @@ export const authService = {
   getSucursales: async (): Promise<Sucursal[]> => {
     const response = await API.get<ApiResponse<Sucursal[]>>('/catalogos/sucursales');
     return response.data.data;
+  },
+
+  // Auth flow completion tracking
+  setAuthFlowCompleted: (completed: boolean) => {
+    localStorage.setItem(AUTH_FLOW_COMPLETED_KEY, String(completed));
+  },
+
+  getAuthFlowCompleted: (): boolean => {
+    return localStorage.getItem(AUTH_FLOW_COMPLETED_KEY) === 'true';
   },
 };
 
