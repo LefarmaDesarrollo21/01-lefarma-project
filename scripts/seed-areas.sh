@@ -1,9 +1,12 @@
 #!/bin/bash
 
 # Script para sembrar el catálogo de Áreas
-# Uso: ./scripts/seed-areas.sh
+# Uso: ./scripts/seed-areas.sh [API_URL]
+# Ejemplo: ./scripts/seed-areas.sh http://192.168.1.100:5000/api
 
-API_URL="${VITE_API_URL:-http://localhost:5000/api}"
+API_URL="${1:-${VITE_API_URL:-http://localhost:5000/api}}"
+
+echo "📍 Usando API: $API_URL"
 
 # Credenciales de autenticación
 USERNAME="54"
@@ -11,15 +14,27 @@ PASSWORD="tt01tt"
 DOMAIN="artricenter"
 
 echo "🔐 Autenticando..."
-LOGIN_RESPONSE=$(curl -s -X POST "$API_URL/auth/login" \
+echo "   URL: $API_URL/auth/login"
+LOGIN_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST "$API_URL/auth/login" \
   -H "Content-Type: application/json" \
   -d "{\"username\": \"$USERNAME\", \"password\": \"$PASSWORD\", \"domain\": \"$DOMAIN\"}")
 
-TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.data.token // empty')
+HTTP_CODE=$(echo "$LOGIN_RESPONSE" | grep "HTTP_CODE:" | cut -d: -f2)
+RESPONSE_BODY=$(echo "$LOGIN_RESPONSE" | grep -v "HTTP_CODE:")
+
+echo "   HTTP Status: $HTTP_CODE"
+echo "   Response: $RESPONSE_BODY"
+
+if [ "$HTTP_CODE" != "200" ]; then
+  echo "❌ Error: El API respondió con código $HTTP_CODE"
+  echo "   Verifica que el backend esté corriendo en: $API_URL"
+  exit 1
+fi
+
+TOKEN=$(echo $RESPONSE_BODY | jq -r '.data.token // empty')
 
 if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
   echo "❌ Error: No se pudo obtener el token"
-  echo "Response: $LOGIN_RESPONSE"
   exit 1
 fi
 
