@@ -60,6 +60,25 @@ export function resetConfig(tableId: string): void {
 }
 
 /**
+ * Clear ALL table configs from localStorage
+ */
+export function clearAllConfigs(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    console.log('[tableConfigStorage] All table configs cleared - reload page to see all columns');
+  } catch (error) {
+    console.error('[tableConfigStorage] Error clearing configs:', error);
+  }
+}
+
+/**
+ * Expose function to global window object for console access
+ */
+if (typeof window !== 'undefined') {
+  (window as any).clearTableConfigs = clearAllConfigs;
+}
+
+/**
  * Create default config for a table
  */
 export function createDefaultConfig(

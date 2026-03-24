@@ -102,8 +102,15 @@ export function useTableFilters<TData>({
   const loadConfig = useCallback(() => {
     const saved = getConfig(tableId);
     if (saved) {
+      // Ensure all current columns are in visibleColumns (new columns default to visible)
+      const updatedVisibleColumns = allColumnIds.filter(id =>
+        saved.visibleColumns.includes(id) || !saved.visibleColumns.includes(id)
+      );
+      // But always show ALL columns by default - ignore saved visibility
+      // This ensures that after code changes, all columns are visible
+      setVisibleColumnIds(allColumnIds);
+
       setSearchColumnIds(saved.searchColumns);
-      setVisibleColumnIds(saved.visibleColumns);
       if (saved.lastFilters) {
         setActiveFilters(Object.values(saved.lastFilters));
       }
@@ -111,7 +118,7 @@ export function useTableFilters<TData>({
         setColumnFilterConfigs(saved.columnFilterConfigs);
       }
     } else {
-      // Create default config on first visit
+      // Create default config on first visit - ALL columns visible
       const defaults = createDefaultConfig(tableId, allColumnIds, defaultSearchColumns);
       setSearchColumnIds(defaults.searchColumns);
       setVisibleColumnIds(defaults.visibleColumns);
