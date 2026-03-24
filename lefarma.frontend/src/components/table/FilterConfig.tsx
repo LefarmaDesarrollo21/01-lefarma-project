@@ -61,7 +61,7 @@ export const FilterConfig = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Settings className="h-4 w-4 mr-2" />
@@ -82,8 +82,10 @@ export const FilterConfig = ({
                 <div key={column.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={`search-${tableId}-${column.id}`}
-                    checked={tempSearchableColumns.includes(column.id)}
-                    onCheckedChange={() => handleSearchColumnToggle(column.id)}
+                    checked={searchableColumns.includes(column.id)}
+                    onCheckedChange={(checked) =>
+                      handleSearchColumnToggle(column.id, checked === true)
+                    }
                   />
                   <Label
                     htmlFor={`search-${tableId}-${column.id}`}
@@ -104,8 +106,10 @@ export const FilterConfig = ({
                 <div key={column.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={`visible-${tableId}-${column.id}`}
-                    checked={tempVisibleColumns.includes(column.id)}
-                    onCheckedChange={() => handleVisibleColumnToggle(column.id)}
+                    checked={visibleColumns.includes(column.id)}
+                    onCheckedChange={(checked) =>
+                      handleVisibleColumnToggle(column.id, checked === true)
+                    }
                   />
                   <Label
                     htmlFor={`visible-${tableId}-${column.id}`}
@@ -125,9 +129,6 @@ export const FilterConfig = ({
           </Button>
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cerrar
-          </Button>
-          <Button onClick={handleSave}>
-            Aplicar
           </Button>
         </DialogFooter>
       </DialogContent>
