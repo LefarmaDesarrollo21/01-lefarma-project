@@ -64,6 +64,7 @@ npm run dev           # Start dev server on http://localhost:5173
 npm run build         # Production build
 npm run lint          # Run ESLint
 npm run format        # Format code with Prettier
+npm run preview       # Preview production build locally
 ```
 
 ## Architecture
@@ -138,18 +139,27 @@ Lefarma.API/
   - Master password bypass for development (tt01tt)
 
 - **Catalogos/**: Catalog management features
-  - Empresas, Sucursales, Areas, Gastos, Medidas, UnidadesMedida
-  - Bancos, MediosPago, FormasPago
+  - **Core**: Empresas, Sucursales, Areas, Gastos, Medidas, UnidadesMedida
+  - **Financieros**: Bancos, MediosPago, FormasPago
+  - **Proveedores**: Proveedores management
+  - **Costos**: CentrosCosto, CuentasContables
+  - **Fiscales**: RegimenesFiscales
+  - **Operaciones**: EstatusOrden
   - CRUD operations with role/permission-based access control
 
 - **Notifications/**: Multi-channel notification system
-  - **Channels**: Email, Telegram, In-App (real-time via SSE)
+  - **Channels**: Email (MailKit), Telegram, In-App (real-time via SSE)
   - **SSE (Server-Sent Events)**: Real-time notification streaming at `/api/notifications/sse`
-  - **Template Service**: Renders notification templates with dynamic data
+  - **Template Service**: Handlebars.Net para templates de email con datos dinámicos
   - **Priority System**: Low, Normal, High, Critical
   - **Categories**: Info, Success, Warning, Error
-  - **Keyed Services**: Channels registered as keyed services for multi-channel delivery
+  - **Keyed Services**: Channels registrados como keyed services para delivery multi-channel
   - **Controllers**: `NotificationsController` (CRUD), `NotificationStreamController` (SSE endpoint)
+
+- **Profile/**: User profile management
+  - User profile data
+  - Profile updates
+  - User preferences
 
 - **Admin/**: System administration
   - User management
@@ -165,6 +175,10 @@ Lefarma.API/
   - Application settings
   - Feature flags
   - Configuration validation
+
+- **HttpClientFactory**: Configurado en `Program.cs` para llamadas a APIs externas
+  - Usado para integraciones con servicios de terceros
+  - Inyectado en servicios que necesitan hacer HTTP requests
 
 ### Frontend - Component-Based Architecture
 
@@ -283,11 +297,127 @@ Both use SQL Server with `TrustServerCertificate=true`.
 
 ### Testing
 
-Tests are organized in `lefarma.backend/tests/`:
-- `Lefarma.UnitTests/`: Unit tests
-- `Lefarma.IntegrationTests/`: Integration tests
+**MANDATORY: Todo cambio requiere validación con agent-browser/chrome-devtools MCP**
 
-Tests are currently minimal (placeholder `UnitTest1.cs` files).
+Antes de considerar cualquier tarea como "completada", DEBE validarse la funcionalidad en el navegador usando:
+
+#### Opción 1: chrome-devtools MCP (Recomendado)
+```bash
+# El skill chrome-devtools está disponible automáticamente
+# Úsalo para:
+- Navegar páginas y tomar screenshots
+- Interactuar con formularios y elementos UI
+- Capturar network traffic
+- Verificar comportamiento visual
+- Probar flujos de usuario completos
+```
+
+#### Opción 2: Agent Browser CLI
+```bash
+# Instalar si no está disponible
+npm install -g @agent-org/cli
+
+# Ejemplos de comandos básicos
+agent-browser goto http://localhost:5173
+agent-browser click "#login-button"
+agent-browser fill "#email" "test@example.com"
+agent-browser screenshot login-success.png
+```
+
+#### Backend Tests
+
+Tests organizados en `lefarma.backend/tests/`:
+- `Lefarma.UnitTests/`: Unit tests (placeholder `UnitTest1.cs`)
+- `Lefarma.IntegrationTests/`: Integration tests (placeholder `UnitTest1.cs`)
+- `Lefarma.Tests/Notifications/`: Tests existentes del sistema de notificaciones
+  - `NotificationsApiTests.cs`: Tests de API de notificaciones
+  - `NotificationServiceTests.cs`: Tests del servicio de notificaciones
+  - `SimpleNotificationTests.cs`: Tests simples de notificaciones
+
+**Comandos:**
+```bash
+cd lefarma.backend/src/Lefarma.API
+
+dotnet test                              # Ejecutar todos los tests
+dotnet test --filter "FullyQualifiedName~UnitTest1"  # Test específico
+dotnet test --logger "console;verbosity=detailed"    # Output detallado
+```
+
+### Validating Changes with Browser Automation
+
+**CRITICAL: Todo cambio en frontend DEBE validarse con chrome-devtools MCP antes de considerarse completo**
+
+Antes de marcar una tarea como completada o hacer commit, sigue este protocolo de validación:
+
+#### 1. Preparación
+```bash
+# Asegúrate de que ambos servicios corriendo
+cd lefarma.backend/src/Lefarma.API
+fuser -k 5134/tcp 2>/dev/null; clear; dotnet run
+
+# En otra terminal
+cd lefarma.frontend
+npm run dev
+```
+
+#### 2. Flujo de Validación con chrome-devtools MCP
+
+El skill chrome-devtools está disponible automáticamente. Úsalo para:
+
+**a) Verificar renderizado visual**
+- Navegar a la página afectada
+- Tomar screenshot para verificar UI
+- Comparar con diseño esperado
+
+**b) Probar interacciones**
+- Llenar formularios
+- Hacer click en botones
+- Verificar cambios de estado
+- Probar flujos completos
+
+**c) Capturar network traffic**
+- Verificar que se hacen las llamadas API correctas
+- Validar payloads de request/response
+- Verificar headers (autenticación, etc.)
+
+**d) Verificar errores**
+- Revisar console logs
+- Verificar no haya errores de JavaScript
+- Validar mensajes de error cuando corresponda
+
+#### 3. Ejemplo de Protocolo de Validación
+
+Para un nuevo feature de catálogo:
+
+1. **Navegación**: Ir a la página del catálogo
+2. **Visual**: Verificar tabla se renderiza correctamente
+3. **Create**: Llenar formulario y crear nuevo registro
+4. **Read**: Verificar que aparece en la tabla
+5. **Update**: Editar un registro existente
+6. **Delete**: Eliminar un registro
+7. **Network**: Verificar todas las llamadas API (GET, POST, PUT, DELETE)
+8. **Errors**: Probar validaciones y casos edge
+
+#### 4. Casos Especiales
+
+**Autenticación/Autorización:**
+- Verificar login/logout funciona
+- Probar acceso a rutas protegidas
+- Verificar redirección cuando no autenticado
+
+**Notificaciones:**
+- Verificar SSE connection se establece
+- Probar recepción de notificaciones en tiempo real
+- Verificar badge de notificaciones se actualiza
+
+**Forms/Validaciones:**
+- Probar todos los validadores (required, email, etc.)
+- Verificar mensajes de error en español
+- Probar submit con datos inválidos
+
+**Responsivo:**
+- Verificar layout en diferentes tamaños
+- Probar en mobile viewport
 
 ### Working with Notifications
 
@@ -359,6 +489,10 @@ const { notifications, markAsRead, markAllAsRead } = useNotifications();
 - Swashbuckle (Swagger/OpenAPI)
 - Server-Sent Events (SSE) for real-time notifications
 - Keyed Services (.NET 8+) for multi-channel notifications
+- **ErrorOr**: Result pattern para manejo de errores y respuestas
+- **MailKit**: Envío de emails (SMTP)
+- **Handlebars.Net**: Templates para notificaciones por email
+- System.DirectoryServices.Protocols: LDAP authentication
 
 **Frontend:**
 - React 19
