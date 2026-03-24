@@ -84,6 +84,16 @@ export const useNotificationStore = create<NotificationState>()(
         const notification = notifications.find((n) => n.id === notificationId);
 
         if (notification && !notification.isRead) {
+          // Usar userId del authStore en lugar de notification.userId (que viene undefined del backend)
+          const { user } = useAuthStore.getState();
+          const userId = user?.id;
+
+          if (!userId) {
+            console.error('[notificationStore] No userId found in authStore');
+            set({ error: 'No hay usuario autenticado' });
+            return;
+          }
+
           // Optimistic update
           set({
             notifications: notifications.map((n) =>
@@ -93,9 +103,11 @@ export const useNotificationStore = create<NotificationState>()(
           });
 
           try {
-            const userId = notification.userId;
+            console.log('[notificationStore] Marking notification as read:', { notificationId, userId });
             await notificationService.markAsRead(notificationId, userId);
+            console.log('[notificationStore] Successfully marked as read');
           } catch (error) {
+            console.error('[notificationStore] Error marking notification as read:', error);
             // Revert on error
             set({
               notifications: notifications.map((n) =>
@@ -104,7 +116,6 @@ export const useNotificationStore = create<NotificationState>()(
               unreadCount: get().unreadCount + 1,
             });
             set({ error: 'Error al marcar notificación como leída' });
-            console.error('Error marking notification as read:', error);
           }
         }
       },

@@ -98,7 +98,15 @@ class NotificationService {
    */
   async markAsRead(notificationId: number, userId: number): Promise<void> {
     // Backend espera UserId con mayúscula (C# naming convention)
-    await API.patch(`${this.basePath}/${notificationId}/read`, { UserId: userId });
+    const payload = { UserId: userId };
+    console.log('[notificationService] Marking as read:', { notificationId, payload });
+    try {
+      const response = await API.patch(`${this.basePath}/${notificationId}/read`, payload);
+      console.log('[notificationService] Mark as read response:', response);
+    } catch (error) {
+      console.error('[notificationService] Mark as read error:', error);
+      throw error;
+    }
   }
 
   /**
