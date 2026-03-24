@@ -23,7 +23,7 @@ export function useTableFilters<TData>({
   defaultSearchColumns?: string[];
 }): UseTableFiltersReturn {
   // Extract column IDs from column definitions
-  const allColumnIds = allColumns.map(col => col.id || col.accessorKey as string);
+  const allColumnIds = allColumns.map(col => col.id as string);
 
   // State
   const [activeFilters, setActiveFilters] = useState<ColumnFilter[]>([]);
