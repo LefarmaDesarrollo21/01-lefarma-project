@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 interface Column {
   id: string;
@@ -37,45 +38,26 @@ export const FilterConfig = ({
   onReset,
 }: FilterConfigProps) => {
   const [open, setOpen] = useState(false);
-  const [tempSearchableColumns, setTempSearchableColumns] = useState<string[]>(searchableColumns);
-  const [tempVisibleColumns, setTempVisibleColumns] = useState<string[]>(visibleColumns);
 
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    if (newOpen) {
-      // Reset temp state when opening
-      setTempSearchableColumns(searchableColumns);
-      setTempVisibleColumns(visibleColumns);
+  const handleSearchColumnToggle = (columnId: string, checked: boolean) => {
+    if (checked) {
+      onSearchColumnsChange([...searchableColumns, columnId]);
+    } else {
+      onSearchColumnsChange(searchableColumns.filter((id) => id !== columnId));
     }
   };
 
-  const handleSave = () => {
-    onSearchColumnsChange(tempSearchableColumns);
-    onVisibleColumnsChange(tempVisibleColumns);
-    setOpen(false);
-  };
-
-  const handleSearchColumnToggle = (columnId: string) => {
-    setTempSearchableColumns((prev) =>
-      prev.includes(columnId)
-        ? prev.filter((id) => id !== columnId)
-        : [...prev, columnId]
-    );
-  };
-
-  const handleVisibleColumnToggle = (columnId: string) => {
-    setTempVisibleColumns((prev) =>
-      prev.includes(columnId)
-        ? prev.filter((id) => id !== columnId)
-        : [...prev, columnId]
-    );
+  const handleVisibleColumnToggle = (columnId: string, checked: boolean) => {
+    if (checked) {
+      onVisibleColumnsChange([...visibleColumns, columnId]);
+    } else {
+      onVisibleColumnsChange(visibleColumns.filter((id) => id !== columnId));
+    }
   };
 
   const handleReset = () => {
     onReset();
-    // Update temp state to reflect reset
-    setTempSearchableColumns(searchableColumns);
-    setTempVisibleColumns(visibleColumns);
+    toast.success("Configuración restaurada a valores por defecto");
   };
 
   return (
