@@ -23,6 +23,7 @@ public class NotificationService : INotificationService
     private readonly ILogger<NotificationService> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ApplicationDbContext _dbContext;
+    private readonly AsokamDbContext _asokamDbContext;
 
     public NotificationService(
         INotificationRepository repository,
@@ -30,7 +31,8 @@ public class NotificationService : INotificationService
         IServiceProvider serviceProvider,
         ILogger<NotificationService> logger,
         IHttpContextAccessor httpContextAccessor,
-        ApplicationDbContext dbContext)
+        ApplicationDbContext dbContext,
+        AsokamDbContext asokamDbContext)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _templateService = templateService ?? throw new ArgumentNullException(nameof(templateService));
@@ -38,6 +40,7 @@ public class NotificationService : INotificationService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _asokamDbContext = asokamDbContext ?? throw new ArgumentNullException(nameof(asokamDbContext));
     }
 
     /// <inheritdoc/>
@@ -429,10 +432,10 @@ public class NotificationService : INotificationService
         // Remove duplicates
         userIds = userIds.Distinct().ToList();
 
-        // Fetch users and get their emails
+        // Fetch users and get their emails from AsokamDbContext
         if (userIds.Any())
         {
-            var users = await _dbContext.Usuarios
+            var users = await _asokamDbContext.Usuarios
                 .Where(u => userIds.Contains(u.IdUsuario) && u.EsActivo && !u.EsAnonimo && !u.EsRobot)
                 .Select(u => u.Correo)
                 .Where(email => !string.IsNullOrWhiteSpace(email))
@@ -451,8 +454,8 @@ public class NotificationService : INotificationService
     /// </summary>
     private async Task<List<int>> GetUserIdsByRoleNamesAsync(List<string> roleNames, CancellationToken ct)
     {
-        // Buscar roles por nombre
-        var roles = await _dbContext.UsuariosRoles
+        // Buscar roles por nombre en AsokamDbContext
+        var roles = await _asokamDbContext.UsuariosRoles
             .Include(ur => ur.Rol)
             .Where(ur => roleNames.Contains(ur.Rol.NombreRol))
             .Select(ur => ur.IdUsuario)
