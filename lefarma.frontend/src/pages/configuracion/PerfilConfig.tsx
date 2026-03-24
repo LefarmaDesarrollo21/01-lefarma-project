@@ -46,7 +46,7 @@ const NOTIFICACIONES_CONFIG = [
 export function PerfilConfig() {
   const { perfil, ui, updatePerfil, setNotificacionPreferida, updateNotificacion } = useConfigStore();
   const { user } = useAuthStore();
-  const { setTitle } = usePageStore();
+  const { setPage } = usePageStore();
 
   const [editMode, setEditMode] = useState(false);
   const [tempPerfil, setTempPerfil] = useState(perfil);
@@ -54,8 +54,8 @@ export function PerfilConfig() {
   const handleSave = () => {
     updatePerfil(tempPerfil);
     setEditMode(false);
-    setTitle('Perfil actualizado');
-    setTimeout(() => setTitle(''), 3000);
+    setPage('Perfil actualizado');
+    setTimeout(() => setPage('', ''), 3000);
   };
 
   const handleCancel = () => {

@@ -36,14 +36,14 @@ const REGIMENES_ENDPOINT = '/catalogos/RegimenesFiscales';
 
 const proveedorSchema = z.object({
   razonSocial: z.string().min(3, 'La razón social debe tener al menos 3 caracteres'),
-  rfc: z.string().optional().or(z.literal('')),
-  codigoPostal: z.string().optional().or(z.literal('')),
+  rfc: z.string().optional(),
+  codigoPostal: z.string().optional(),
   regimenFiscalId: z.number().optional(),
-  personaContacto: z.string().optional().or(z.literal('')),
-  notaFormaPago: z.string().optional().or(z.literal('')),
-  notasGenerales: z.string().optional().or(z.literal('')),
-  sinDatosFiscales: z.boolean().default(false),
-  autorizadoPorCxP: z.boolean().default(false),
+  personaContacto: z.string().optional(),
+  notaFormaPago: z.string().optional(),
+  notasGenerales: z.string().optional(),
+  sinDatosFiscales: z.boolean(),
+  autorizadoPorCxP: z.boolean(),
 });
 
 interface Proveedor {
