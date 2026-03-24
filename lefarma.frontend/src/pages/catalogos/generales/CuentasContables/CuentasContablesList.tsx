@@ -326,6 +326,11 @@ export default function CuentasContablesList() {
               showRowCount
               showRefreshButton
               onRefresh={fetchCuentas}
+              filterConfig={{
+                tableId: 'cuentas-contables',
+                searchableColumns: ['codigo', 'nombre'],
+                defaultSearchColumns: ['codigo'],
+              }}
             />
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-sm">

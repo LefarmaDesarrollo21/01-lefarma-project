@@ -259,6 +259,11 @@ export default function CentrosCostoList() {
               showRowCount
               showRefreshButton
               onRefresh={fetchCentrosCosto}
+              filterConfig={{
+                tableId: 'centros-costo',
+                searchableColumns: ['nombre', 'codigo', 'descripcion'],
+                defaultSearchColumns: ['nombre'],
+              }}
             />
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-sm">

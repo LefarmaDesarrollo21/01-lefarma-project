@@ -341,6 +341,11 @@ export default function ProveedoresList() {
               showRowCount
               showRefreshButton
               onRefresh={fetchProveedores}
+              filterConfig={{
+                tableId: 'proveedores',
+                searchableColumns: ['razonSocial', 'rfc', 'personaContacto'],
+                defaultSearchColumns: ['razonSocial'],
+              }}
             />
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-sm">

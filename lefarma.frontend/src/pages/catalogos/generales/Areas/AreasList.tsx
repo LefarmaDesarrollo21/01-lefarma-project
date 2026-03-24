@@ -315,6 +315,11 @@ export default function AreasList() {
               showRowCount
               showRefreshButton
               onRefresh={fetchAreas}
+              filterConfig={{
+                tableId: 'areas',
+                searchableColumns: ['nombre', 'descripcion'],
+                defaultSearchColumns: ['nombre'],
+              }}
             />
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-sm">

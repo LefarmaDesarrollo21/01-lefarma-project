@@ -256,6 +256,11 @@ export default function FormasPagoList() {
               showRowCount
               showRefreshButton
               onRefresh={fetchFormasPago}
+              filterConfig={{
+                tableId: 'formas-pago',
+                searchableColumns: ['nombre', 'descripcion'],
+                defaultSearchColumns: ['nombre'],
+              }}
             />
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-sm">

@@ -371,6 +371,11 @@ export default function SucursalesList() {
               showRowCount
               showRefreshButton
               onRefresh={fetchSucursales}
+              filterConfig={{
+                tableId: 'sucursales',
+                searchableColumns: ['nombre', 'ciudad', 'estado', 'direccion', 'telefono'],
+                defaultSearchColumns: ['nombre'],
+              }}
             />
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-sm">
