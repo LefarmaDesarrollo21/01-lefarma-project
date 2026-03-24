@@ -89,6 +89,7 @@ function SortIcon({ direction }: { direction: "asc" | "desc" | false }) {
 // ─── Filter type helper ─────────────────────────────────────────────────────────
 
 function getFilterTypeForColumn(columnId: string): 'text' | 'number' | 'boolean' | 'select' | 'date' {
+  if (!columnId) return 'text';
   if (columnId.includes('activo') || columnId.includes('Activo')) return 'boolean';
   if (columnId.includes('fecha') || columnId.includes('Fecha') || columnId.includes('date') || columnId.includes('Date')) return 'date';
   if (columnId.includes('Id') || columnId.includes('numero') || columnId.includes('empleados')) return 'number';
