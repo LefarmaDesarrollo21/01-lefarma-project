@@ -157,9 +157,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sucursales: [],
     });
 
-    // Redirect to home after logout
-    if (window.location.pathname !== '/') {
-      window.location.href = '/';
+    // Redirect to login after logout
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
     }
   },
 
@@ -230,7 +230,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (token && user) {
       // Backward compatibility: if user has token but no authFlowCompleted flag,
       // treat as authenticated (pre-existing session)
-      const isFullyAuthenticated = authFlowCompleted || (!authFlowCompleted && empresa && sucursal);
+      const isFullyAuthenticated = authFlowCompleted || Boolean(empresa && sucursal);
 
       set({
         token,

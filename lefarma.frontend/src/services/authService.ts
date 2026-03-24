@@ -63,12 +63,20 @@ export const authService = {
         await API.post('/auth/logout', { refreshToken });
       }
     } finally {
+      // Limpiar localStorage - datos de autenticación
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(EMPRESA_KEY);
       localStorage.removeItem(SUCURSAL_KEY);
       localStorage.removeItem(AUTH_FLOW_COMPLETED_KEY);
+      localStorage.removeItem('token'); // Legacy token key
+
+      // Limpiar localStorage - Zustand stores
+      localStorage.removeItem('notification-store'); // Notificaciones del usuario
+
+      // Limpiar sessionStorage
+      sessionStorage.removeItem('loginFlow');
     }
   },
 

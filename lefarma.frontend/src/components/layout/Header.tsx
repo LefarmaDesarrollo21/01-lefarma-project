@@ -29,9 +29,9 @@ export const Header = () => {
     setTema(newTheme);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    await logout();
+    // logout() ya hace redirect a /login, no necesitamos navegar aquí
   };
 
   const getThemeIcon = () => {

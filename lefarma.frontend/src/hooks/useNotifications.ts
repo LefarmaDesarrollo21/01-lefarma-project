@@ -58,7 +58,6 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
   const reconnectAttemptsRef = useRef(0);
   const isMountedRef = useRef(true);
   const connectRef = useRef<(() => void) | null>(null);
-  const disconnectRef = useRef<(() => void) | null>(null);
 
   /**
    * Maneja la apertura de la conexión SSE
@@ -212,6 +211,12 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         handleMessage('heartbeat', event);
       });
 
+      // Escuchar eventos de prueba (para debug)
+      eventSourceRef.current.addEventListener('test', (event) => {
+        console.log('[Notifications SSE] Test event received:', event.data);
+        handleMessage('test', event);
+      });
+
     } catch (error) {
       console.error('[Notifications SSE] Error creando EventSource:', error);
       handleError();
@@ -220,32 +225,6 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
 
   // Guardar la referencia actual de connect para usarla en handleError
   connectRef.current = connect;
-
-  /**
-   * Desconecta la conexión SSE
-   * @param updateState - Si es false, no actualiza el estado (para cleanup)
-   */
-  const disconnect = useCallback((updateState = true) => {
-    console.log('[Notifications SSE] Desconectando...');
-
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
-
-    // Solo actualizar estado si no es un cleanup
-    if (updateState && isMountedRef.current) {
-      setConnected(false);
-    }
-  }, [setConnected]);
-
-  // Guardar la referencia actual de disconnect
-  disconnectRef.current = disconnect;
 
   /**
    * Reconecta manualmente
@@ -264,7 +243,15 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     }
 
     return () => {
-      disconnectRef.current?.(false); // No actualizar estado en cleanup
+      // No actualizar estado en cleanup - solo cerrar conexión
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
     };
   }, [autoConnect, isAuthenticated]); // Quitar 'token' para evitar bucle infinito
 
@@ -274,7 +261,15 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
 
     return () => {
       isMountedRef.current = false;
-      disconnectRef.current?.(false); // No actualizar estado en cleanup
+      // No actualizar estado en cleanup - solo cerrar conexión
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
     };
   }, []);
 
@@ -287,10 +282,22 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     }
   }, []);
 
-  // Wrapper público para disconnect que siempre actualiza el estado
+  // Wrapper público para disconnect
   const publicDisconnect = useCallback(() => {
-    disconnectRef.current?.(true);
-  }, []);
+    console.log('[Notifications SSE] Desconectando (manual)...');
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    setConnected(false);
+  }, [setConnected]);
 
   return {
     isConnected: useNotificationStore((state) => state.isConnected),

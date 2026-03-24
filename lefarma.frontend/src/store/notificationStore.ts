@@ -49,17 +49,65 @@ export const useNotificationStore = create<NotificationState>()(
       // Add a single notification
       addNotification: (notification) => {
         const { notifications, unreadCount } = get();
-        const exists = notifications.some((n) => n.id === notification.id);
 
-        if (!exists) {
+        console.log('[notificationStore] addNotification called (SSE):', {
+          notificationId: notification.id,
+          isRead: notification.isRead,
+          currentCount: notifications.length,
+          currentUnread: unreadCount
+        });
+
+        // Buscar si ya existe una notificación con el mismo ID
+        const existingIndex = notifications.findIndex((n) => n.id === notification.id);
+
+        if (existingIndex >= 0) {
+          // La notificación ya existe - actualizarla si cambió
+          const existingNotification = notifications[existingIndex];
+
+          // Si cambió de leída a no leída, sumar al contador
+          if (existingNotification.isRead && !notification.isRead) {
+            const newNotifications = [...notifications];
+            newNotifications[existingIndex] = notification;
+            const newUnreadCount = unreadCount + 1;
+
+            console.log('[notificationStore] Existing notification marked as unread, incrementing counter:', {
+              oldUnread: unreadCount,
+              newUnread: newUnreadCount
+            });
+
+            set({
+              notifications: newNotifications,
+              unreadCount: newUnreadCount,
+            });
+
+            // Mostrar notificación nativa
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification(notification.notification?.title || 'Nueva Notificación', {
+                body: notification.notification?.message,
+                icon: '/favicon.ico',
+                tag: notification.id.toString(),
+              });
+            }
+          } else {
+            // Ya existe con el mismo estado, no hacer nada
+            console.log('[notificationStore] Notification already exists with same state, no update needed');
+          }
+        } else {
+          // Nueva notificación - agregarla al inicio
           const newNotifications = [notification, ...notifications];
           const newUnreadCount = notification.isRead ? unreadCount : unreadCount + 1;
+
+          console.log('[notificationStore] Adding NEW notification via SSE:', {
+            newCount: newNotifications.length,
+            newUnread: newUnreadCount
+          });
+
           set({
             notifications: newNotifications,
             unreadCount: newUnreadCount,
           });
 
-          // Mostrar notificación nativa del navegador si está permitido
+          // Mostrar notificación nativa del navegador
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(notification.notification?.title || 'Nueva Notificación', {
               body: notification.notification?.message,
