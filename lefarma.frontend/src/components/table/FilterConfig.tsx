@@ -57,6 +57,7 @@ interface FilterConfigProps {
   columnFilterConfigs?: Record<string, ColumnFilterConfig>;
   onColumnFilterChange?: (columnId: string, config: ColumnFilterConfig) => void;
   onSave?: () => void;
+  onApplyChanges?: () => void;
 }
 
 function getFilterTypeForColumn(columnId: string): ColumnFilterConfig['type'] {
@@ -78,6 +79,7 @@ export const FilterConfig = ({
   columnFilterConfigs = {},
   onColumnFilterChange,
   onSave,
+  onApplyChanges,
 }: FilterConfigProps) => {
   const [open, setOpen] = useState(false);
 
@@ -371,6 +373,7 @@ export const FilterConfig = ({
           </Button>
           <Button onClick={() => {
             onSave?.();
+            onApplyChanges?.();
             setOpen(false);
           }}>
             Aplicar cambios

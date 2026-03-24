@@ -12,7 +12,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState, useMemo, useEffect, type ReactNode } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback, type ReactNode } from "react";
 import {
   ArrowUpIcon,
   ArrowDownIcon,
@@ -155,7 +155,7 @@ export function DataTable<TData>({
   });
 
   // Sync visibleColumnIds from useTableFilters with TanStack Table columnVisibility
-  useEffect(() => {
+  const syncColumnVisibility = useCallback(() => {
     if (filterEnabled) {
       const allColumnIds = columns.map(col => col.id || (('accessorKey' in col && typeof col.accessorKey === 'string') ? col.accessorKey : '')).filter(Boolean);
       const newVisibility: Record<string, boolean> = {};
@@ -164,7 +164,12 @@ export function DataTable<TData>({
       });
       setColumnVisibility(newVisibility);
     }
-  }, [visibleColumnIds, columns, filterEnabled]);
+  }, [filterEnabled, columns, visibleColumnIds]);
+
+  // Sync on mount and when filterEnabled changes
+  useEffect(() => {
+    syncColumnVisibility();
+  }, [filterEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Convert activeFilters to TanStack Table format
   const computedColumnFilters = useMemo(() => {
@@ -295,6 +300,7 @@ export function DataTable<TData>({
               columnFilterConfigs={columnFilterConfigs}
               onColumnFilterChange={setColumnFilterConfig}
               onSave={saveConfig}
+              onApplyChanges={syncColumnVisibility}
             />
           )}
 
