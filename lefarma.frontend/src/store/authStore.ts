@@ -26,6 +26,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   pendingUsername: null,
   empresas: [],
   sucursales: [],
+  authFlowCompleted: false,
 
   loginStepOne: async (username: string) => {
     set({ isLoading: true });
@@ -113,10 +114,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw new Error('Empresa o sucursal no encontrada');
     }
 
+    // Persist to localStorage
+    authService.setEmpresa(empresa);
+    authService.setSucursal(sucursal);
+    authService.setAuthFlowCompleted(true);
+
     set({
       empresa,
       sucursal,
       isAuthenticated: true,
+      authFlowCompleted: true,
       loginStep: 1,
       empresas: [],
       sucursales: [],
@@ -144,10 +151,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       empresa: null,
       sucursal: null,
       isAuthenticated: false,
+      authFlowCompleted: false,
       loginStep: 1,
       empresas: [],
       sucursales: [],
     });
+
+    // Redirect to login after logout
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
   },
 
   setEmpresa: (empresa: Empresa) => {
@@ -212,20 +225,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const user = authService.getCurrentUser();
     const empresa = authService.getEmpresa();
     const sucursal = authService.getSucursal();
+    const authFlowCompleted = authService.getAuthFlowCompleted();
 
     if (token && user) {
+      // Backward compatibility: if user has token but no authFlowCompleted flag,
+      // treat as authenticated (pre-existing session)
+      const isFullyAuthenticated = authFlowCompleted || Boolean(empresa && sucursal);
+
       set({
         token,
         user,
         empresa,
         sucursal,
         isAuthenticated: true,
+        authFlowCompleted: isFullyAuthenticated,
       });
+
+      // If backward compatibility case, set the flag for future sessions
+      if (!authFlowCompleted && isFullyAuthenticated) {
+        authService.setAuthFlowCompleted(true);
+      }
 
       // Sincronizar perfil con configStore
       useConfigStore.getState().updatePerfil({
         nombre: user.nombre || '',
         correo: user.correo || '',
+      });
+    } else {
+      // No auth data
+      set({
+        isAuthenticated: false,
+        authFlowCompleted: false,
       });
     }
 

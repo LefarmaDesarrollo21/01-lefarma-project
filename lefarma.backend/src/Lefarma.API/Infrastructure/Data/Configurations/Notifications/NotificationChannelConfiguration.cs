@@ -8,7 +8,7 @@ public class NotificationChannelConfiguration : IEntityTypeConfiguration<Notific
 {
     public void Configure(EntityTypeBuilder<NotificationChannel> builder)
     {
-        builder.ToTable("NotificationChannels");
+        builder.ToTable("NotificationChannels", "app");
 
         builder.HasKey(nc => nc.Id);
         builder.Property(nc => nc.Id)

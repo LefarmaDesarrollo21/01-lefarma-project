@@ -22,12 +22,9 @@ public class SseService : ISseService
 
     public async Task RegisterConnectionAsync(int userId, HttpResponse response, CancellationToken cancellationToken = default)
     {
-        response.Headers.Append("Content-Type", "text/event-stream");
-        response.Headers.Append("Cache-Control", "no-cache");
-        response.Headers.Append("Connection", "keep-alive");
-
+        // Headers are already set by the controller, don't try to set them again
         _connections[userId] = response;
-        _logger.LogInformation("SSE connection registered for user {UserId}. Active connections: {Count}", 
+        _logger.LogInformation("SSE connection registered for user {UserId}. Active connections: {Count}",
             userId, _connections.Count);
 
         await SendConnectedEventAsync(response, cancellationToken);
@@ -85,14 +82,25 @@ public class SseService : ISseService
 
     public async Task NotifyAsync(int userId, string eventType, object data, CancellationToken cancellationToken = default)
     {
+        _logger.LogDebug("Attempting to send {EventType} event to user {UserId}. Active connections: {ConnectionCount}",
+            eventType, userId, _connections.Count);
+
         if (!_connections.TryGetValue(userId, out var response))
         {
-            _logger.LogDebug("No active SSE connection for user {UserId}", userId);
+            _logger.LogWarning("No active SSE connection for user {UserId}. Active users: {ActiveUsers}",
+                userId, string.Join(", ", _connections.Keys));
             return;
         }
 
-        await SendEventAsync(response, eventType, data, cancellationToken);
-        _logger.LogInformation("Sent {EventType} event to user {UserId}", eventType, userId);
+        try
+        {
+            await SendEventAsync(response, eventType, data, cancellationToken);
+            _logger.LogInformation("✅ Sent {EventType} event to user {UserId}", eventType, userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending SSE event to user {UserId}", userId);
+        }
     }
 
     private async Task SendConnectedEventAsync(HttpResponse response, CancellationToken cancellationToken)

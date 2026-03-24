@@ -65,5 +65,6 @@ public interface INotificationService
     /// <param name="recipients">Comma-separated list of recipients (user IDs, emails, phone numbers, etc.)</param>
     /// <param name="ct">Cancellation token for async operation</param>
     /// <returns>Response indicating success and created notification IDs</returns>
-    Task<SendNotificationResponse> SendToAllChannelsAsync(string title, string message, string recipients, CancellationToken ct = default);
+    // TODO: Re-implement with UserIds and RoleNames instead of recipients string
+    // Task<SendNotificationResponse> SendToAllChannelsAsync(string title, string message, string recipients, CancellationToken ct = default);
 }

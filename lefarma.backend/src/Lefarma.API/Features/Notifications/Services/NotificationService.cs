@@ -1,7 +1,13 @@
+using System.Security.Claims;
 using System.Text.Json;
 using Lefarma.API.Domain.Entities.Notifications;
+using Lefarma.API.Domain.Entities.Auth;
 using Lefarma.API.Domain.Interfaces;
 using Lefarma.API.Features.Notifications.DTOs;
+using Lefarma.API.Infrastructure.Data;
+using Lefarma.API.Features.Auth;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lefarma.API.Features.Notifications.Services;
@@ -16,17 +22,29 @@ public class NotificationService : INotificationService
     private readonly ITemplateService _templateService;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<NotificationService> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ApplicationDbContext _dbContext;
+    private readonly AsokamDbContext _asokamDbContext;
+    private readonly ISseService _sseService;
 
     public NotificationService(
         INotificationRepository repository,
         ITemplateService templateService,
         IServiceProvider serviceProvider,
-        ILogger<NotificationService> logger)
+        ILogger<NotificationService> logger,
+        IHttpContextAccessor httpContextAccessor,
+        ApplicationDbContext dbContext,
+        AsokamDbContext asokamDbContext,
+        ISseService sseService)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _templateService = templateService ?? throw new ArgumentNullException(nameof(templateService));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _asokamDbContext = asokamDbContext ?? throw new ArgumentNullException(nameof(asokamDbContext));
+        _sseService = sseService ?? throw new ArgumentNullException(nameof(sseService));
     }
 
     /// <inheritdoc/>
@@ -80,7 +98,10 @@ public class NotificationService : INotificationService
                     continue;
                 }
 
-                // Step 3b: Render template if TemplateId provided
+                // Step 3b: Resolve UserIds and RoleNames to recipient emails
+                var resolvedRecipients = await ResolveRecipientsToEmailsAsync(channelRequest, ct);
+
+                // Step 3c: Render template if TemplateId provided
                 string messageBody = request.Message;
                 if (!string.IsNullOrWhiteSpace(request.TemplateId))
                 {
@@ -91,12 +112,12 @@ public class NotificationService : INotificationService
                         ct);
                 }
 
-                // Step 3c: Create NotificationMessage with data
+                // Step 3d: Create NotificationMessage with resolved emails
                 var notificationMessage = new NotificationMessage
                 {
                     Title = request.Title,
                     Body = messageBody,
-                    Recipients = channelRequest.Recipients,
+                    Recipients = string.Join(";", resolvedRecipients),
                     Data = channelRequest.ChannelSpecificData ?? new Dictionary<string, object>()
                 };
 
@@ -107,16 +128,16 @@ public class NotificationService : INotificationService
                     notificationMessage.Data["templateData"] = request.TemplateData ?? new Dictionary<string, object>();
                 }
 
-                // Step 3d: Call channel.SendAsync()
+                // Step 3e: Call channel.SendAsync()
                 var channelResult = await channel.SendAsync(notificationMessage, ct);
 
-                // Step 3e: Create NotificationChannel record with result
+                // Step 3f: Create NotificationChannel record with result
                 var notificationChannel = new NotificationChannel
                 {
                     NotificationId = notification.Id,
                     ChannelType = channelRequest.ChannelType,
                     Status = channelResult.Success ? "sent" : "failed",
-                    Recipient = channelRequest.Recipients,
+                    Recipient = string.Join(";", resolvedRecipients),
                     SentAt = channelResult.Success ? DateTime.UtcNow : null,
                     ErrorMessage = channelResult.Success ? null : channelResult.Message,
                     ExternalId = channelResult.ExternalId
@@ -146,7 +167,7 @@ public class NotificationService : INotificationService
                     NotificationId = notification.Id,
                     ChannelType = channelRequest.ChannelType,
                     Status = "failed",
-                    Recipient = channelRequest.Recipients,
+                    Recipient = "",
                     ErrorMessage = ex.Message
                 });
             }
@@ -377,26 +398,6 @@ public class NotificationService : INotificationService
             userId);
     }
 
-    /// <inheritdoc/>
-    public async Task<SendNotificationResponse> SendToAllChannelsAsync(string title, string message, string recipients, CancellationToken ct = default)
-    {
-        _logger.LogInformation("Sending notification to all channels: {Title}", title);
-
-        var request = new SendNotificationRequest
-        {
-            Title = title,
-            Message = message,
-            Channels = new List<NotificationChannelRequest>
-            {
-                new() { ChannelType = "email", Recipients = recipients },
-                new() { ChannelType = "telegram", Recipients = recipients },
-                new() { ChannelType = "in-app", Recipients = recipients }
-            }
-        };
-
-        return await SendAsync(request, ct);
-    }
-
     /// <summary>
     /// Gets a notification channel by its key from the DI container.
     /// Uses keyed services to support multiple channel implementations.
@@ -409,6 +410,66 @@ public class NotificationService : INotificationService
     /// <summary>
     /// Creates UserNotification records for in-app channel recipients.
     /// </summary>
+    /// <summary>
+    /// Resolves UserIds and RoleNames to a list of email addresses
+    /// </summary>
+    private async Task<List<string>> ResolveRecipientsToEmailsAsync(
+        NotificationChannelRequest channelRequest,
+        CancellationToken ct)
+    {
+        var emails = new List<string>();
+        var userIds = new List<int>();
+
+        // Add explicitly selected user IDs
+        if (channelRequest.UserIds != null && channelRequest.UserIds.Any())
+        {
+            userIds.AddRange(channelRequest.UserIds);
+        }
+
+        // Add user IDs from roles
+        if (channelRequest.RoleNames != null && channelRequest.RoleNames.Any())
+        {
+            var roleUserIds = await GetUserIdsByRoleNamesAsync(channelRequest.RoleNames, ct);
+            userIds.AddRange(roleUserIds);
+        }
+
+        // Remove duplicates
+        userIds = userIds.Distinct().ToList();
+
+        // Fetch users and get their emails from AsokamDbContext
+        if (userIds.Any())
+        {
+            var users = await _asokamDbContext.Usuarios
+                .Where(u => userIds.Contains(u.IdUsuario) && u.EsActivo && !u.EsAnonimo && !u.EsRobot)
+                .Select(u => u.Correo)
+                .Where(email => !string.IsNullOrWhiteSpace(email))
+                .Distinct()
+                .ToListAsync(ct);
+
+            emails.AddRange(users);
+            _logger.LogDebug("Resolved {UserCount} users to {EmailCount} emails", userIds.Count, users.Count);
+        }
+
+        return emails;
+    }
+
+    /// <summary>
+    /// Gets user IDs that have any of the specified roles
+    /// </summary>
+    private async Task<List<int>> GetUserIdsByRoleNamesAsync(List<string> roleNames, CancellationToken ct)
+    {
+        // Buscar roles por nombre en AsokamDbContext
+        var roles = await _asokamDbContext.UsuariosRoles
+            .Include(ur => ur.Rol)
+            .Where(ur => roleNames.Contains(ur.Rol.NombreRol))
+            .Select(ur => ur.IdUsuario)
+            .Distinct()
+            .ToListAsync(ct);
+
+        _logger.LogDebug("Found {UserCount} users with roles: {Roles}", roles.Count, string.Join(", ", roleNames));
+        return roles;
+    }
+
     private async Task CreateUserNotificationsAsync(
         Notification notification,
         NotificationChannelRequest inAppChannelRequest,
@@ -416,8 +477,39 @@ public class NotificationService : INotificationService
     {
         _logger.LogDebug("Creating user notifications for in-app channel");
 
-        // Parse recipients (user IDs)
-        var userIds = ParseRecipientUserIds(inAppChannelRequest.Recipients);
+        var userIds = new List<int>();
+
+        // Add explicitly selected user IDs
+        if (inAppChannelRequest.UserIds != null && inAppChannelRequest.UserIds.Any())
+        {
+            userIds.AddRange(inAppChannelRequest.UserIds);
+        }
+
+        // Add user IDs from roles
+        if (inAppChannelRequest.RoleNames != null && inAppChannelRequest.RoleNames.Any())
+        {
+            var roleUserIds = await GetUserIdsByRoleNamesAsync(inAppChannelRequest.RoleNames, ct);
+            userIds.AddRange(roleUserIds);
+        }
+
+        // If no user IDs found and it's a test request, use current user
+        if (userIds.Count == 0)
+        {
+            var currentUserId = getCurrentUserId();
+            if (currentUserId.HasValue)
+            {
+                userIds.Add(currentUserId.Value);
+                _logger.LogDebug("Using current authenticated user for in-app notification");
+            }
+            else
+            {
+                _logger.LogWarning("No valid user IDs found for in-app channel. Skipping UserNotification creation.");
+                return;
+            }
+        }
+
+        // Remove duplicates
+        userIds = userIds.Distinct().ToList();
 
         foreach (var userId in userIds)
         {
@@ -437,6 +529,38 @@ public class NotificationService : INotificationService
                     "User notification created: UserId={UserId}, NotificationId={NotificationId}",
                     userId,
                     notification.Id);
+
+                // Send SSE event to the user in real-time
+                // This ensures the frontend receives the notification immediately without refresh
+                var notificationDto = new
+                {
+                    id = userNotification.Id,
+                    notificationId = notification.Id,
+                    userId = userId,
+                    isRead = false,
+                    createdAt = userNotification.CreatedAt,
+                    notification = new
+                    {
+                        id = notification.Id,
+                        title = notification.Title,
+                        message = notification.Message,
+                        type = notification.Type,
+                        priority = notification.Priority,
+                        category = notification.Category,
+                        createdAt = notification.CreatedAt
+                    }
+                };
+
+                await _sseService.NotifyAsync(userId, "notification", new
+                {
+                    type = "notification",
+                    data = notificationDto
+                }, ct);
+
+                _logger.LogInformation(
+                    "SSE notification sent to user {UserId} for notification {NotificationId}",
+                    userId,
+                    notification.Id);
             }
             catch (Exception ex)
             {
@@ -450,23 +574,36 @@ public class NotificationService : INotificationService
     }
 
     /// <summary>
-    /// Parses semicolon-separated recipient string into user IDs.
+    /// Gets the current authenticated user ID from HTTP context.
     /// </summary>
-    private static List<int> ParseRecipientUserIds(string recipients)
+    private int? getCurrentUserId()
     {
-        if (string.IsNullOrWhiteSpace(recipients))
+        try
         {
-            return new List<int>();
-        }
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext?.User == null)
+            {
+                return null;
+            }
 
-        return recipients
-            .Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(id => id.Trim())
-            .Where(id => int.TryParse(id, out _))
-            .Select(int.Parse)
-            .Distinct()
-            .ToList();
+            var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out var userId))
+            {
+                return userId;
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
+
+    /// <summary>
+    /// Parses semicolon-separated recipient string into user IDs.
+    /// Handles special case "test" by using the current authenticated user.
+    /// </summary>
 }
 
 /// <summary>

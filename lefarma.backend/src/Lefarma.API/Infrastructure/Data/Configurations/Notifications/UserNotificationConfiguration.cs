@@ -8,7 +8,7 @@ public class UserNotificationConfiguration : IEntityTypeConfiguration<UserNotifi
 {
     public void Configure(EntityTypeBuilder<UserNotification> builder)
     {
-        builder.ToTable("UserNotifications");
+        builder.ToTable("UserNotifications", "app");
 
         builder.HasKey(un => un.Id);
         builder.Property(un => un.Id)
