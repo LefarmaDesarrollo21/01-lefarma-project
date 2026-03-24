@@ -108,6 +108,7 @@ export const FilterConfig = ({
 
   const handleReset = () => {
     onReset();
+    onApplyChanges?.(); // Sync columns immediately after reset
     toast.success("Configuración restaurada a valores por defecto");
   };
 

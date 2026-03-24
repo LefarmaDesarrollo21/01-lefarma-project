@@ -26,7 +26,10 @@ export function useTableFilters<TData>({
   columnFilterConfigs?: Record<string, ColumnFilterConfig>;
 }): UseTableFiltersReturn {
   // Extract column IDs from column definitions
-  const allColumnIds = allColumns.map(col => col.id as string);
+  // Use same logic as DataTable: try col.id, then accessorKey
+  const allColumnIds = allColumns
+    .map(col => col.id || (('accessorKey' in col && typeof col.accessorKey === 'string') ? col.accessorKey : '') || '')
+    .filter(id => id !== null && id !== undefined && id !== '');
 
   // State
   const [activeFilters, setActiveFilters] = useState<ColumnFilter[]>([]);
@@ -73,10 +76,12 @@ export function useTableFilters<TData>({
     const defaults = createDefaultConfig(tableId, allColumnIds, defaultSearchColumns);
     setActiveFilters([]);
     setSearchColumnIds(defaults.searchColumns);
-    setVisibleColumnIds(defaults.visibleColumns);
+    setVisibleColumnIds(defaults.visibleColumns); // This is allColumnIds
     setColumnFilterConfigs({});
-    resetConfigInStorage(tableId);
-  }, [tableId, allColumnIds, defaultSearchColumns]);
+
+    // Save the default config immediately so it persists
+    saveConfigToStorage(defaults);
+  }, [tableId, allColumnIds, defaultSearchColumns, saveConfigToStorage]);
 
   const setColumnFilterConfig = useCallback((columnId: string, config: ColumnFilterConfig) => {
     setColumnFilterConfigs(prev => ({
@@ -89,7 +94,7 @@ export function useTableFilters<TData>({
   const saveConfig = useCallback(() => {
     const config: TableConfig = {
       tableId,
-      visibleColumns: visibleColumnIds,
+      visibleColumns: allColumnIds, // ALWAYS save ALL columns as visible
       searchColumns: searchColumnIds,
       lastFilters: activeFilters.reduce((acc, filter) => {
         acc[filter.columnId] = filter;
@@ -97,26 +102,35 @@ export function useTableFilters<TData>({
       }, {} as Record<string, ColumnFilter>),
     };
     saveConfigToStorage(config);
-  }, [tableId, visibleColumnIds, searchColumnIds, activeFilters]);
+  }, [tableId, allColumnIds, searchColumnIds, activeFilters]);
 
   const loadConfig = useCallback(() => {
     const saved = getConfig(tableId);
     if (saved) {
-      // Ensure all current columns are in visibleColumns (new columns default to visible)
-      const updatedVisibleColumns = allColumnIds.filter(id =>
-        saved.visibleColumns.includes(id) || !saved.visibleColumns.includes(id)
-      );
-      // But always show ALL columns by default - ignore saved visibility
-      // This ensures that after code changes, all columns are visible
+      // Always show ALL columns - ignore saved visibility config
+      // This ensures checkboxes are always checked by default
       setVisibleColumnIds(allColumnIds);
 
-      setSearchColumnIds(saved.searchColumns);
+      // Clean searchColumns to remove nulls/undefined
+      const cleanSearchColumns = saved.searchColumns.filter(id => id && allColumnIds.includes(id));
+      setSearchColumnIds(cleanSearchColumns);
+
       if (saved.lastFilters) {
         setActiveFilters(Object.values(saved.lastFilters));
       }
       if (saved.columnFilterConfigs) {
         setColumnFilterConfigs(saved.columnFilterConfigs);
       }
+
+      // Update saved config to have all columns visible (cleanup old configs)
+      const updatedConfig: TableConfig = {
+        tableId,
+        visibleColumns: allColumnIds, // Update to all columns
+        searchColumns: cleanSearchColumns,
+        lastFilters: saved.lastFilters,
+        columnFilterConfigs: saved.columnFilterConfigs,
+      };
+      saveConfigToStorage(updatedConfig);
     } else {
       // Create default config on first visit - ALL columns visible
       const defaults = createDefaultConfig(tableId, allColumnIds, defaultSearchColumns);
