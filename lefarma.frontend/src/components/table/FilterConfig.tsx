@@ -56,6 +56,7 @@ interface FilterConfigProps {
   onReset: () => void;
   columnFilterConfigs?: Record<string, ColumnFilterConfig>;
   onColumnFilterChange?: (columnId: string, config: ColumnFilterConfig) => void;
+  onSave?: () => void;
 }
 
 function getFilterTypeForColumn(columnId: string): ColumnFilterConfig['type'] {
@@ -75,8 +76,16 @@ export const FilterConfig = ({
   onReset,
   columnFilterConfigs = {},
   onColumnFilterChange,
+  onSave,
 }: FilterConfigProps) => {
   const [open, setOpen] = useState(false);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen && onSave) {
+      onSave();
+    }
+  };
 
   const handleSearchColumnToggle = (columnId: string, checked: boolean) => {
     if (checked) {
@@ -100,7 +109,7 @@ export const FilterConfig = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Settings className="h-4 w-4 mr-2" />

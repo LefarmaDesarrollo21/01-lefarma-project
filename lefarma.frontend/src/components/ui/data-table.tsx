@@ -88,8 +88,9 @@ function SortIcon({ direction }: { direction: "asc" | "desc" | false }) {
 
 // ─── Filter type helper ─────────────────────────────────────────────────────────
 
-function getFilterTypeForColumn(columnId: string): 'text' | 'number' | 'boolean' | 'select' {
+function getFilterTypeForColumn(columnId: string): 'text' | 'number' | 'boolean' | 'select' | 'date' {
   if (columnId.includes('activo') || columnId.includes('Activo')) return 'boolean';
+  if (columnId.includes('fecha') || columnId.includes('Fecha') || columnId.includes('date') || columnId.includes('Date')) return 'date';
   if (columnId.includes('Id') || columnId.includes('numero') || columnId.includes('empleados')) return 'number';
   return 'text';
 }
@@ -141,10 +142,13 @@ export function DataTable<TData>({
     setSearchColumns,
     setVisibleColumns,
     resetToDefaults,
+    columnFilterConfigs,
+    setColumnFilterConfig,
   } = useTableFilters({
     tableId: filterConfig?.tableId || '',
     allColumns: columns,
     defaultSearchColumns: filterConfig?.defaultSearchColumns,
+    columnFilterConfigs: filterConfig?.columnFilterConfigs,
   });
 
   // Convert activeFilters to TanStack Table format
@@ -273,6 +277,12 @@ export function DataTable<TData>({
               onSearchColumnsChange={setSearchColumns}
               onVisibleColumnsChange={setVisibleColumns}
               onReset={resetToDefaults}
+              columnFilterConfigs={columnFilterConfigs}
+              onColumnFilterChange={setColumnFilterConfig}
+              onSave={() => {
+                // Auto-save happens via useEffect in useTableFilters hook
+                // This callback is for explicit save on modal close if needed
+              }}
             />
           )}
 
