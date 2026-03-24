@@ -27,7 +27,7 @@ export interface ColumnFilter {
   columnId: string;
   type: FilterType;
   operator: TextOperator | NumberOperator | BooleanValue;
-  value: string | number | boolean | string[];
+  value: string | number | boolean | string[] | number[];
   displayLabel: string; // Human-readable label for badges
 }
 
