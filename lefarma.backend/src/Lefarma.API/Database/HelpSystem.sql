@@ -10,7 +10,7 @@ GO
 -- Tabla: HelpArticles
 -- Almacena los artículos de documentación con contenido JSON de Lexical
 -- ============================================================================
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'HelpArticles' AND schema_id = SCHEMA_ID('help'))
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'help')
 BEGIN
     EXECUTE('CREATE SCHEMA [help]');
 END

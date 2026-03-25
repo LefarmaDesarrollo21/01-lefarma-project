@@ -13,37 +13,47 @@ public class HelpImageConfiguration : IEntityTypeConfiguration<HelpImage>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id)
+            .HasColumnName("Id")
             .ValueGeneratedOnAdd();
 
         builder.Property(x => x.NombreOriginal)
+            .HasColumnName("NombreOriginal")
             .HasMaxLength(255)
             .IsRequired();
 
         builder.Property(x => x.NombreArchivo)
+            .HasColumnName("NombreArchivo")
             .HasMaxLength(255)
             .IsRequired();
 
         builder.Property(x => x.RutaRelativa)
+            .HasColumnName("RutaRelativa")
             .HasMaxLength(500)
             .IsRequired();
 
         builder.Property(x => x.TamanhoBytes)
+            .HasColumnName("TamanhoBytes")
             .IsRequired();
 
         builder.Property(x => x.MimeType)
+            .HasColumnName("MimeType")
             .HasMaxLength(100)
             .IsRequired();
 
         builder.Property(x => x.Ancho)
+            .HasColumnName("Ancho")
             .IsRequired(false);
 
         builder.Property(x => x.Alto)
+            .HasColumnName("Alto")
             .IsRequired(false);
 
         builder.Property(x => x.FechaSubida)
+            .HasColumnName("FechaSubida")
             .HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(x => x.SubidoPor)
+            .HasColumnName("SubidoPor")
             .HasMaxLength(100);
 
         // Índices
