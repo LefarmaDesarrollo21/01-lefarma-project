@@ -27,6 +27,7 @@ using Lefarma.API.Infrastructure.Data;
 using Lefarma.API.Infrastructure.Data.Repositories.Admin;
 using Lefarma.API.Infrastructure.Data.Repositories.Catalogos;
 using Lefarma.API.Infrastructure.Data.Repositories.Notifications;
+using Lefarma.API.Infrastructure.Data.Repositories;
 using Lefarma.API.Infrastructure.Data.Seeding;
 using Lefarma.API.Infrastructure.Filters;
 using Lefarma.API.Infrastructure.Middleware;
@@ -116,6 +117,9 @@ builder.Services.AddScoped<IEstatusOrdenRepository, EstatusOrdenRepository>();
 builder.Services.AddScoped<IRegimenFiscalRepository, RegimenFiscalRepository>();
 builder.Services.AddScoped<IProveedorRepository, ProveedorRepository>();
 builder.Services.AddScoped<ICuentaContableRepository, CuentaContableRepository>();
+
+// Help System
+builder.Services.AddScoped<IHelpArticleRepository, HelpArticleRepository>();
 
 // Servicios
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
