@@ -23,6 +23,7 @@ using Lefarma.API.Features.Catalogos.MediosPago;
 using Lefarma.API.Features.Catalogos.FormasPago;
 using Lefarma.API.Features.Notifications.Services;
 using Lefarma.API.Features.Notifications.Services.Channels;
+using Lefarma.API.Features.Help.Services;
 using Lefarma.API.Infrastructure.Data;
 using Lefarma.API.Infrastructure.Data.Repositories.Admin;
 using Lefarma.API.Infrastructure.Data.Repositories.Catalogos;
@@ -120,6 +121,7 @@ builder.Services.AddScoped<ICuentaContableRepository, CuentaContableRepository>(
 
 // Help System
 builder.Services.AddScoped<IHelpArticleRepository, HelpArticleRepository>();
+builder.Services.AddScoped<IHelpArticleService, HelpArticleService>();
 
 // Servicios
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
