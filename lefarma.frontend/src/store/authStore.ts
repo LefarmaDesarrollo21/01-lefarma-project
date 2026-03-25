@@ -26,7 +26,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   pendingUsername: null,
   empresas: [],
   sucursales: [],
-  authFlowCompleted: false,
 
   loginStepOne: async (username: string) => {
     set({ isLoading: true });
@@ -117,13 +116,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Persist to localStorage
     authService.setEmpresa(empresa);
     authService.setSucursal(sucursal);
-    authService.setAuthFlowCompleted(true);
 
     set({
       empresa,
       sucursal,
       isAuthenticated: true,
-      authFlowCompleted: true,
       loginStep: 1,
       empresas: [],
       sucursales: [],
@@ -151,7 +148,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       empresa: null,
       sucursal: null,
       isAuthenticated: false,
-      authFlowCompleted: false,
       loginStep: 1,
       empresas: [],
       sucursales: [],
@@ -225,26 +221,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const user = authService.getCurrentUser();
     const empresa = authService.getEmpresa();
     const sucursal = authService.getSucursal();
-    const authFlowCompleted = authService.getAuthFlowCompleted();
 
     if (token && user) {
-      // Backward compatibility: if user has token but no authFlowCompleted flag,
-      // treat as authenticated (pre-existing session)
-      const isFullyAuthenticated = authFlowCompleted || Boolean(empresa && sucursal);
+      // User is authenticated if they have token + empresa + sucursal
+      const isAuthenticated = Boolean(empresa && sucursal);
 
       set({
         token,
         user,
         empresa,
         sucursal,
-        isAuthenticated: true,
-        authFlowCompleted: isFullyAuthenticated,
+        isAuthenticated,
       });
-
-      // If backward compatibility case, set the flag for future sessions
-      if (!authFlowCompleted && isFullyAuthenticated) {
-        authService.setAuthFlowCompleted(true);
-      }
 
       // Sincronizar perfil con configStore
       useConfigStore.getState().updatePerfil({
@@ -255,7 +243,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // No auth data
       set({
         isAuthenticated: false,
-        authFlowCompleted: false,
       });
     }
 

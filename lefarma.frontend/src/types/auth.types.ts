@@ -113,7 +113,6 @@ export interface AuthState {
   pendingUsername: string | null;
   empresas: Empresa[];
   sucursales: Sucursal[];
-  authFlowCompleted: boolean; // Tracks if user completed all 3 steps
 
   // Existing actions
   logout: () => Promise<void>;
