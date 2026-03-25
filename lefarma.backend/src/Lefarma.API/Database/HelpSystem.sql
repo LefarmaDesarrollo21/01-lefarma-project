@@ -19,31 +19,31 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'HelpArticles' AND schema_id = SCHEMA_ID('help'))
 BEGIN
     CREATE TABLE [help].HelpArticles (
-        [Id]               INT IDENTITY(1,1) PRIMARY KEY,
-        [Titulo]           NVARCHAR(200) NOT NULL,
-        [Contenido]        NVARCHAR(MAX) NOT NULL,  -- JSON de Lexical
-        [Resumen]          NVARCHAR(500) NULL,      -- Para listados/cards
-        [Modulo]           NVARCHAR(50) NOT NULL,    -- 'Catalogos', 'Auth', 'Notificaciones', etc.
-        [Tipo]             NVARCHAR(50) NOT NULL,    -- 'usuario', 'desarrollador', 'ambos'
-        [Categoria]        NVARCHAR(100) NULL,       -- Sub-categoría dentro del módulo (opcional)
-        [Orden]            INT NOT NULL DEFAULT 0,   -- Para ordenar dentro del módulo
-        [Activo]           BIT NOT NULL DEFAULT 1,   -- Soft delete
-        [FechaCreacion]    DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-        [FechaActualizacion] DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-        [CreadoPor]        NVARCHAR(100) NULL,       -- Username
-        [ActualizadoPor]   NVARCHAR(100) NULL        -- Username
+        [id]               INT IDENTITY(1,1) PRIMARY KEY,
+        [titulo]           NVARCHAR(200) NOT NULL,
+        [contenido]        NVARCHAR(MAX) NOT NULL,  -- JSON de Lexical
+        [resumen]          NVARCHAR(500) NULL,      -- Para listados/cards
+        [modulo]           NVARCHAR(50) NOT NULL,    -- 'Catalogos', 'Auth', 'Notificaciones', etc.
+        [tipo]             NVARCHAR(50) NOT NULL,    -- 'usuario', 'desarrollador', 'ambos'
+        [categoria]        NVARCHAR(100) NULL,       -- Sub-categoría dentro del módulo (opcional)
+        [orden]            INT NOT NULL DEFAULT 0,   -- Para ordenar dentro del módulo
+        [activo]           BIT NOT NULL DEFAULT 1,   -- Soft delete
+        [fecha_creacion]    DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+        [fecha_actualizacion] DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+        [creado_por]        NVARCHAR(100) NULL,       -- Username
+        [actualizado_por]   NVARCHAR(100) NULL        -- Username
     );
 
     -- Índices para búsquedas frecuentes
-    CREATE NONCLUSTERED INDEX [IX_HelpArticles_Modulo_Activo]
-        ON [help].HelpArticles([Modulo], [Activo]);
+    CREATE NONCLUSTERED INDEX [IX_HelpArticles_modulo_activo]
+        ON [help].HelpArticles([modulo], [activo]);
 
-    CREATE NONCLUSTERED INDEX [IX_HelpArticles_Tipo_Activo]
-        ON [help].HelpArticles([Tipo], [Activo]);
+    CREATE NONCLUSTERED INDEX [IX_HelpArticles_tipo_activo]
+        ON [help].HelpArticles([tipo], [activo]);
 
-    CREATE NONCLUSTERED INDEX [IX_HelpArticles_Categoria_Activo]
-        ON [help].HelpArticles([Categoria], [Activo])
-        WHERE [Categoria] IS NOT NULL;
+    CREATE NONCLUSTERED INDEX [IX_HelpArticles_categoria_activo]
+        ON [help].HelpArticles([categoria], [activo])
+        WHERE [categoria] IS NOT NULL;
 
     PRINT '✓ Tabla [help].HelpArticles creada exitosamente';
 END
@@ -60,24 +60,24 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'HelpImages' AND schema_id = SCHEMA_ID('help'))
 BEGIN
     CREATE TABLE [help].HelpImages (
-        [Id]               INT IDENTITY(1,1) PRIMARY KEY,
-        [NombreOriginal]   NVARCHAR(255) NOT NULL,  -- Nombre original del archivo
-        [NombreArchivo]    NVARCHAR(255) NOT NULL,  -- GUID.ext
-        [RutaRelativa]     NVARCHAR(500) NOT NULL,  -- /media/help/2025/03/abc-123.png
-        [TamanhoBytes]     BIGINT NOT NULL,
-        [MimeType]         NVARCHAR(100) NOT NULL,  -- image/png, image/jpeg, etc.
-        [Ancho]            INT NULL,                -- Ancho en pixeles (opcional)
-        [Alto]             INT NULL,                -- Alto en pixeles (opcional)
-        [FechaSubida]      DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-        [SubidoPor]        NVARCHAR(100) NULL       -- Username
+        [id]               INT IDENTITY(1,1) PRIMARY KEY,
+        [nombre_original]   NVARCHAR(255) NOT NULL,  -- Nombre original del archivo
+        [nombre_archivo]    NVARCHAR(255) NOT NULL,  -- GUID.ext
+        [ruta_relativa]     NVARCHAR(500) NOT NULL,  -- /media/help/2025/03/abc-123.png
+        [tamano_bytes]     BIGINT NOT NULL,
+        [mime_type]         NVARCHAR(100) NOT NULL,  -- image/png, image/jpeg, etc.
+        [ancho]            INT NULL,                -- Ancho en pixeles (opcional)
+        [alto]             INT NULL,                -- Alto en pixeles (opcional)
+        [fecha_subida]      DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+        [subido_por]        NVARCHAR(100) NULL       -- Username
     );
 
     -- Índices
-    CREATE NONCLUSTERED INDEX [IX_HelpImages_NombreArchivo]
-        ON [help].HelpImages([NombreArchivo]);
+    CREATE NONCLUSTERED INDEX [IX_HelpImages_nombre_archivo]
+        ON [help].HelpImages([nombre_archivo]);
 
-    CREATE NONCLUSTERED INDEX [IX_HelpImages_FechaSubida]
-        ON [help].HelpImages([FechaSubida] DESC);
+    CREATE NONCLUSTERED INDEX [IX_HelpImages_fecha_subida]
+        ON [help].HelpImages([fecha_subida] DESC);
 
     PRINT '✓ Tabla [help].HelpImages creada exitosamente';
 END

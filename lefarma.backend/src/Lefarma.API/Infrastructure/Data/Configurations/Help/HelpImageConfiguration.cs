@@ -13,55 +13,55 @@ public class HelpImageConfiguration : IEntityTypeConfiguration<HelpImage>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id)
-            .HasColumnName("Id")
+            .HasColumnName("id")
             .ValueGeneratedOnAdd();
 
         builder.Property(x => x.NombreOriginal)
-            .HasColumnName("NombreOriginal")
+            .HasColumnName("nombre_original")
             .HasMaxLength(255)
             .IsRequired();
 
         builder.Property(x => x.NombreArchivo)
-            .HasColumnName("NombreArchivo")
+            .HasColumnName("nombre_archivo")
             .HasMaxLength(255)
             .IsRequired();
 
         builder.Property(x => x.RutaRelativa)
-            .HasColumnName("RutaRelativa")
+            .HasColumnName("ruta_relativa")
             .HasMaxLength(500)
             .IsRequired();
 
         builder.Property(x => x.TamanhoBytes)
-            .HasColumnName("TamanhoBytes")
+            .HasColumnName("tamano_bytes")
             .IsRequired();
 
         builder.Property(x => x.MimeType)
-            .HasColumnName("MimeType")
+            .HasColumnName("mime_type")
             .HasMaxLength(100)
             .IsRequired();
 
         builder.Property(x => x.Ancho)
-            .HasColumnName("Ancho")
+            .HasColumnName("ancho")
             .IsRequired(false);
 
         builder.Property(x => x.Alto)
-            .HasColumnName("Alto")
+            .HasColumnName("alto")
             .IsRequired(false);
 
         builder.Property(x => x.FechaSubida)
-            .HasColumnName("FechaSubida")
+            .HasColumnName("fecha_subida")
             .HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(x => x.SubidoPor)
-            .HasColumnName("SubidoPor")
+            .HasColumnName("subido_por")
             .HasMaxLength(100);
 
         // Índices
         builder.HasIndex(x => x.NombreArchivo)
-            .HasDatabaseName("IX_HelpImages_NombreArchivo");
+            .HasDatabaseName("IX_HelpImages_nombre_archivo");
 
         builder.HasIndex(x => x.FechaSubida)
             .IsDescending()
-            .HasDatabaseName("IX_HelpImages_FechaSubida");
+            .HasDatabaseName("IX_HelpImages_fecha_subida");
     }
 }

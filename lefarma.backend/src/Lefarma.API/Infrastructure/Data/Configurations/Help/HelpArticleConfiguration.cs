@@ -13,69 +13,69 @@ public class HelpArticleConfiguration : IEntityTypeConfiguration<HelpArticle>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id)
-            .HasColumnName("Id")
+            .HasColumnName("id")
             .ValueGeneratedOnAdd();
 
         builder.Property(x => x.Titulo)
-            .HasColumnName("Titulo")
+            .HasColumnName("titulo")
             .HasMaxLength(200)
             .IsRequired();
 
         builder.Property(x => x.Contenido)
-            .HasColumnName("Contenido")
+            .HasColumnName("contenido")
             .IsRequired();
 
         builder.Property(x => x.Resumen)
-            .HasColumnName("Resumen")
+            .HasColumnName("resumen")
             .HasMaxLength(500);
 
         builder.Property(x => x.Modulo)
-            .HasColumnName("Modulo")
+            .HasColumnName("modulo")
             .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.Tipo)
-            .HasColumnName("Tipo")
+            .HasColumnName("tipo")
             .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.Categoria)
-            .HasColumnName("Categoria")
+            .HasColumnName("categoria")
             .HasMaxLength(100);
 
         builder.Property(x => x.Orden)
-            .HasColumnName("Orden")
+            .HasColumnName("orden")
             .HasDefaultValue(0);
 
         builder.Property(x => x.Activo)
-            .HasColumnName("Activo")
+            .HasColumnName("activo")
             .HasDefaultValue(true);
 
         builder.Property(x => x.FechaCreacion)
-            .HasColumnName("FechaCreacion")
+            .HasColumnName("fecha_creacion")
             .HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(x => x.FechaActualizacion)
-            .HasColumnName("FechaActualizacion")
+            .HasColumnName("fecha_actualizacion")
             .HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(x => x.CreadoPor)
-            .HasColumnName("CreadoPor")
+            .HasColumnName("creado_por")
             .HasMaxLength(100);
 
         builder.Property(x => x.ActualizadoPor)
-            .HasColumnName("ActualizadoPor")
+            .HasColumnName("actualizado_por")
             .HasMaxLength(100);
 
         // Índices para búsquedas frecuentes
         builder.HasIndex(x => new { x.Modulo, x.Activo })
-            .HasDatabaseName("IX_HelpArticles_Modulo_Activo");
+            .HasDatabaseName("IX_HelpArticles_modulo_activo");
 
         builder.HasIndex(x => new { x.Tipo, x.Activo })
-            .HasDatabaseName("IX_HelpArticles_Tipo_Activo");
+            .HasDatabaseName("IX_HelpArticles_tipo_activo");
 
         builder.HasIndex(x => new { x.Categoria, x.Activo })
-            .HasDatabaseName("IX_HelpArticles_Categoria_Activo")
-            .HasFilter("[Categoria] IS NOT NULL");
+            .HasDatabaseName("IX_HelpArticles_categoria_activo")
+            .HasFilter("[categoria] IS NOT NULL");
     }
 }
