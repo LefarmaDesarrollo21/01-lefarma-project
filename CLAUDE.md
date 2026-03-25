@@ -152,6 +152,12 @@ agent-browser screenshot dashboard.png
 
 ### 3. Git Workflow
 
+**CRITICAL RULES**:
+- **NO hagas commits hasta que el usuario te lo indique**
+- **NO hagas push hasta que el usuario te lo indique**
+- **NO hagas merge hasta que el usuario te lo indique**
+- **NO te metas con git hasta que el usuario te lo indique**
+
 **Branch Strategy**:
 - `main`: Production (stable)
 - `dev`: Development (merge to main when stable)
