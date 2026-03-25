@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHelpStore } from '@/store/helpStore';
@@ -18,15 +18,23 @@ export default function HelpView() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      {/* Back Button */}
-      <Button
-        variant="ghost"
-        onClick={() => navigate('/help')}
-        className="mb-6"
-      >
-        <ChevronLeft className="mr-2 h-4 w-4" />
-        Volver al centro de ayuda
-      </Button>
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2 mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/help')}
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Volver
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => navigate(`/help/edit/${id}`)}
+        >
+          <Edit className="mr-2 h-4 w-4" />
+          Editar
+        </Button>
+      </div>
 
       {/* Loading State */}
       {isLoading && (

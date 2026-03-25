@@ -61,6 +61,7 @@ export const AppRoutes = () => {
           <Route path="/notificaciones" element={<NotificationsPage />} />
           <Route path="/help" element={<HelpList />} />
           <Route path="/help/new" element={<HelpEditor />} />
+          <Route path="/help/edit/:id" element={<HelpEditor />} />
           <Route path="/help/:id" element={<HelpView />} />
           <Route path="/roadmap" element={<Roadmap />} />
           <Route path="/demo-components" element={<DemoComponents />} />
