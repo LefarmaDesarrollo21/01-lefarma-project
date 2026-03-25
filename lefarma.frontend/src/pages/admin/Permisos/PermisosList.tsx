@@ -224,17 +224,15 @@ export default function PermisosList() {
             <Pencil className="h-3.5 w-3.5" />
             Editar
           </Button>
-          {!row.original.esSistema && (
-             <Button
-                size="sm"
-                variant="destructive"
-                className="h-8 gap-1.5"
-                onClick={() => handleDelete(row.original.idPermiso)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Eliminar
-              </Button>
-          )}
+          <Button
+            size="sm"
+            variant="destructive"
+            className="h-8 gap-1.5"
+            onClick={() => handleDelete(row.original.idPermiso)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Eliminar
+          </Button>
         </div>
       ),
     },

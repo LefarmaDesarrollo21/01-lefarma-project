@@ -19,6 +19,8 @@ import {
   List,
   Building,
   UserCircle,
+  LogOut,
+  HelpCircle,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -36,6 +38,7 @@ import {
   SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useAuthStore } from '@/store/authStore';
 
 const menuItems = [
   {
@@ -84,6 +87,12 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -167,8 +176,20 @@ export function AppSidebar() {
             <SidebarMenuButton size="sm" asChild tooltip="Perfil">
               <NavLink to="/perfil">
                 <User className="h-4 w-4" />
-                <span>Perfil Usuario</span>
+                <span>{user?.nombre || 'Usuario'}</span>
               </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm" onClick={handleLogout} tooltip="Cerrar Sesión">
+              <LogOut className="h-4 w-4" />
+              <span>Cerrar Sesión</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm" tooltip="Soporte">
+              <HelpCircle className="h-4 w-4" />
+              <span>Soporte</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
