@@ -2,6 +2,7 @@
 using Lefarma.API.Domain.Entities.Auth;
 using Lefarma.API.Domain.Entities.Logging;
 using Lefarma.API.Domain.Entities.Notifications;
+using Lefarma.API.Domain.Entities.Help;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -56,6 +57,10 @@ namespace Lefarma.API.Infrastructure.Data
 
         // DbSets - Views (read-only)
         public DbSet<VwDirectorioActivo> VwDirectorioActivo { get; set; }
+
+        // DbSets - Help System
+        public DbSet<HelpArticle> HelpArticles { get; set; }
+        public DbSet<HelpImage> HelpImages { get; set; }
 
         // Configuración mediante Fluent API
         protected override void OnModelCreating(ModelBuilder modelBuilder)
