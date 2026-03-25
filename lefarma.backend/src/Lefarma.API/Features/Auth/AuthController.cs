@@ -94,7 +94,7 @@ public class AuthController : ControllerBase
     /// <param name="request">The refresh token request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>New login response with fresh tokens.</returns>
-    [Authorize]
+    [AllowAnonymous]
     [HttpPost("refresh")]
     [SwaggerOperation(
         Summary = "Refrescar token de acceso",
@@ -122,7 +122,7 @@ public class AuthController : ControllerBase
     /// <param name="request">Optional logout request with refresh token.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Logout response.</returns>
-    [Authorize]
+    [AllowAnonymous]
     [HttpPost("logout")]
     [SwaggerOperation(
         Summary = "Cerrar sesion",
