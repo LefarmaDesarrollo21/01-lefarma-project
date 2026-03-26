@@ -130,7 +130,6 @@ builder.Services.AddScoped<IHelpImageRepository, HelpImageRepository>();
 builder.Services.AddScoped<IHelpImageService, HelpImageService>();
 builder.Services.AddScoped<IHelpModuleRepository, HelpModuleRepository>();
 builder.Services.AddScoped<IHelpModuleService, HelpModuleService>();
-
 // Archivos
 builder.Services.Configure<ArchivosSettings>(
     builder.Configuration.GetSection("ArchivosSettings"));
@@ -395,7 +394,7 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
         Path.Combine(app.Environment.WebRootPath, "media")),
-    RequestPath = "/media",
+    RequestPath = "/api/media",
     OnPrepareResponse = ctx =>
     {
         ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=31536000");
