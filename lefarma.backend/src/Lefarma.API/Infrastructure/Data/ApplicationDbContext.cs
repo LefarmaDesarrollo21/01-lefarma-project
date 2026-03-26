@@ -3,6 +3,7 @@ using Lefarma.API.Domain.Entities.Auth;
 using Lefarma.API.Domain.Entities.Logging;
 using Lefarma.API.Domain.Entities.Notifications;
 using Lefarma.API.Domain.Entities.Help;
+using Lefarma.API.Domain.Entities.Archivos;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -59,8 +60,12 @@ namespace Lefarma.API.Infrastructure.Data
         public DbSet<VwDirectorioActivo> VwDirectorioActivo { get; set; }
 
         // DbSets - Help System
+        public DbSet<HelpModule> HelpModules { get; set; }
         public DbSet<HelpArticle> HelpArticles { get; set; }
         public DbSet<HelpImage> HelpImages { get; set; }
+
+        // DbSets - Archivos
+        public DbSet<Archivo> Archivos { get; set; }
 
         // Configuración mediante Fluent API
         protected override void OnModelCreating(ModelBuilder modelBuilder)
