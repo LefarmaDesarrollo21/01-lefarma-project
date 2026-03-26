@@ -27,6 +27,7 @@ Esto inicia:
 - [Sistema de Filtros](#sistema-de-filtros)
 - [Autenticación](#autenticación)
 - [Notificaciones](#notificaciones)
+- [Sistema de Gestión de Archivos](#-sistema-de-gestión-de-archivos)
 - [Testing](#testing)
 - [Estructura del Proyecto](#estructura-del-proyecto)
 
@@ -494,7 +495,170 @@ const { notifications, markAsRead, markAllAsRead } = useNotifications();
 // Conexión automática cuando usuario autenticado
 // Reconexión automática si se cae
 // Badge de notificaciones en Header
+  ```
+
+## 📁 Sistema de Gestión de Archivos
+
+Sistema genérico para subir, previsualizar y gestionar archivos asociados a cualquier entidad del sistema.
+
+### Características
+
+- **Upload con Drag & Drop**: Interfaz moderna para subir archivos
+- **Previsualización en Canvas**: PDF, imágenes y documentos Office (convertidos a PDF)
+- **Versionado**: Al reemplazar un archivo, el anterior se marca como inactivo
+- **Soft Delete**: Los archivos eliminados se pueden recuperar
+- **Metadata Flexible**: Campo JSON para datos adicionales por módulo
+- **Asociación Genérica**: Funciona con cualquier entidad (Cotizaciones, Productos, Clientes, etc.)
+
+### Formatos Soportados
+
+| Tipo | Extensiones | Previsualización |
+|------|-------------|------------------|
+| **PDF** | `.pdf` | ✅ Nativo |
+| **Imágenes** | `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp` | ✅ Nativo |
+| **Excel** | `.xlsx` | ✅ Conversión a PDF |
+| **Word** | `.docx` | ✅ Conversión a PDF |
+| **PowerPoint** | `.pptx` | ✅ Conversión a PDF |
+
+### Requisito: LibreOffice
+
+Para la conversión de documentos Office a PDF, necesitas instalar **LibreOffice**.
+
+#### Instalación en Linux (Producción)
+
+```bash
+# Opción 1: Desde repositorios (recomendado)
+sudo apt update
+sudo apt install -y libreoffice
+
+# Opción 2: Descargar DEB desde la web
+# https://www.libreoffice.org/download/download/
+cd ~/Downloads
+# Extraer y instalar
+sudo dpkg -i LibreOffice_*.deb
+sudo apt-get install -f  # Instalar dependencias
 ```
+
+#### Instalación en Windows (Desarrollo)
+
+1. Descargar desde: https://www.libreoffice.org/download/download/
+2. Ejecutar el instalador MSI
+3. Instalación por defecto en: `C:\Program Files\LibreOffice\`
+
+#### Verificar Instalación
+
+**Linux:**
+```bash
+# Verificar que está instalado
+soffice --version
+# o
+/opt/libreoffice*/program/soffice --version
+
+# Verificar modo headless (necesario para conversión)
+soffice --headless --version
+```
+
+**Windows:**
+```cmd
+"C:\Program Files\LibreOffice\program\soffice.exe" --version
+```
+
+#### Encontrar la Ruta del Ejecutable
+
+**Linux:**
+```bash
+# Si está en el PATH
+which soffice
+
+# Buscar en /opt (instalaciones manuales)
+find /opt -name "soffice" 2>/dev/null
+
+# Buscar en todo el sistema
+locate soffice | grep -E "program/soffice$"
+```
+
+**Windows:**
+```cmd
+# Buscar en Archivos de Programa
+dir "C:\Program Files\LibreOffice*\program\soffice.exe" /s
+
+# O usar PowerShell
+Get-ChildItem "C:\Program Files" -Recurse -Filter "soffice.exe" -ErrorAction SilentlyContinue
+```
+
+### Configuración
+
+#### Linux/Producción (`appsettings.json`)
+
+```json
+{
+  "ArchivosSettings": {
+    "BasePath": "wwwroot/media/archivos",
+    "LibreOfficePath": "/opt/libreoffice26.2/program/soffice",
+    "TamanoMaximoMB": 10,
+    "ExtensionesPermitidas": [".pdf", ".xlsx", ".docx", ".pptx", ".jpg", ".jpeg", ".png", ".gif", ".webp"]
+  }
+}
+```
+
+> **Nota:** La ruta puede variar según tu instalación:
+> - Ubuntu/Debian: `/usr/bin/soffice`
+> - Instalación manual: `/opt/libreoffice{version}/program/soffice`
+
+#### Windows/Desarrollo (`appsettings.Development.json`)
+
+```json
+{
+  "ArchivosSettings": {
+    "BasePath": "wwwroot/media/archivos",
+    "LibreOfficePath": "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
+    "TamanoMaximoMB": 10,
+    "ExtensionesPermitidas": [".pdf", ".xlsx", ".docx", ".pptx", ".jpg", ".jpeg", ".png", ".gif", ".webp"]
+  }
+}
+```
+
+> **Nota:** En Windows usa `\\` para escapar los backslashes en JSON.
+
+### Endpoints API
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `POST` | `/api/archivos/subir` | Subir archivo |
+| `GET` | `/api/archivos?entidadTipo=X&entidadId=Y` | Listar archivos |
+| `GET` | `/api/archivos/{id}` | Obtener archivo |
+| `GET` | `/api/archivos/{id}/descargar` | Descargar original |
+| `GET` | `/api/archivos/{id}/previsualizar` | Previsualizar (PDF o convertido) |
+| `PUT` | `/api/archivos/{id}/reemplazar` | Reemplazar archivo |
+| `DELETE` | `/api/archivos/{id}` | Eliminar (soft delete) |
+
+### Componentes Frontend
+
+```tsx
+import { FileUploader, FileViewer } from '@/components/archivos';
+
+// Subir archivos
+<FileUploader
+  open={showUploader}
+  onOpenChange={setShowUploader}
+  entidadTipo="cotizacion"
+  entidadId={cotizacionId}
+  carpeta="cotizaciones"
+  onUploadComplete={() => refetch()}
+/>
+
+// Previsualizar archivos
+<FileViewer
+  open={showViewer}
+  onOpenChange={setShowViewer}
+  archivoId={archivoId}
+  archivoNombre={archivoNombre}
+/>
+```
+
+### Demo
+
+Puedes ver una demostración completa en: **http://localhost:5173/demo-components**
 
 ## 🧪 Testing
 
@@ -560,6 +724,7 @@ lefarma-project/
 | **Roles** | ✅ | ✅ | `/api/admin/roles` | ✅ Completo |
 | **Permisos** | ✅ | ✅ | `/api/admin/permisos` | ✅ Completo |
 | **Notificaciones** | ✅ | ✅ | `/api/notifications/*` | ✅ Completo |
+| **Gestión de Archivos** | ✅ | ✅ | `/api/archivos/*` | ✅ Completo |
 
 ## 🔄 Flujo de Trabajo
 
@@ -662,4 +827,4 @@ Proprietary - Grupo Lefarma
 
 ---
 
-*Última actualización: 2026-03-24*
+*Última actualización: 2026-03-26*

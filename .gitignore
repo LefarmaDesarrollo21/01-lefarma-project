@@ -73,3 +73,6 @@ logs/security/
 .auto-claude-security.json
 .claude_settings.json
 .claude/settings.local.json
+
+# Brainstorming mockups
+.superpowers/
