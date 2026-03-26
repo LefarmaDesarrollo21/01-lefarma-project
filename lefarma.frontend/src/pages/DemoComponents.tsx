@@ -888,18 +888,14 @@ const EjemploArchivos = () => {
       />
 
       {/* FileViewer Modal */}
-      {archivoId && (
-        <FileViewer
-          open={viewerOpen}
-          onClose={() => {
-            setViewerOpen(false);
-            setArchivoId(null);
-            setArchivoNombre("");
-          }}
-          archivoId={archivoId}
-          titulo={archivoNombre}
-        />
-      )}
+      <FileViewer
+        open={viewerOpen && archivoId !== null}
+        onClose={() => {
+          setViewerOpen(false);
+        }}
+        archivoId={archivoId || 0}
+        titulo={archivoNombre}
+      />
     </div>
   );
 };
