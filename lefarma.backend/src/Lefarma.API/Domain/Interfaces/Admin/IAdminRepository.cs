@@ -52,11 +52,16 @@ public interface IAdminRepository
     #region Asignaciones
 
     Task AsignarRolesAUsuarioAsync(int usuarioId, List<int> rolesIds);
+    Task AsignarPermisosAUsuarioAsync(int usuarioId, List<int> permisosIds);
     Task AsignarPermisosARolAsync(int rolId, List<int> permisosIds);
+    Task AsignarUsuariosARolAsync(int rolId, List<int> usuariosIds);
+    Task AsignarRolesAPermisoAsync(int permisoId, List<int> rolesIds);
+    Task AsignarUsuariosAPermisoAsync(int permisoId, List<int> usuariosIds);
     Task<bool> RolTieneUsuariosAsync(int rolId);
     Task<bool> PermisoTieneRolesAsync(int permisoId);
     Task<bool> RolExisteYActivoAsync(int rolId);
     Task<bool> PermisoExisteYActivoAsync(int permisoId);
+    Task<bool> UsuarioExisteYActivoAsync(int usuarioId);
 
     #endregion
 

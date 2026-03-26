@@ -39,6 +39,18 @@
     }
 
     /// <summary>
+    /// Response DTO básico para Usuario (sin relaciones completas)
+    /// </summary>
+    public class UsuarioBasicoResponse
+    {
+        public int IdUsuario { get; set; }
+        public string? SamAccountName { get; set; }
+        public string? NombreCompleto { get; set; }
+        public string? Correo { get; set; }
+        public bool EsActivo { get; set; }
+    }
+
+    /// <summary>
     /// Request DTO para actualizar Usuario
     /// </summary>
     public class UpdateUsuarioRequest
@@ -48,6 +60,7 @@
         public string? Correo { get; set; }
 
         public List<int> RolesIds { get; set; } = [];
+        public List<int> PermisosIds { get; set; } = [];
         public UpdateUsuarioDetalleRequest? Detalle { get; set; }
     }
 
@@ -152,6 +165,22 @@
     }
 
     /// <summary>
+    /// Response DTO para Rol con lista de usuarios
+    /// </summary>
+    public class RolConUsuariosResponse
+    {
+        public int IdRol { get; set; }
+        public string NombreRol { get; set; } = string.Empty;
+        public string? Descripcion { get; set; }
+        public bool EsActivo { get; set; }
+        public bool EsSistema { get; set; }
+        public DateTime FechaCreacion { get; set; }
+        public int CantidadUsuarios { get; set; }
+        public List<PermisoBasicoResponse> Permisos { get; set; } = [];
+        public List<UsuarioBasicoResponse> Usuarios { get; set; } = [];
+    }
+
+    /// <summary>
     /// Response DTO básico para Rol (sin relaciones)
     /// </summary>
     public class RolBasicoResponse
@@ -207,6 +236,7 @@
         public bool EsSistema { get; set; }
         public DateTime FechaCreacion { get; set; }
         public int CantidadRoles { get; set; }
+        public int CantidadUsuarios { get; set; }
     }
 
     /// <summary>
@@ -274,12 +304,45 @@
     }
 
     /// <summary>
+    /// Request DTO para asignar usuarios a un rol
+    /// </summary>
+    public class AsignarUsuariosRequest
+    {
+        public List<int> UsuariosIds { get; set; } = [];
+    }
+
+    /// <summary>
+    /// Request DTO para asignar roles a un permiso
+    /// </summary>
+    public class AsignarRolesAPermisoRequest
+    {
+        public List<int> RolesIds { get; set; } = [];
+    }
+
+    /// <summary>
+    /// Request DTO para asignar usuarios a un permiso
+    /// </summary>
+    public class AsignarUsuariosAPermisoRequest
+    {
+        public List<int> UsuariosIds { get; set; } = [];
+    }
+
+    /// <summary>
+    /// Response DTO para permiso con roles y usuarios
+    /// </summary>
+    public class PermisoConRolesYUsuariosResponse : PermisoResponse
+    {
+        public List<RolBasicoResponse> Roles { get; set; } = [];
+        public List<UsuarioBasicoResponse> Usuarios { get; set; } = [];
+    }
+
+    /// <summary>
     /// Request DTO para asignar permisos directos a un usuario
     /// </summary>
     public class AsignarPermisosUsuarioRequest
     {
         public List<int> PermisosIds { get; set; } = [];
-        
+
         public DateTime? FechaExpiracion { get; set; }
     }
 

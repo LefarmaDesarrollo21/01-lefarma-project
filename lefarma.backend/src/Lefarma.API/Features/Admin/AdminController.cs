@@ -9,7 +9,6 @@ namespace Lefarma.API.Features.Admin;
 
 [Route("api/[controller]")]
 [ApiController]
-//[Authorize(Roles = "Admin")] // Solo administradores
 [EndpointGroupName("Admin")]
 public class AdminController : ControllerBase
 {
@@ -101,6 +100,18 @@ public class AdminController : ControllerBase
         }));
     }
 
+    [HttpGet("roles/{id}/usuarios")]
+    [SwaggerOperation(Summary = "Obtener rol con lista de usuarios")]
+    public async Task<IActionResult> GetRolWithUsuarios(int id)
+    {
+        var result = await _adminService.GetRolWithUsuariosAsync(id);
+        return result.ToActionResult(this, data => Ok(new ApiResponse<RolConUsuariosResponse>
+        {
+            Success = true,
+            Data = data
+        }));
+    }
+
     [HttpPost("roles")]
     [SwaggerOperation(Summary = "Crear rol")]
     public async Task<IActionResult> CreateRol([FromBody] CreateRolRequest request)
@@ -125,6 +136,18 @@ public class AdminController : ControllerBase
         {
             Success = true,
             Data = data
+        }));
+    }
+
+    [HttpPut("roles/{id}/usuarios")]
+    [SwaggerOperation(Summary = "Actualizar usuarios de un rol")]
+    public async Task<IActionResult> UpdateRolUsuarios(int id, [FromBody] AsignarUsuariosRequest request)
+    {
+        var result = await _adminService.UpdateRolUsuariosAsync(id, request);
+        return result.ToActionResult(this, data => Ok(new ApiResponse<bool>
+        {
+            Success = true,
+            Message = "Usuarios actualizados exitosamente"
         }));
     }
 
@@ -204,6 +227,42 @@ public class AdminController : ControllerBase
         {
             Success = true,
             Message = "Permiso eliminado exitosamente"
+        }));
+    }
+
+    [HttpGet("permisos/{id}/relaciones")]
+    [SwaggerOperation(Summary = "Obtener permiso con roles y usuarios")]
+    public async Task<IActionResult> GetPermisoConRelaciones(int id)
+    {
+        var result = await _adminService.GetPermisoConRelacionesAsync(id);
+        return result.ToActionResult(this, data => Ok(new ApiResponse<PermisoConRolesYUsuariosResponse>
+        {
+            Success = true,
+            Data = data
+        }));
+    }
+
+    [HttpPut("permisos/{id}/roles")]
+    [SwaggerOperation(Summary = "Actualizar roles de un permiso")]
+    public async Task<IActionResult> UpdatePermisoRoles(int id, [FromBody] AsignarRolesAPermisoRequest request)
+    {
+        var result = await _adminService.UpdatePermisoRolesAsync(id, request);
+        return result.ToActionResult(this, data => Ok(new ApiResponse<bool>
+        {
+            Success = true,
+            Message = "Roles actualizados exitosamente"
+        }));
+    }
+
+    [HttpPut("permisos/{id}/usuarios")]
+    [SwaggerOperation(Summary = "Actualizar usuarios de un permiso")]
+    public async Task<IActionResult> UpdatePermisoUsuarios(int id, [FromBody] AsignarUsuariosAPermisoRequest request)
+    {
+        var result = await _adminService.UpdatePermisoUsuariosAsync(id, request);
+        return result.ToActionResult(this, data => Ok(new ApiResponse<bool>
+        {
+            Success = true,
+            Message = "Usuarios actualizados exitosamente"
         }));
     }
 
