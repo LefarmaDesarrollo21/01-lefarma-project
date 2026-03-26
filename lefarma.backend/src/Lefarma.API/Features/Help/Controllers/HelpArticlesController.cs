@@ -122,13 +122,39 @@ public class HelpArticlesController : ControllerBase
     }
 
     /// <summary>
+    /// Obtiene artículos de ayuda para usuarios (tipo 'usuario' o 'ambos')
+    /// </summary>
+    /// <param name="modulo">Nombre del módulo (opcional)</param>
+    /// <param name="ct">Token de cancelación</param>
+    /// <returns>Lista de artículos de ayuda para usuarios</returns>
+    [HttpGet("for-user")]
+    [SwaggerOperation(Summary = "Obtener artículos para usuario", Description = "Retorna artículos de ayuda con tipo 'usuario' o 'ambos', opcionalmente filtrados por módulo")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<HelpArticleDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetForUser(
+        [FromQuery][SwaggerParameter(Description = "Nombre del módulo para filtrar (ej: Catalogos, Auth, Notificaciones)")] string? modulo,
+        CancellationToken ct)
+    {
+        var result = await _helpArticleService.GetForUserAsync(modulo, ct);
+
+        return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<HelpArticleDto>>
+        {
+            Success = true,
+            Message = modulo != null
+                ? $"Artículos de ayuda para usuario del módulo {modulo} obtenidos exitosamente."
+                : "Artículos de ayuda para usuario obtenidos exitosamente.",
+            Data = data
+        }));
+    }
+
+    /// <summary>
     /// Crea un nuevo artículo de ayuda
     /// </summary>
     /// <param name="request">Datos del artículo a crear</param>
     /// <param name="ct">Token de cancelación</param>
     /// <returns>Artículo creado</returns>
     [HttpPost]
-    [Authorize(Roles = "Administrator,Manager")]
     [SwaggerOperation(Summary = "Crear artículo de ayuda", Description = "Crea un nuevo artículo de ayuda con los datos proporcionados")]
     [ProducesResponseType(typeof(ApiResponse<HelpArticleDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -161,7 +187,6 @@ public class HelpArticlesController : ControllerBase
     /// <param name="ct">Token de cancelación</param>
     /// <returns>Artículo actualizado</returns>
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Administrator,Manager")]
     [SwaggerOperation(Summary = "Actualizar artículo de ayuda", Description = "Actualiza los datos de un artículo de ayuda existente")]
     [ProducesResponseType(typeof(ApiResponse<HelpArticleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -202,7 +227,6 @@ public class HelpArticlesController : ControllerBase
     /// <param name="ct">Token de cancelación</param>
     /// <returns>Confirmación de eliminación</returns>
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(Summary = "Eliminar artículo de ayuda", Description = "Elimina un artículo de ayuda por su identificador")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
