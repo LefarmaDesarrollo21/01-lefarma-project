@@ -60,6 +60,28 @@ public class HelpArticleRepository : BaseRepository<HelpArticle>, IHelpArticleRe
     }
 
     /// <summary>
+    /// Obtiene artículos de ayuda para usuarios (tipo 'usuario' o 'ambos'), ordenados por fecha de actualización descendente.
+    /// Opcionalmente filtrados por módulo.
+    /// </summary>
+    public async Task<IEnumerable<HelpArticle>> GetForUserAsync(string? modulo, CancellationToken ct)
+    {
+        var query = _context.HelpArticles
+            .AsNoTracking()
+            .Where(a => a.Activo && (a.Tipo == "usuario" || a.Tipo == "ambos"));
+
+        if (!string.IsNullOrWhiteSpace(modulo))
+        {
+            query = query.Where(a => a.Modulo == modulo);
+        }
+
+        return await query
+            .OrderBy(a => a.Orden)
+            .ThenByDescending(a => a.FechaActualizacion)
+            .ThenByDescending(a => a.FechaCreacion)
+            .ToListAsync(ct);
+    }
+
+    /// <summary>
     /// Obtiene un artículo de ayuda por ID.
     /// Implementación de interfaz con AsNoTracking.
     /// </summary>

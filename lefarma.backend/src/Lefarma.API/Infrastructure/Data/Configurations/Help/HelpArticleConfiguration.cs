@@ -29,6 +29,9 @@ public class HelpArticleConfiguration : IEntityTypeConfiguration<HelpArticle>
             .HasColumnName("resumen")
             .HasMaxLength(500);
 
+        builder.Property(x => x.ModuloId)
+            .HasColumnName("modulo_id");
+
         builder.Property(x => x.Modulo)
             .HasColumnName("modulo")
             .HasMaxLength(50)
@@ -37,7 +40,8 @@ public class HelpArticleConfiguration : IEntityTypeConfiguration<HelpArticle>
         builder.Property(x => x.Tipo)
             .HasColumnName("tipo")
             .HasMaxLength(50)
-            .IsRequired();
+            .IsRequired()
+            .HasDefaultValue("usuario");
 
         builder.Property(x => x.Categoria)
             .HasColumnName("categoria")
@@ -67,7 +71,6 @@ public class HelpArticleConfiguration : IEntityTypeConfiguration<HelpArticle>
             .HasColumnName("actualizado_por")
             .HasMaxLength(100);
 
-        // Índices para búsquedas frecuentes
         builder.HasIndex(x => new { x.Modulo, x.Activo })
             .HasDatabaseName("IX_HelpArticles_modulo_activo");
 
@@ -77,5 +80,10 @@ public class HelpArticleConfiguration : IEntityTypeConfiguration<HelpArticle>
         builder.HasIndex(x => new { x.Categoria, x.Activo })
             .HasDatabaseName("IX_HelpArticles_categoria_activo")
             .HasFilter("[categoria] IS NOT NULL");
+
+        builder.HasOne(x => x.ModuloNavigation)
+            .WithMany(m => m.Articulos)
+            .HasForeignKey(x => x.ModuloId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

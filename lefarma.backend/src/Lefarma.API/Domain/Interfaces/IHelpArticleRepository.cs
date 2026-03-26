@@ -23,6 +23,12 @@ public interface IHelpArticleRepository
     Task<IEnumerable<HelpArticle>> GetByTypeAsync(string tipo, CancellationToken ct);
 
     /// <summary>
+    /// Obtiene artículos de ayuda para usuarios (tipo 'usuario' o 'ambos').
+    /// Opcionalmente filtrados por módulo.
+    /// </summary>
+    Task<IEnumerable<HelpArticle>> GetForUserAsync(string? modulo, CancellationToken ct);
+
+    /// <summary>
     /// Obtiene un artículo de ayuda por ID.
     /// </summary>
     Task<HelpArticle?> GetByIdAsync(int id, CancellationToken ct);
