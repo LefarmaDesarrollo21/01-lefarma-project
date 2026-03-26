@@ -3,9 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Edit, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Textarea } from '@/components/ui/textarea';
 import { useHelpStore } from '@/store/helpStore';
-import LexicalRenderer from '@/components/help/LexicalRenderer';
+import LexicalEditor from '@/components/help/LexicalEditor';
+import LexicalViewer from '@/components/help/LexicalViewer';
 import { helpService } from '@/services/helpService';
 import type { UpdateHelpArticleRequest } from '@/types/help.types';
 
@@ -159,19 +159,12 @@ export default function HelpView() {
           {/* Content */}
           <div className="border-t pt-6">
             {isEditing ? (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground mb-2">
-                  Editando contenido JSON (próximamente: editor visual con Lexical)
-                </p>
-                <Textarea
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  rows={15}
-                  className="font-mono text-sm"
-                />
-              </div>
+              <LexicalEditor
+                initialContent={selectedArticle.contenido}
+                onChange={setEditedContent}
+              />
             ) : (
-              <LexicalRenderer contenido={selectedArticle.contenido} />
+              <LexicalViewer contenido={selectedArticle.contenido} />
             )}
           </div>
         </div>

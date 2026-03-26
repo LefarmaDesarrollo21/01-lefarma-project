@@ -10,10 +10,10 @@ interface HelpState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions
   fetchAllArticles: () => Promise<void>;
-  fetchArticlesByModule: (modulo: string) => Promise<void>;
+  fetchArticlesByModule: (modulo: string, tipo?: string) => Promise<void>;
   fetchArticlesByType: (tipo: string) => Promise<void>;
+  fetchForUser: () => Promise<void>;
   fetchArticleById: (id: number) => Promise<void>;
   setSelectedModule: (modulo: string) => void;
   setSelectedType: (tipo: string) => void;
@@ -23,13 +23,13 @@ interface HelpState {
 export const useHelpStore = create<HelpState>((set, get) => ({
   articles: [],
   selectedArticle: null,
-  selectedModule: 'General',
+  selectedModule: '',
   selectedType: 'usuario',
   isLoading: false,
   error: null,
 
   fetchAllArticles: async () => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, selectedModule: '' });
     try {
       const articles = await helpService.getAll();
       set({ articles, isLoading: false });
@@ -38,11 +38,18 @@ export const useHelpStore = create<HelpState>((set, get) => ({
     }
   },
 
-  fetchArticlesByModule: async (modulo: string) => {
+  fetchArticlesByModule: async (modulo: string, tipo?: string) => {
     set({ isLoading: true, error: null, selectedModule: modulo });
+    if (tipo) {
+      set({ selectedType: tipo });
+    }
     try {
       const articles = await helpService.getByModule(modulo);
-      set({ articles, isLoading: false });
+      // Filtrar por tipo si se especifica
+      const filtered = tipo 
+        ? articles.filter(a => a.tipo === tipo || a.tipo === 'ambos')
+        : articles;
+      set({ articles: filtered, isLoading: false });
     } catch (error) {
       set({ error: 'Error al cargar artículos', isLoading: false });
     }
@@ -53,6 +60,16 @@ export const useHelpStore = create<HelpState>((set, get) => ({
     try {
       const articles = await helpService.getByType(tipo);
       set({ articles, isLoading: false });
+    } catch (error) {
+      set({ error: 'Error al cargar artículos', isLoading: false });
+    }
+  },
+
+  fetchForUser: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const articles = await helpService.getForUser();
+      set({ articles, selectedType: 'usuario', isLoading: false });
     } catch (error) {
       set({ error: 'Error al cargar artículos', isLoading: false });
     }
