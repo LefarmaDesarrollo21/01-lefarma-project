@@ -70,6 +70,8 @@ import {
 import type { BundledLanguage } from "@/components/kibo-ui/code-block";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ContextMenu,
@@ -84,8 +86,11 @@ import {
   Clock,
   Code2,
   Copy,
+  Download,
   EyeIcon,
+  FileIcon,
   GanttChartSquareIcon,
+  HardDrive,
   Layers,
   LinkIcon,
   ListIcon,
@@ -94,8 +99,12 @@ import {
   TableIcon,
   Terminal,
   TrashIcon,
+  Upload,
   Zap,
 } from "lucide-react";
+import { FileUploader } from "@/components/archivos/FileUploader";
+import { FileViewer } from "@/components/archivos/FileViewer";
+import { toast } from "sonner";
 
 // ==========================================
 // DATOS DE EJEMPLO
@@ -219,6 +228,13 @@ const tareasDemo = [
     usuario: usuarios[3],
     grupo: grupos[2],
   },
+];
+
+// Datos de ejemplo para Archivos
+const archivosEjemplo = [
+  { id: 1, nombre: "Documento.pdf", tipo: "application/pdf", tamanoBytes: 245000, extension: ".pdf" },
+  { id: 2, nombre: "Imagen.png", tipo: "image/png", tamanoBytes: 120000, extension: ".png" },
+  { id: 3, nombre: "Reporte.xlsx", tipo: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", tamanoBytes: 89000, extension: ".xlsx" },
 ];
 
 // Código de ejemplo para CodeBlock - solo TSX
@@ -803,6 +819,91 @@ const EjemploTabla = () => {
   );
 };
 
+const EjemploArchivos = () => {
+  const [uploaderOpen, setUploaderOpen] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [archivoId, setArchivoId] = useState<number | null>(null);
+  const [archivoNombre, setArchivoNombre] = useState<string>("");
+  const [archivoIdManual, setArchivoIdManual] = useState<string>("");
+
+  const handleUploadComplete = (archivos: { id: number; nombreOriginal: string }[]) => {
+    setUploaderOpen(false);
+    if (archivos.length > 0) {
+      const archivo = archivos[0];
+      // Mostrar ID y abrir viewer automáticamente
+      setArchivoId(archivo.id);
+      setArchivoNombre(archivo.nombreOriginal);
+      setViewerOpen(true);
+    }
+  };
+
+  const handleVisualizarPorId = () => {
+    if (archivoIdManual) {
+      setArchivoId(Number(archivoIdManual));
+      setArchivoNombre(`Archivo ID: ${archivoIdManual}`);
+      setViewerOpen(true);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Botón de subir */}
+      <button
+        onClick={() => setUploaderOpen(true)}
+        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+      >
+        <Upload className="h-4 w-4" />
+        Subir Archivo
+      </button>
+
+      {/* Sección para visualizar por ID manual */}
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <label className="text-sm font-medium mb-1.5 block">ID del archivo</label>
+          <Input 
+            type="number" 
+            placeholder="Ingresa el ID del archivo..."
+            value={archivoIdManual}
+            onChange={(e) => setArchivoIdManual(e.target.value)}
+          />
+        </div>
+        <Button 
+          onClick={handleVisualizarPorId}
+          disabled={!archivoIdManual}
+        >
+          <EyeIcon className="h-4 w-4 mr-2" />
+          Visualizar
+        </Button>
+      </div>
+
+      {/* FileUploader Modal */}
+      <FileUploader
+        open={uploaderOpen}
+        onClose={() => setUploaderOpen(false)}
+        entidadTipo="demo"
+        entidadId={123}
+        carpeta="demo"
+        onUploadComplete={handleUploadComplete}
+        onError={(error) => toast.error(error)}
+      />
+
+      {/* FileViewer Modal */}
+      {archivoId && (
+        <FileViewer
+          open={viewerOpen}
+          onClose={() => {
+            setViewerOpen(false);
+            setArchivoId(null);
+            setArchivoNombre("");
+          }}
+          archivoId={archivoId}
+          titulo={archivoNombre}
+        />
+      )}
+    </div>
+  );
+};
+
 // ==========================================
 // PÁGINA PRINCIPAL
 // ==========================================
@@ -1060,6 +1161,7 @@ export default function DemoComponents() {
               { name: "Kanban", description: "Tablero tipo Trello con drag and drop", icon: Layers, status: "stable" },
               { name: "List", description: "Lista organizada con agrupación", icon: ListIcon, status: "stable" },
               { name: "Table", description: "Tabla avanzada con ordenamiento", icon: TableIcon, status: "stable" },
+              { name: "File Manager", description: "Gestión de archivos con upload y preview", icon: FileIcon, status: "new" },
             ].map((component) => (
               <div
                 key={component.name}
@@ -1077,6 +1179,53 @@ export default function DemoComponents() {
                 <p className="text-sm text-muted-foreground">{component.description}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Sistema de Gestión de Archivos */}
+        <section className="space-y-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge className="bg-primary text-primary-foreground">Nuevo</Badge>
+              <h2 className="text-2xl font-semibold tracking-tight">Sistema de Gestión de Archivos</h2>
+            </div>
+            <p className="text-muted-foreground max-w-2xl">
+              Subida, previsualización y gestión de archivos con soporte para PDF, imágenes y documentos Office.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 border rounded-xl bg-card shadow-sm overflow-hidden">
+              <div className="p-4 border-b bg-muted/30">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-primary" />
+                  Gestor de Archivos
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Subí y previsualizá archivos con drag & drop
+                </p>
+              </div>
+              <div className="p-4">
+                <EjemploArchivos />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                { icon: Upload, title: "Drag & Drop", desc: "Arrastrá archivos directamente" },
+                { icon: EyeIcon, title: "Previsualización", desc: "PDF, imágenes y más" },
+                { icon: Download, title: "Descarga", desc: "Descarga directa de archivos" },
+                { icon: FileIcon, title: "Multi-formato", desc: "PDF, Office, imágenes" },
+              ].map((feat, i) => (
+                <div key={i} className="p-4 rounded-xl border bg-card">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-sm">{feat.title}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{feat.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </div>
