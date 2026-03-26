@@ -79,11 +79,14 @@ public class NotificationChannelRequest
     public string ChannelType { get; set; } = string.Empty;
 
     /// <summary>
-    /// Recipients separated by semicolon (;)
+    /// List of user IDs to send the notification to
     /// </summary>
-    [Required]
-    [MaxLength(500)]
-    public string Recipients { get; set; } = string.Empty;
+    public List<int>? UserIds { get; set; }
+
+    /// <summary>
+    /// List of role names to send the notification to all users with those roles
+    /// </summary>
+    public List<string>? RoleNames { get; set; }
 
     /// <summary>
     /// Channel-specific configuration data
@@ -306,9 +309,12 @@ public class TestNotificationRequest
     public string ChannelType { get; set; } = string.Empty;
 
     /// <summary>
-    /// Recipient to send test to
+    /// User IDs to send test to (optional, defaults to current user if not provided)
     /// </summary>
-    [Required]
-    [MaxLength(500)]
-    public string Recipient { get; set; } = string.Empty;
+    public List<int>? UserIds { get; set; }
+
+    /// <summary>
+    /// Role names to send test to (optional)
+    /// </summary>
+    public List<string>? RoleNames { get; set; }
 }

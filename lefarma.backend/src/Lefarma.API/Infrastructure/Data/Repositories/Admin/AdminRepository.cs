@@ -236,6 +236,36 @@ public class AdminRepository : IAdminRepository
         await _asokamContext.SaveChangesAsync();
     }
 
+    public async Task AsignarPermisosAUsuarioAsync(int usuarioId, List<int> permisosIds)
+    {
+        var usuario = await _asokamContext.Usuarios
+            .Include(u => u.UsuariosPermisos)
+            .FirstOrDefaultAsync(u => u.IdUsuario == usuarioId);
+
+        if (usuario == null)
+            throw new InvalidOperationException($"Usuario con ID {usuarioId} no encontrado");
+
+        // Eliminar permisos existentes
+        _asokamContext.UsuariosPermisos.RemoveRange(usuario.UsuariosPermisos);
+
+        // Agregar nuevos permisos
+        foreach (var permisoId in permisosIds)
+        {
+            var permisoExiste = await PermisoExisteYActivoAsync(permisoId);
+            if (permisoExiste)
+            {
+                _asokamContext.UsuariosPermisos.Add(new UsuarioPermiso
+                {
+                    IdUsuario = usuarioId,
+                    IdPermiso = permisoId,
+                    FechaAsignacion = DateTime.UtcNow
+                });
+            }
+        }
+
+        await _asokamContext.SaveChangesAsync();
+    }
+
     public async Task AsignarPermisosARolAsync(int rolId, List<int> permisosIds)
     {
         var rol = await _asokamContext.Roles
@@ -265,6 +295,36 @@ public class AdminRepository : IAdminRepository
         await _asokamContext.SaveChangesAsync();
     }
 
+    public async Task AsignarUsuariosARolAsync(int rolId, List<int> usuariosIds)
+    {
+        var rol = await _asokamContext.Roles
+            .Include(r => r.UsuariosRoles)
+            .FirstOrDefaultAsync(r => r.IdRol == rolId);
+
+        if (rol == null)
+            throw new InvalidOperationException($"Rol con ID {rolId} no encontrado");
+
+        // Eliminar asignaciones existentes
+        _asokamContext.UsuariosRoles.RemoveRange(rol.UsuariosRoles);
+
+        // Agregar nuevas asignaciones
+        foreach (var usuarioId in usuariosIds)
+        {
+            var usuarioExiste = await UsuarioExisteYActivoAsync(usuarioId);
+            if (usuarioExiste)
+            {
+                _asokamContext.UsuariosRoles.Add(new UsuarioRol
+                {
+                    IdRol = rolId,
+                    IdUsuario = usuarioId,
+                    FechaAsignacion = DateTime.UtcNow
+                });
+            }
+        }
+
+        await _asokamContext.SaveChangesAsync();
+    }
+
     public async Task<bool> RolTieneUsuariosAsync(int rolId)
     {
         return await _asokamContext.UsuariosRoles.AnyAsync(ur => ur.IdRol == rolId);
@@ -283,6 +343,71 @@ public class AdminRepository : IAdminRepository
     public async Task<bool> PermisoExisteYActivoAsync(int permisoId)
     {
         return await _asokamContext.Permisos.AnyAsync(p => p.IdPermiso == permisoId && p.EsActivo);
+    }
+
+    public async Task<bool> UsuarioExisteYActivoAsync(int usuarioId)
+    {
+        return await _asokamContext.Usuarios.AnyAsync(u => u.IdUsuario == usuarioId && u.EsActivo);
+    }
+
+    public async Task AsignarRolesAPermisoAsync(int permisoId, List<int> rolesIds)
+    {
+        var permiso = await _asokamContext.Permisos
+            .Include(p => p.RolesPermisos)
+            .FirstOrDefaultAsync(p => p.IdPermiso == permisoId);
+
+        if (permiso == null)
+            throw new InvalidOperationException($"Permiso con ID {permisoId} no encontrado");
+
+        // Eliminar asignaciones existentes
+        _asokamContext.RolesPermisos.RemoveRange(permiso.RolesPermisos);
+
+        // Agregar nuevas asignaciones
+        foreach (var rolId in rolesIds)
+        {
+            var rolExiste = await RolExisteYActivoAsync(rolId);
+            if (rolExiste)
+            {
+                _asokamContext.RolesPermisos.Add(new RolPermiso
+                {
+                    IdRol = rolId,
+                    IdPermiso = permisoId,
+                    FechaAsignacion = DateTime.UtcNow
+                });
+            }
+        }
+
+        await _asokamContext.SaveChangesAsync();
+    }
+
+    public async Task AsignarUsuariosAPermisoAsync(int permisoId, List<int> usuariosIds)
+    {
+        var permiso = await _asokamContext.Permisos
+            .Include(p => p.UsuariosPermisos)
+            .FirstOrDefaultAsync(p => p.IdPermiso == permisoId);
+
+        if (permiso == null)
+            throw new InvalidOperationException($"Permiso con ID {permisoId} no encontrado");
+
+        // Eliminar asignaciones existentes
+        _asokamContext.UsuariosPermisos.RemoveRange(permiso.UsuariosPermisos);
+
+        // Agregar nuevas asignaciones
+        foreach (var usuarioId in usuariosIds)
+        {
+            var usuarioExiste = await UsuarioExisteYActivoAsync(usuarioId);
+            if (usuarioExiste)
+            {
+                _asokamContext.UsuariosPermisos.Add(new UsuarioPermiso
+                {
+                    IdUsuario = usuarioId,
+                    IdPermiso = permisoId,
+                    FechaAsignacion = DateTime.UtcNow
+                });
+            }
+        }
+
+        await _asokamContext.SaveChangesAsync();
     }
 
     #endregion

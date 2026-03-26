@@ -154,6 +154,11 @@ public class AdminService : BaseService, IAdminService
                 await _repository.AsignarRolesAUsuarioAsync(id, request.RolesIds);
             }
 
+            if (request.PermisosIds.Any())
+            {
+                await _repository.AsignarPermisosAUsuarioAsync(id, request.PermisosIds);
+            }
+
             // Actualizar o crear detalle del usuario
             if (request.Detalle != null)
             {
@@ -349,12 +354,6 @@ public class AdminService : BaseService, IAdminService
                 return CommonErrors.NotFound("Rol", id.ToString());
             }
 
-            if (rol.EsSistema)
-            {
-                EnrichWideEvent(action: "UpdateRol", entityId: id, error: "No se puede modificar un rol de sistema");
-                return CommonErrors.Validation("rol", "No se puede modificar un rol de sistema");
-            }
-
             var existeOtro = await _repository.ExisteOtroRolAsync(request.NombreRol, id);
             if (existeOtro)
             {
@@ -381,6 +380,81 @@ public class AdminService : BaseService, IAdminService
         {
             EnrichWideEvent(action: "UpdateRol", entityId: id, exception: ex);
             return CommonErrors.DatabaseError("actualizar el rol");
+        }
+    }
+
+    public async Task<ErrorOr<RolConUsuariosResponse>> GetRolWithUsuariosAsync(int id)
+    {
+        try
+        {
+            var rol = await _repository.GetRolByIdConRelacionesAsync(id);
+
+            if (rol == null)
+            {
+                EnrichWideEvent(action: "GetRolWithUsuarios", entityId: id, notFound: true);
+                return CommonErrors.NotFound("Rol", id.ToString());
+            }
+
+            // Obtener IDs de usuarios asignados
+            var usuarioIds = rol.UsuariosRoles.Select(ur => ur.IdUsuario).ToList();
+
+            // Obtener datos completos de usuarios
+            var usuarios = new List<Usuario>();
+            foreach (var usuarioId in usuarioIds)
+            {
+                var usuario = await _repository.GetUsuarioByIdAsync(usuarioId);
+                if (usuario != null)
+                {
+                    usuarios.Add(usuario);
+                }
+            }
+
+            var response = new RolConUsuariosResponse
+            {
+                IdRol = rol.IdRol,
+                NombreRol = rol.NombreRol,
+                Descripcion = rol.Descripcion,
+                EsActivo = rol.EsActivo,
+                EsSistema = rol.EsSistema,
+                FechaCreacion = rol.FechaCreacion,
+                CantidadUsuarios = rol.UsuariosRoles.Count,
+                Permisos = rol.RolesPermisos
+                    .Where(rp => rp.Permiso.EsActivo)
+                    .Select(rp => rp.Permiso.ToPermisoBasicoResponse())
+                    .ToList(),
+                Usuarios = usuarios.Select(u => u.ToUsuarioBasicoResponse()).ToList()
+            };
+
+            EnrichWideEvent(action: "GetRolWithUsuarios", entityId: id, nombre: rol.NombreRol);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            EnrichWideEvent(action: "GetRolWithUsuarios", entityId: id, exception: ex);
+            return CommonErrors.DatabaseError("obtener el rol con usuarios");
+        }
+    }
+
+    public async Task<ErrorOr<bool>> UpdateRolUsuariosAsync(int id, AsignarUsuariosRequest request)
+    {
+        try
+        {
+            var rol = await _repository.GetRolByIdAsync(id);
+            if (rol == null)
+            {
+                EnrichWideEvent(action: "UpdateRolUsuarios", entityId: id, notFound: true);
+                return CommonErrors.NotFound("Rol", id.ToString());
+            }
+
+            await _repository.AsignarUsuariosARolAsync(id, request.UsuariosIds);
+
+            EnrichWideEvent(action: "UpdateRolUsuarios", entityId: id, nombre: rol.NombreRol, count: request.UsuariosIds.Count);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            EnrichWideEvent(action: "UpdateRolUsuarios", entityId: id, exception: ex);
+            return CommonErrors.DatabaseError("actualizar los usuarios del rol");
         }
     }
 
@@ -483,7 +557,7 @@ public class AdminService : BaseService, IAdminService
             if (existePermiso)
             {
                 EnrichWideEvent(action: "CreatePermiso", nombre: request.CodigoPermiso, duplicate: true);
-                return CommonErrors.AlreadyExists("Permiso", "código", request.CodigoPermiso);
+                return CommonErrors.AlreadyExists("Permiso", "cï¿½digo", request.CodigoPermiso);
             }
 
             var permiso = new Permiso
@@ -523,17 +597,11 @@ public class AdminService : BaseService, IAdminService
                 return CommonErrors.NotFound("Permiso", id.ToString());
             }
 
-            if (permiso.EsSistema)
-            {
-                EnrichWideEvent(action: "UpdatePermiso", entityId: id, error: "No se puede modificar un permiso de sistema");
-                return CommonErrors.Validation("permiso", "No se puede modificar un permiso de sistema");
-            }
-
             var existeOtro = await _repository.ExisteOtroPermisoAsync(request.CodigoPermiso, id);
             if (existeOtro)
             {
                 EnrichWideEvent(action: "UpdatePermiso", entityId: id, nombre: request.CodigoPermiso, duplicate: true);
-                return CommonErrors.AlreadyExists("Permiso", "código", request.CodigoPermiso);
+                return CommonErrors.AlreadyExists("Permiso", "cï¿½digo", request.CodigoPermiso);
             }
 
             permiso.CodigoPermiso = request.CodigoPermiso;
@@ -577,8 +645,8 @@ public class AdminService : BaseService, IAdminService
 
             if (await _repository.PermisoTieneRolesAsync(id))
             {
-                EnrichWideEvent(action: "DeletePermiso", entityId: id, error: "El permiso está asignado a roles");
-                return CommonErrors.Validation("permiso", "No se puede eliminar un permiso que está asignado a roles");
+                EnrichWideEvent(action: "DeletePermiso", entityId: id, error: "El permiso estï¿½ asignado a roles");
+                return CommonErrors.Validation("permiso", "No se puede eliminar un permiso que estï¿½ asignado a roles");
             }
 
             await _repository.DeletePermisoAsync(permiso);
@@ -590,6 +658,106 @@ public class AdminService : BaseService, IAdminService
         {
             EnrichWideEvent(action: "DeletePermiso", entityId: id, exception: ex);
             return CommonErrors.DatabaseError("eliminar el permiso");
+        }
+    }
+
+    public async Task<ErrorOr<PermisoConRolesYUsuariosResponse>> GetPermisoConRelacionesAsync(int id)
+    {
+        try
+        {
+            var permiso = await _repository.GetPermisoByIdConRelacionesAsync(id);
+
+            if (permiso == null)
+            {
+                EnrichWideEvent(action: "GetPermisoConRelaciones", entityId: id, notFound: true);
+                return CommonErrors.NotFound("Permiso", id.ToString());
+            }
+
+            var rolIds = permiso.RolesPermisos.Select(rp => rp.IdRol).ToList();
+            var roles = new List<Rol>();
+            foreach (var rolId in rolIds)
+            {
+                var rol = await _repository.GetRolByIdAsync(rolId);
+                if (rol != null) roles.Add(rol);
+            }
+
+            var usuarioIds = permiso.UsuariosPermisos.Select(up => up.IdUsuario).ToList();
+            var usuarios = new List<Usuario>();
+            foreach (var usuarioId in usuarioIds)
+            {
+                var usuario = await _repository.GetUsuarioByIdAsync(usuarioId);
+                if (usuario != null) usuarios.Add(usuario);
+            }
+
+            return new PermisoConRolesYUsuariosResponse
+            {
+                IdPermiso = permiso.IdPermiso,
+                CodigoPermiso = permiso.CodigoPermiso,
+                NombrePermiso = permiso.NombrePermiso,
+                Descripcion = permiso.Descripcion,
+                Categoria = permiso.Categoria,
+                Recurso = permiso.Recurso,
+                Accion = permiso.Accion,
+                EsActivo = permiso.EsActivo,
+                EsSistema = permiso.EsSistema,
+                FechaCreacion = permiso.FechaCreacion,
+                CantidadRoles = permiso.RolesPermisos.Count,
+                Roles = roles.Select(r => r.ToRolBasicoResponse()).ToList(),
+                Usuarios = usuarios.Select(u => u.ToUsuarioBasicoResponse()).ToList()
+            };
+        }
+        catch (Exception ex)
+        {
+            EnrichWideEvent(action: "GetPermisoConRelaciones", entityId: id, exception: ex);
+            return CommonErrors.DatabaseError("obtener el permiso con relaciones");
+        }
+    }
+
+    public async Task<ErrorOr<bool>> UpdatePermisoRolesAsync(int id, AsignarRolesAPermisoRequest request)
+    {
+        try
+        {
+            var permiso = await _repository.GetPermisoByIdAsync(id);
+
+            if (permiso == null)
+            {
+                EnrichWideEvent(action: "UpdatePermisoRoles", entityId: id, notFound: true);
+                return CommonErrors.NotFound("Permiso", id.ToString());
+            }
+
+            await _repository.AsignarRolesAPermisoAsync(id, request.RolesIds);
+
+            EnrichWideEvent(action: "UpdatePermisoRoles", entityId: id, nombre: permiso.NombrePermiso, count: request.RolesIds.Count);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            EnrichWideEvent(action: "UpdatePermisoRoles", entityId: id, exception: ex);
+            return CommonErrors.DatabaseError("actualizar los roles del permiso");
+        }
+    }
+
+    public async Task<ErrorOr<bool>> UpdatePermisoUsuariosAsync(int id, AsignarUsuariosAPermisoRequest request)
+    {
+        try
+        {
+            var permiso = await _repository.GetPermisoByIdAsync(id);
+
+            if (permiso == null)
+            {
+                EnrichWideEvent(action: "UpdatePermisoUsuarios", entityId: id, notFound: true);
+                return CommonErrors.NotFound("Permiso", id.ToString());
+            }
+
+            await _repository.AsignarUsuariosAPermisoAsync(id, request.UsuariosIds);
+
+            EnrichWideEvent(action: "UpdatePermisoUsuarios", entityId: id, nombre: permiso.NombrePermiso, count: request.UsuariosIds.Count);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            EnrichWideEvent(action: "UpdatePermisoUsuarios", entityId: id, exception: ex);
+            return CommonErrors.DatabaseError("actualizar los usuarios del permiso");
         }
     }
 

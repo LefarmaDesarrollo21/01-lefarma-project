@@ -62,11 +62,16 @@ export const authService = {
         await API.post('/auth/logout', { refreshToken });
       }
     } finally {
+      // Limpiar SOLO datos de autenticación
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
-      localStorage.removeItem(EMPRESA_KEY);
-      localStorage.removeItem(SUCURSAL_KEY);
+      localStorage.removeItem('token'); // Legacy token key
+
+      // NO borrar configuración de usuario (empresa, sucursal, notificaciones, etc.)
+
+      // Limpiar sessionStorage temporal
+      sessionStorage.removeItem('loginFlow');
     }
   },
 

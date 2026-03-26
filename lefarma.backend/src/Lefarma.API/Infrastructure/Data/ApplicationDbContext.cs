@@ -4,6 +4,8 @@ using Lefarma.API.Domain.Entities.Config;
 using Lefarma.API.Domain.Entities.Logging;
 using Lefarma.API.Domain.Entities.Notifications;
 using Lefarma.API.Domain.Entities.Operaciones;
+using Lefarma.API.Domain.Entities.Help;
+using Lefarma.API.Domain.Entities.Archivos;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -40,6 +42,15 @@ namespace Lefarma.API.Infrastructure.Data
         public DbSet<OrdenCompra> OrdenesCompra { get; set; }
         public DbSet<OrdenCompraPartida> OrdenesCompraPartidas { get; set; }
 
+        // DbSets - Catalogos Nuevos (Sistema CxP)
+        public DbSet<Proveedor> Proveedores { get; set; }
+        public DbSet<CentroCosto> CentrosCosto { get; set; }
+        public DbSet<CuentaContable> CuentasContables { get; set; }
+        public DbSet<EstatusOrden> EstatusOrden { get; set; }
+        public DbSet<RegimenFiscal> RegimenesFiscales { get; set; }
+        public DbSet<Banco> Bancos { get; set; }
+        public DbSet<MedioPago> MediosPago { get; set; }
+
         // DbSets - Auth/Identity
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Rol> Roles { get; set; }
@@ -62,6 +73,14 @@ namespace Lefarma.API.Infrastructure.Data
 
         // DbSets - Views (read-only)
         public DbSet<VwDirectorioActivo> VwDirectorioActivo { get; set; }
+
+        // DbSets - Help System
+        public DbSet<HelpModule> HelpModules { get; set; }
+        public DbSet<HelpArticle> HelpArticles { get; set; }
+        public DbSet<HelpImage> HelpImages { get; set; }
+
+        // DbSets - Archivos
+        public DbSet<Archivo> Archivos { get; set; }
 
         // Configuración mediante Fluent API
         protected override void OnModelCreating(ModelBuilder modelBuilder)

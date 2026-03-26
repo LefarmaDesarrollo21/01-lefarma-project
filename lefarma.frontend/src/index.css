@@ -62,6 +62,22 @@
     --shadow-2xl: 0 1px 2px 0px hsl(225.5172 35.8025% 15.8824% / 0.13);
     --tracking-normal: 0em;
     --spacing: 0.24rem;
+
+    /* UI Preferences - Dynamic Variables */
+    --font-scale: 1; /* 0.875 (small), 1 (medium), 1.125 (large) */
+    --spacing-factor: 1; /* 0.75 (compacto), 1 (comodo) */
+    --transition-duration: 150ms; /* 0ms when animations disabled */
+  }
+
+  /* Apply font scale to root */
+  :root {
+    font-size: calc(16px * var(--font-scale));
+  }
+
+  /* Disable animations when data-no-animations is true */
+  [data-no-animations="true"] * {
+    transition: none !important;
+    animation: none !important;
   }
 
   .dark {
@@ -195,4 +211,15 @@
     @apply bg-background text-foreground;
     font-family: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, sans-serif;
   }
+}
+
+/* Table Density Styles */
+.data-table-compact tbody tr td {
+  padding-top: calc(var(--spacing-factor) * 0.25rem);
+  padding-bottom: calc(var(--spacing-factor) * 0.25rem);
+}
+
+.data-table-comfortable tbody tr td {
+  padding-top: calc(var(--spacing-factor) * 1rem);
+  padding-bottom: calc(var(--spacing-factor) * 1rem);
 }

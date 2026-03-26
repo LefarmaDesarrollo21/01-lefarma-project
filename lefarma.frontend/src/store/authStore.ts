@@ -113,6 +113,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw new Error('Empresa o sucursal no encontrada');
     }
 
+    // Persist to localStorage
+    authService.setEmpresa(empresa);
+    authService.setSucursal(sucursal);
+
     set({
       empresa,
       sucursal,
@@ -148,6 +152,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       empresas: [],
       sucursales: [],
     });
+
+    // Redirect to login after logout
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
   },
 
   setEmpresa: (empresa: Empresa) => {
@@ -214,18 +223,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const sucursal = authService.getSucursal();
 
     if (token && user) {
+      // User is authenticated if they have token + empresa + sucursal
+      const isAuthenticated = Boolean(empresa && sucursal);
+
       set({
         token,
         user,
         empresa,
         sucursal,
-        isAuthenticated: true,
+        isAuthenticated,
       });
 
       // Sincronizar perfil con configStore
       useConfigStore.getState().updatePerfil({
         nombre: user.nombre || '',
         correo: user.correo || '',
+      });
+    } else {
+      // No auth data
+      set({
+        isAuthenticated: false,
       });
     }
 

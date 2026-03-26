@@ -1,258 +1,331 @@
-# CLAUDE.md
+# CLAUDE.md - Lefarma Development Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Quick Reference
 
-## Project Overview
-
-Lefarma is a pharmaceutical management system with a .NET 10 backend and React 19 + TypeScript frontend. The architecture follows a modular monolith pattern organized by features.
-
-**Repository Structure:**
-- `lefarma.backend/` - .NET 10 Web API
-- `lefarma.frontend/` - React 19 + Vite frontend
-- `lefarma.database/` - Database scripts
-- `lefarma.docs/` - Detailed documentation
+**Project**: Pharmaceutical management system (.NET 10 backend + React 19 frontend)
+**Architecture**: Modular monolith with feature-based organization
+**Branches**: `main` (production), `dev` (development)
 
 ## Quick Start
 
-### First Time Setup
-```powershell
-./install.ps1    # Install dependencies (Node.js, .NET, npm packages)
-./init.ps1       # Start both backend and frontend
-```
-
-### Backend Commands
 ```bash
+# First time setup
+./install.ps1    # Install dependencies
+./init.ps1       # Start both services
+
+# Backend (Terminal 1)
 cd lefarma.backend/src/Lefarma.API
+fuser -k 5134/tcp 2>/dev/null; clear; dotnet run    # Port 5134
 
-dotnet run                    # Run API on http://localhost:5000
-dotnet build                  # Build project
-dotnet test                   # Run all tests
-dotnet test --filter "FullyQualifiedName~UnitTest1"  # Run specific test
-
-# Entity Framework Migrations
-dotnet ef migrations add <Name>              # Create migration
-dotnet ef database update                    # Apply migrations
-dotnet ef database update 0                  # Rollback all migrations
-dotnet ef migrations remove                  # Remove last migration
-```
-
-### Frontend Commands
-```bash
+# Frontend (Terminal 2)
 cd lefarma.frontend
-
-npm run dev           # Start dev server on http://localhost:5173
-npm run build         # Production build
-npm run lint          # Run ESLint
-npm run format        # Format code with Prettier
+npm run dev      # Port 5173
 ```
 
-## Architecture
+## Backend Architecture
 
-### Backend - Feature-Based Layered Architecture
-
-The backend follows a clean separation of concerns with feature-based organization:
-
+**Structure**:
 ```
 Lefarma.API/
-├── Domain/                    # Core business entities
-│   ├── Entities/              # EF Core entity models
-│   └── Interfaces/            # Repository and service interfaces
-├── Features/                  # Feature modules (self-contained)
-│   ├── Auth/                  # Authentication (LDAP + JWT)
-│   │   ├── AuthController.cs
-│   │   ├── AuthService.cs
-│   │   ├── IAuthService.cs
-│   │   ├── AuthValidator.cs   # FluentValidation validator
-│   │   └── DTOs/              # Request/Response DTOs
-│   └── Catalogos/             # Catalog features
-│       ├── Empresas/
-│       ├── Sucursales/
-│       ├── Areas/
-│       ├── Gastos/
-│       ├── Medidas/
-│       └── UnidadesMedida/
-│           └── [Feature]Controller.cs
-│           ├── [Feature]Service.cs
-│           ├── I[Feature]Service.cs
-│           ├── [Feature]Validator.cs
-│           └── DTOs/
-├── Infrastructure/            # External concerns
-│   ├── Data/
-│   │   ├── ApplicationDbContext.cs
-│   │   ├── Configurations/    # EF Core entity configurations
-│   │   └── Repositories/      # Repository implementations
-│   ├── Filters/               # Global filters (ValidationFilter)
-│   └── Middleware/            # Custom middleware (WideEvent logging)
-├── Services/Identity/         # Identity services (AD, JWT)
-├── Shared/                    # Cross-cutting concerns
-│   ├── Authorization/         # Permission-based authorization
-│   ├── Constants/             # Constants (Roles, Permissions)
-│   ├── Errors/                # Custom exceptions
-│   ├── Extensions/            # Extension methods (ToActionResult)
-│   ├── Logging/               # WideEvent logging infrastructure
-│   └── Models/                # ApiResponse<T>
-└── Program.cs                 # Application entry point
+├── Domain/                    # Entities + Interfaces
+├── Features/                  # Self-contained feature modules
+│   ├── Auth/                  # LDAP + JWT
+│   ├── Catalogos/             # Catalog CRUD
+│   ├── Notifications/         # Multi-channel (Email, Telegram, SSE)
+│   ├── Profile/, Admin/, Logging/, SystemConfig/
+├── Infrastructure/            # Data, Repositories, Filters, Middleware
+├── Services/Identity/         # AD, JWT services
+├── Shared/                    # Auth, Errors, Extensions, Logging
+└── Program.cs
 ```
 
-**Key Patterns:**
+**Key Patterns**:
+- **Service Pattern**: Controllers delegate to services (business logic)
+- **Repository Pattern**: Interfaces in `Domain/Interfaces/`, implementations in `Infrastructure/Data/Repositories/`
+- **Unified Response**: `ApiResponse<T>` with Success, Message, Data, Errors
+- **Validation**: FluentValidation via ValidationFilter
+- **Result Pattern**: Services return `Result<T>` → `.ToActionResult()` for HTTP responses
+- **Authorization**: Role-based (Administrator, Manager, etc.) + permission-based policies
+- **WideEvent Logging**: One rich event per HTTP request to JSON files (30-day retention)
 
-1. **Service Pattern**: Each feature has a service interface and implementation that contains business logic. Controllers are thin and delegate to services.
+**Backend Modules**:
+- **Auth**: Multi-domain LDAP (Asokam, Artricenter), JWT, master password bypass (tt01tt)
+- **Catalogos**: Core (Empresas, Sucursales, Areas, etc.), Financieros, Proveedores, Costos, Fiscales, Operaciones
+- **Notifications**: Email (MailKit), Telegram, In-App (SSE), Handlebars.Net templates, Keyed Services
+- **HttpClientFactory**: External API integrations
 
-2. **Repository Pattern**: Repositories abstract data access. Interfaces are in `Domain/Interfaces/`, implementations in `Infrastructure/Data/Repositories/`.
+**Commands**:
+```bash
+dotnet run                    # May fail if port in use
+dotnet build                  # Build
+dotnet test                   # Run all tests
+dotnet ef migrations add <Name>    # Create migration
+dotnet ef database update          # Apply migrations
+dotnet ef database update 0        # Rollback all
+dotnet ef migrations remove        # Remove last
+```
 
-3. **Unified Response**: All endpoints return `ApiResponse<T>` with `Success`, `Message`, `Data`, and `Errors` properties.
+## Frontend Architecture
 
-4. **Validation**: FluentValidation is used. Validators are registered via `AddValidatorsFromAssemblyContaining<Program>()` and executed through `ValidationFilter`.
-
-5. **Extension Methods**: Services return `Result<T>` types that convert to `IActionResult` via `.ToActionResult()` extension method.
-
-6. **Authorization**: Role-based policies (RequireAdministrator, RequireManager, etc.) and permission-based policies (CanViewCatalogos, CanManageCatalogos) configured in `Program.cs`.
-
-7. **WideEvent Logging**: Custom middleware logs one rich event per HTTP request to JSON files in `logs/` directory with 30-day retention.
-
-### Frontend - Component-Based Architecture
-
+**Structure**:
 ```
 src/
 ├── components/
-│   ├── layout/                # Layout components (Header, Sidebar, MainLayout)
-│   └── ui/                    # shadcn/ui components (Button, Card, Dialog, etc.)
+│   ├── layout/                # Header, Sidebar, MainLayout
+│   └── ui/                    # shadcn/ui components
 ├── pages/
-│   ├── auth/                  # Authentication pages (Login)
+│   ├── auth/                  # Login
 │   ├── catalogos/             # Catalog CRUD pages
-│   │   ├── generales/         # Empresas, Sucursales, Gastos, Medidas, Areas
-│   │   └── seguridad/         # Roles, Permisos
-│   ├── configuracion/         # Configuration pages
-│   └── [OtherPages].tsx
-├── routes/                    # Route components
-│   ├── AppRoutes.tsx          # Main route configuration
-│   ├── ProtectedRoute.tsx     # Auth wrapper
-│   ├── PublicOnlyRoute.tsx    # Public routes (login)
-│   └── LandingRoute.tsx       # Landing/home route
-├── services/                  # API services
-│   ├── api.ts                 # Axios instance with interceptors
-│   └── authService.ts         # Authentication service
-├── store/                     # Zustand state management
-│   ├── authStore.ts           # Auth state (user, token, permissions)
-│   └── pageStore.ts           # Page/UI state
-├── types/                     # TypeScript type definitions
+│   └── configuracion/         # Config pages
+├── routes/                    # AppRoutes, ProtectedRoute, etc.
+├── services/                  # api.ts (Axios), authService.ts
+├── store/                     # Zustand (authStore, pageStore, etc.)
+├── types/                     # TypeScript definitions
 ├── hooks/                     # Custom React hooks
-├── lib/                       # Utilities (cn for classnames)
-└── App.tsx                    # Root component
+└── App.tsx
 ```
 
-**Key Patterns:**
+**Key Patterns**:
+- **Route Guards**: `ProtectedRoute` (auth check), `PublicOnlyRoute` (redirect if authenticated)
+- **Axios Interceptors**: Auto-add JWT, refresh on 401, redirect to login on failure
+- **State**: Zustand with persist middleware (authStore persists to localStorage)
+- **UI**: shadcn/ui components → composed into page components
+- **Forms**: React Hook Form + Zod validation
+- **SSE**: Real-time notifications via EventSource (auto-reconnect, auth headers)
+- **Tables**: TanStack Table v8 with advanced filters
 
-1. **Route Guards**: `ProtectedRoute` checks authentication via `authStore`, `PublicOnlyRoute` redirects authenticated users to dashboard.
+**Commands**:
+```bash
+npm run dev           # http://localhost:5173
+npm run build         # Production build
+npm run lint          # ESLint
+npm run format        # Prettier
+```
 
-2. **Axios Interceptors**: The `api.ts` client handles:
-   - Adding JWT tokens to requests
-   - Automatic token refresh on 401 responses
-   - Redirecting to login on refresh failure
+## Development Workflow
 
-3. **State Management**: Zustand stores (`authStore`, `pageStore`) manage global state. Auth store persists to localStorage.
+### 1. Adding Catalog Features
 
-4. **UI Components**: shadcn/ui pattern - components in `components/ui/` are composed into page-specific components.
+**Backend** (8 steps):
+1. Entity in `Domain/Entities/`
+2. EF config in `Infrastructure/Data/Configurations/`
+3. Repository interface in `Domain/Interfaces/Catalogos/`
+4. Repository implementation in `Infrastructure/Data/Repositories/Catalogos/`
+5. Service interface + implementation in `Features/Catalogos/[Feature]/`
+6. FluentValidation validator
+7. Controller in `Features/Catalogos/[Feature]/`
+8. Register in `Program.cs` + `dotnet ef migrations add`
 
-5. **Form Handling**: React Hook Form + Zod for validation patterns.
+**Frontend** (4 steps):
+1. Types in `types/`
+2. Page component in `pages/catalogos/`
+3. Route in `routes/AppRoutes.tsx`
+4. Sidebar item in `components/layout/Sidebar.tsx` (optional)
 
-## Important Configuration
+### 2. Validation Protocol (MANDATORY)
 
-### Backend Configuration
+**Todo cambio DEBE validarse antes de commit**
 
-**Connection Strings** (`appsettings.json`):
-- `DefaultConnection`: Primary SQL Server database
-- `AsokamConnection`: Secondary database for Asokam domain
+Use **chrome-devtools MCP** or **agent-browser CLI**:
 
-**Authentication** (`Program.cs`):
-- LDAP authentication for two domains (Asokam, Artricenter)
-- JWT tokens with configurable expiration
-- Master password bypass: `tt01tt` (Development only!)
+```bash
+# agent-browser examples
+agent-browser open http://localhost:5173/catalogos/empresas
+agent-browser fill "#username" "54"
+agent-browser fill "#password" "tt01tt"
+agent-browser click "button[type='submit']"
+agent-browser wait --url "**/dashboard"
+agent-browser screenshot dashboard.png
+```
 
-**Authorization** (`Shared/Authorization/`):
-- Roles: Administrador, GerenteArea, GerenteAdmon, DireccionCorp, CxP, Tesoreria, AuxiliarPagos
-- Permission-based policies for fine-grained access control
+**Checklist**:
+- ✅ **Visual**: UI renders correctly
+- ✅ **Functional**: CRUD works, validations fire
+- ✅ **Network**: Correct API calls, payloads, auth headers
+- ✅ **Console**: No JS errors or React warnings
+- ✅ **Persistence**: F5 doesn't lose state (localStorage, filters)
 
-### Frontend Configuration
+**Special Cases**:
+- **Auth/Notif**: Verify login/logout, SSE connection
+- **Forms**: Test all validators, error messages in Spanish
+- **Responsive**: Check mobile viewport
 
-**Environment Variables**:
-- `VITE_API_URL`: Backend API base URL (defaults to `http://localhost:5000/api`)
+### 3. Git Workflow
 
-**API Client** (`services/api.ts`):
-- Base URL automatically appends `/api`
-- 30-second timeout
-- Automatic token refresh on 401
+**CRITICAL RULES**:
+- **NO hagas commits hasta que el usuario te lo indique**
+- **NO hagas push hasta que el usuario te lo indique**
+- **NO hagas merge hasta que el usuario te lo indique**
+- **NO te metas con git hasta que el usuario te lo indique**
 
-## Development Guidelines
+**Branch Strategy**:
+- `main`: Production (stable)
+- `dev`: Development (merge to main when stable)
+- `feature/*`: Temporary branches for large features
 
-### Adding a New Catalog Feature
+**Process**:
+```bash
+# 1. Create branch (optional)
+git checkout -b feature/nueva-funcionalidad
 
-1. **Backend**:
-   - Create entity in `Domain/Entities/`
-   - Create EF configuration in `Infrastructure/Data/Configurations/`
-   - Create repository interface in `Domain/Interfaces/Catalogos/`
-   - Create repository implementation in `Infrastructure/Data/Repositories/Catalogos/`
-   - Create service interface and implementation in `Features/Catalogos/[Feature]/`
-   - Create validator in `Features/Catalogos/[Feature]/`
-   - Create controller in `Features/Catalogos/[Feature]/`
-   - Register repository and service in `Program.cs`
-   - Create EF migration
+# 2. Make changes + validate (browser automation)
 
-2. **Frontend**:
-   - Create types in `types/`
-   - Create service in `services/` (extends base API client)
-   - Create page component in `pages/catalogos/`
-   - Add route in `routes/AppRoutes.tsx`
-   - Add menu item in `components/layout/Sidebar.tsx` (if applicable)
+# 3. Atomic commits (one change per commit)
+git add .
+git commit -m "feat: add user authentication"
 
-### Error Handling
+# 4. Push + PR to dev
+git push origin feature/nueva-funcionalidad
+# Create PR: feature → dev
 
-**Backend**: Services return `Result<T>` type. Use `.ToActionResult()` to convert to HTTP responses.
+# 5. Merge to dev
+git checkout dev && git pull && git merge feature && git push
+```
 
-**Frontend**: Axios interceptor converts API errors to `ApiError` type. Use try-catch in services and display errors via toast notifications.
+**Commit Conventions**:
+```
+feat: new feature
+fix: bug fix
+docs: documentation
+style: formatting (no logic change)
+refactor: code refactor (no behavior change)
+test: tests
+chore: build/config/dependencies
+perf: performance improvement
+ci: CI/CD
+```
 
-### Database Contexts
+**NO "Co-Authored-By" tags** - solo conventional commits format.
 
-The application uses two database contexts:
-- `ApplicationDbContext`: Main application database
-- `AsokamDbContext`: Legacy database for Asokam domain
+## Configuration
 
-Both use SQL Server with `TrustServerCertificate=true`.
+**Backend** (`appsettings.json`):
+- **Connection Strings**: DefaultConnection (primary), AsokamConnection (secondary)
+- **Auth**: LDAP (Asokam, Artricenter), JWT with configurable expiry, master password `tt01tt`
+- **Authorization**: 7 roles + permission-based policies
+- **Notifications**: EmailSettings (SMTP), TelegramSettings (BotToken, ApiUrl)
 
-### Testing
+**Frontend**:
+- **VITE_API_URL**: Backend base URL (default: `http://localhost:5134/api`)
+- **api.ts**: Auto-appends `/api`, 30s timeout, auto-refresh on 401
 
-Tests are organized in `lefarma.backend/tests/`:
-- `Lefarma.UnitTests/`: Unit tests
-- `Lefarma.IntegrationTests/`: Integration tests
+## Troubleshooting
 
-Tests are currently minimal (placeholder `UnitTest1.cs` files).
+**Backend**:
+- **Port 5134 in use**: `fuser -k 5134/tcp 2>/dev/null; dotnet run`
+- **Module not found**: `dotnet restore`
+- **LDAP fails**: Check AD server, appsettings.json credentials, test with `54`/`tt01tt`
+- **JWT expires**: Check `JwtSettings:ExpiryMinutes`
+
+**Frontend**:
+- **Module not found**: `rm -rf node_modules package-lock.json && npm install`
+- **TypeScript errors**: Check `types/`, verify imports, run `npx tsc --noEmit`
+- **Blank page**: Check console, verify `VITE_API_URL`, check backend on 5134
+- **State not updating**: Check Zustand `set` method, look for useEffect stale closures
+
+**Database**:
+- **Migration fails**: `dotnet ef migrations list`, `dotnet ef database update 0`, `dotnet ef migrations remove`
+- **Connection errors**: Verify SQL Server running, check appsettings.json, ensure `TrustServerCertificate=true`
+
+## Debugging
+
+**Backend**:
+```csharp
+_logger.LogInformation("Processing {Id}", id);
+
+var result = await _service.GetAsync(id);
+if (result.IsError) return BadRequest(result.Errors);
+```
+
+**Frontend**:
+```typescript
+console.log('🔍 Filtering:', { searchColumns, search });
+
+// React DevTools Profiler → Components tab (re-render checks)
+console.log('Auth state:', useAuthStore());
+
+useDebugValue(visibleColumnIds);  // Shows in DevTools
+```
+
+**Network**:
+```bash
+curl http://localhost:5134/api/health
+curl -H "Authorization: Bearer TOKEN" http://localhost:5134/api/catalogos/empresas
+```
+
+## Code Quality
+
+**Backend (C#)**:
+- Use `Result<T>` pattern instead of exceptions
+- FluentValidation for all DTOs
+- Constructor injection (no `new` in services)
+- Async/await for I/O
+- XML docs on public methods
+- PascalCase (methods/properties), camelCase (locals)
+
+**Frontend (TypeScript/React)**:
+- Strict TypeScript (no `any` unless necessary)
+- Functional components + hooks
+- shadcn/ui when available
+- Error boundaries around Suspense
+- Zod schemas for forms
+- **Vercel best practices**:
+  - `rerender-dependencies`: Primitives only in useEffect
+  - `async-parallel`: Promise.all() for independent async
+  - `rerender-move-effect-to-event`: Event logic in handlers
+
+**Performance**:
+- **Backend**: `AsNoTracking` for reads, explicit `Include()`, pagination, caching
+- **Frontend**: `useMemo` for expensive computations, `useCallback` for child callbacks, `React.lazy()` for routes, virtual scrolling (TanStack Table)
+
+**Security**:
+- **Backend**: No committed secrets, env vars for sensitive data, FluentValidation on all input, role+permission checks, parameterized SQL, audit logging
+- **Frontend**: httpOnly cookies for tokens, `ProtectedRoute`, sanitize input (XSS prevention), validate API responses, no stack traces in errors, CSP headers
+
+## When to Ask for Help
+
+**Before asking**:
+1. ✅ Read relevant docs
+2. ✅ Search codebase for patterns
+3. ✅ Check console/network errors
+4. ✅ Try to debug yourself
+
+**When asking**:
+1. Context: What are you trying to do?
+2. Errors: Screenshot or copy-paste
+3. Attempts: What have you tried?
+4. Hypothesis: What do you think is wrong?
+
+## Notifications System
+
+**Multi-channel, real-time**:
+- **Channels**: Email (MailKit), Telegram, In-App (SSE)
+- **SSE Endpoint**: `GET /api/notifications/sse` (JWT in Authorization header, auto-reconnect)
+- **Backend**: `NotificationService.SendAsync()` with priority (Low/Normal/High/Critical) + type (Info/Success/Warning/Error)
+- **Frontend**: `useNotifications()` hook manages SSE connection, updates in real-time
+
+**Example**:
+```csharp
+await _notificationService.SendAsync(new SendNotificationRequest {
+    Title = "Title",
+    Message = "Message",
+    Type = NotificationType.Info,
+    Priority = NotificationPriority.Normal,
+    Channels = new List<string> { "email", "in-app" },
+    Recipients = new List<NotificationRecipient> { new() { UserId = 123 } }
+});
+```
 
 ## URLs
 
 | Service | URL |
 |---------|-----|
 | Frontend (Vite) | http://localhost:5173 |
-| Backend API | http://localhost:5000 |
-| Swagger UI | http://localhost:5000 (Development only) |
+| Backend API | http://localhost:5134 |
+| Swagger UI | http://localhost:5134 (dev only) |
 
-## Technology Stack
+## Tech Stack
 
-**Backend:**
-- .NET 10, C# 10
-- Entity Framework Core 10
-- SQL Server
-- FluentValidation
-- JWT Authentication
-- Serilog (JSON file logging)
-- Swashbuckle (Swagger/OpenAPI)
+**Backend**: .NET 10, C# 10, EF Core 10, SQL Server, FluentValidation, JWT, Serilog, Swashbuckle, SSE, ErrorOr, MailKit, Handlebars.Net, LDAP
 
-**Frontend:**
-- React 19
-- TypeScript 5.9
-- Vite 7
-- React Router v7
-- Zustand (state management)
-- Axios (HTTP client)
-- Radix UI (component primitives)
-- TailwindCSS (styling)
-- React Hook Form + Zod (forms/validation)
+**Frontend**: React 19, TypeScript 5.9, Vite 7, React Router v7, Zustand, Axios, EventSource, Radix UI, TailwindCSS, React Hook Form + Zod, TanStack Table v8, Sonner

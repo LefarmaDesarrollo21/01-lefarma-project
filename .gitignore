@@ -35,6 +35,10 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Test results
+test-results/
+**/test-results/
+
 # Backend specific
 *.user
 *.suo
@@ -69,3 +73,6 @@ logs/security/
 .auto-claude-security.json
 .claude_settings.json
 .claude/settings.local.json
+
+# Brainstorming mockups
+.superpowers/

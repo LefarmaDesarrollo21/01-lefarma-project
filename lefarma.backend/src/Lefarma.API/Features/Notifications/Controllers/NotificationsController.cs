@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Lefarma.API.Domain.Interfaces;
 using Lefarma.API.Features.Notifications.DTOs;
-using Lefarma.API.Features.Notifications.Services;
+using Lefarma.API.Features.Auth;
 
 namespace Lefarma.API.Features.Notifications.Controllers;
 
@@ -326,10 +328,22 @@ public class NotificationsController : ControllerBase
                 return BadRequest(ModelState);
             }
 
+            // Get current user ID if UserIds not provided
+            if ((request.UserIds == null || !request.UserIds.Any()) &&
+                (request.RoleNames == null || !request.RoleNames.Any()))
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out var currentUserId))
+                {
+                    request.UserIds = new List<int> { currentUserId };
+                }
+            }
+
             _logger.LogInformation(
-                "POST /api/notifications/test - Channel: {ChannelType}, Recipient: {Recipient}",
+                "POST /api/notifications/test - Channel: {ChannelType}, UserIds: {UserIds}, RoleNames: {RoleNames}",
                 request.ChannelType,
-                request.Recipient);
+                request.UserIds != null ? string.Join(",", request.UserIds) : "none",
+                request.RoleNames != null ? string.Join(",", request.RoleNames) : "none");
 
             // Create a test notification
             var testRequest = new SendNotificationRequest
@@ -344,7 +358,8 @@ public class NotificationsController : ControllerBase
                     new()
                     {
                         ChannelType = request.ChannelType,
-                        Recipients = request.Recipient
+                        UserIds = request.UserIds,
+                        RoleNames = request.RoleNames
                     }
                 }
             };
@@ -362,6 +377,52 @@ public class NotificationsController : ControllerBase
         {
             _logger.LogError(ex, "Error sending test notification");
             return StatusCode(500, new { error = "An error occurred while sending the test notification" });
+        }
+    }
+
+    /// <summary>
+    /// Test SSE connection directly - sends a ping event to the current user via SSE.
+    /// Useful for verifying SSE is working without creating a notification.
+    /// </summary>
+    /// <response code="200">SSE ping sent successfully</response>
+    /// <response code="401">User not authenticated</response>
+    [HttpPost("test-sse")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> TestSse(CancellationToken ct)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { error = "No valid user ID found" });
+            }
+
+            _logger.LogInformation("POST /api/notifications/test-sse - Testing SSE for user {UserId}", userId);
+
+            // Get SSE service from dependency injection
+            var sseService = HttpContext.RequestServices.GetRequiredService<ISseService>();
+
+            // Send test SSE event
+            await sseService.NotifyAsync(userId, "test", new
+            {
+                message = "SSE connection test successful!",
+                timestamp = DateTime.UtcNow,
+                userId = userId
+            }, ct);
+
+            return Ok(new
+            {
+                message = "SSE test event sent",
+                userId,
+                timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending SSE test");
+            return StatusCode(500, new { error = "Error sending SSE test" });
         }
     }
 }

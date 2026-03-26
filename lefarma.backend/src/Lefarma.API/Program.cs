@@ -9,6 +9,11 @@ using Lefarma.API.Features.Admin;
 using Lefarma.API.Features.Auth;
 using Lefarma.API.Features.Catalogos.Areas;
 using Lefarma.API.Features.Catalogos.Bancos;
+using Lefarma.API.Features.Catalogos.CentrosCosto;
+using Lefarma.API.Features.Catalogos.CuentasContables;
+using Lefarma.API.Features.Catalogos.EstatusOrden;
+using Lefarma.API.Features.Catalogos.Proveedores;
+using Lefarma.API.Features.Catalogos.RegimenesFiscales;
 using Lefarma.API.Features.Catalogos.Empresas;
 using Lefarma.API.Features.Catalogos.FormasPago;
 using Lefarma.API.Features.Catalogos.Gastos;
@@ -25,12 +30,18 @@ using Lefarma.API.Features.OrdenesCompra.Captura;
 using Lefarma.API.Features.OrdenesCompra.Firmas;
 using Lefarma.API.Features.OrdenesCompra.Firmas.Handlers;
 using Lefarma.API.Features.Profile;
+using Lefarma.API.Features.Help.Services;
+using Lefarma.API.Features.Archivos.Services;
+using Lefarma.API.Features.Archivos.Conversores;
+using Lefarma.API.Features.Archivos.Settings;
+using Microsoft.Extensions.FileProviders;
 using Lefarma.API.Infrastructure.Data;
 using Lefarma.API.Infrastructure.Data.Repositories.Admin;
 using Lefarma.API.Infrastructure.Data.Repositories.Catalogos;
 using Lefarma.API.Infrastructure.Data.Repositories.Config;
 using Lefarma.API.Infrastructure.Data.Repositories.Notifications;
 using Lefarma.API.Infrastructure.Data.Repositories.Operaciones;
+using Lefarma.API.Infrastructure.Data.Repositories;
 using Lefarma.API.Infrastructure.Data.Seeding;
 using Lefarma.API.Infrastructure.Filters;
 using Lefarma.API.Infrastructure.Middleware;
@@ -112,7 +123,28 @@ builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IMedioPagoRepository, MedioPagoRepository>();
 builder.Services.AddScoped<IFormaPagoRepository, FormaPagoRepository>();
 builder.Services.AddScoped<IBancoRepository, BancoRepository>();
-// builder.Services.AddScoped<Domain.Interfaces.INotificationRepository, NotificationRepository>(); // TODO: Uncomment when notifications are complete
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+
+// Catálogos Faltantes
+builder.Services.AddScoped<ICentroCostoRepository, CentroCostoRepository>();
+builder.Services.AddScoped<IEstatusOrdenRepository, EstatusOrdenRepository>();
+builder.Services.AddScoped<IRegimenFiscalRepository, RegimenFiscalRepository>();
+builder.Services.AddScoped<IProveedorRepository, ProveedorRepository>();
+builder.Services.AddScoped<ICuentaContableRepository, CuentaContableRepository>();
+
+// Help System
+builder.Services.AddScoped<IHelpArticleRepository, HelpArticleRepository>();
+builder.Services.AddScoped<IHelpArticleService, HelpArticleService>();
+builder.Services.AddScoped<IHelpImageRepository, HelpImageRepository>();
+builder.Services.AddScoped<IHelpImageService, HelpImageService>();
+builder.Services.AddScoped<IHelpModuleRepository, HelpModuleRepository>();
+builder.Services.AddScoped<IHelpModuleService, HelpModuleService>();
+// Archivos
+builder.Services.Configure<ArchivosSettings>(
+    builder.Configuration.GetSection("ArchivosSettings"));
+builder.Services.AddScoped<IArchivoRepository, ArchivoRepository>();
+builder.Services.AddScoped<IOfficeToPdfConverter, OfficeToPdfConverter>();
+builder.Services.AddScoped<IArchivoService, ArchivoService>();
 
 // Repositorios - Config y Operaciones
 builder.Services.AddScoped<IWorkflowRepository, WorkflowRepository>();
@@ -140,6 +172,15 @@ builder.Services.AddScoped<IUnidadMedidaService, UnidadMedidaService>();
 builder.Services.AddScoped<IMedioPagoService, MedioPagoService>();
 builder.Services.AddScoped<IFormaPagoService, FormaPagoService>();
 builder.Services.AddScoped<IBancoService, BancoService>();
+builder.Services.AddScoped<Lefarma.API.Features.Auth.Usuarios.IUsuarioCatalogService, Lefarma.API.Features.Auth.Usuarios.UsuarioCatalogService>();
+builder.Services.AddScoped<Lefarma.API.Features.Auth.Roles.IRolCatalogService, Lefarma.API.Features.Auth.Roles.RolCatalogService>();
+
+// Catálogos Faltantes
+builder.Services.AddScoped<ICentroCostoService, CentroCostoService>();
+builder.Services.AddScoped<IEstatusOrdenService, EstatusOrdenService>();
+builder.Services.AddScoped<IRegimenFiscalService, RegimenFiscalService>();
+builder.Services.AddScoped<IProveedorService, ProveedorService>();
+builder.Services.AddScoped<ICuentaContableService, CuentaContableService>();
 
 // Logging Services
 builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
@@ -153,32 +194,28 @@ builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 builder.Services.AddSingleton<ISseService, SseService>();
 
 // Notification Services
-// TODO: Uncomment when notification interfaces are implemented
-// builder.Services.AddScoped<Lefarma.API.Domain.Interfaces.ITemplateService, TemplateService>();
-// builder.Services.AddScoped<Lefarma.API.Domain.Interfaces.INotificationService, NotificationService>();
+builder.Services.AddScoped<Lefarma.API.Domain.Interfaces.ITemplateService, TemplateService>();
+builder.Services.AddScoped<Lefarma.API.Domain.Interfaces.INotificationService, Lefarma.API.Features.Notifications.Services.NotificationService>();
 
 // Email Settings configuration
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-// TODO: Uncomment when email settings are configured
-// builder.Services.AddOptions<EmailSettings>()
-//     .Validate(x => !string.IsNullOrWhiteSpace(x.SmtpServer), "SmtpServer is required")
-//     .Validate(x => !string.IsNullOrWhiteSpace(x.FromEmail), "FromEmail is required")
-//     .Validate(x => x.SmtpPort > 0 && x.SmtpPort <= 65535, "SmtpPort must be between 1 and 65535")
-//     .ValidateOnStart();
+builder.Services.AddOptions<EmailSettings>()
+    .Validate(x => !string.IsNullOrWhiteSpace(x.SmtpServer), "SmtpServer is required")
+    .Validate(x => !string.IsNullOrWhiteSpace(x.FromEmail), "FromEmail is required")
+    .Validate(x => x.SmtpPort > 0 && x.SmtpPort <= 65535, "SmtpPort must be between 1 and 65535")
+    .ValidateOnStart();
 
 // Register channels as KEYED SERVICES for multi-channel support
-// TODO: Uncomment when notification channels are implemented
-// builder.Services.AddKeyedScoped<Lefarma.API.Domain.Interfaces.INotificationChannel, Lefarma.API.Features.Notifications.Services.Channels.EmailNotificationChannel>("email");
-// builder.Services.AddKeyedScoped<Lefarma.API.Domain.Interfaces.INotificationChannel, Lefarma.API.Features.Notifications.Services.Channels.TelegramNotificationChannel>("telegram");
-// builder.Services.AddKeyedScoped<Lefarma.API.Domain.Interfaces.INotificationChannel, Lefarma.API.Features.Notifications.Services.Channels.InAppNotificationChannel>("in-app");
+builder.Services.AddKeyedScoped<Lefarma.API.Domain.Interfaces.INotificationChannel, Lefarma.API.Features.Notifications.Services.Channels.EmailNotificationChannel>("email");
+builder.Services.AddKeyedScoped<Lefarma.API.Domain.Interfaces.INotificationChannel, Lefarma.API.Features.Notifications.Services.Channels.TelegramNotificationChannel>("telegram");
+builder.Services.AddKeyedScoped<Lefarma.API.Domain.Interfaces.INotificationChannel, Lefarma.API.Features.Notifications.Services.Channels.InAppNotificationChannel>("in-app");
 
 // Telegram Settings configuration
 builder.Services.Configure<TelegramSettings>(builder.Configuration.GetSection("TelegramSettings"));
-// TODO: Uncomment when telegram bot is configured
-// builder.Services.AddOptions<TelegramSettings>()
-//     .Validate(x => !string.IsNullOrWhiteSpace(x.BotToken), "BotToken is required")
-//     .Validate(x => !string.IsNullOrWhiteSpace(x.ApiUrl), "ApiUrl is required")
-//     .ValidateOnStart();
+builder.Services.AddOptions<TelegramSettings>()
+    .Validate(x => !string.IsNullOrWhiteSpace(x.BotToken), "BotToken is required")
+    .Validate(x => !string.IsNullOrWhiteSpace(x.ApiUrl), "ApiUrl is required")
+    .ValidateOnStart();
 
 // JWT Bearer Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
@@ -294,6 +331,11 @@ builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
+})
+.AddJsonOptions(options =>
+{
+    // Make JSON binding case-insensitive (frontend sends camelCase, C# uses PascalCase)
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
 // Validators
@@ -371,6 +413,18 @@ app.UseWideEventLogging();
 
 // Use CORS
 app.UseCors("CorsPolicy");
+
+// Static files for help images
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(app.Environment.WebRootPath, "media")),
+    RequestPath = "/api/media",
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=31536000");
+    }
+});
 
 // Authentication & Authorization - Order matters: Authentication must come before Authorization
 app.UseAuthentication();

@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Lefarma.API.Domain.Interfaces;
 using Lefarma.API.Features.Notifications.DTOs;
+using Microsoft.Extensions.Options;
 
 namespace Lefarma.API.Features.Notifications.Services.Channels;
 
@@ -19,11 +20,11 @@ public class TelegramNotificationChannel : INotificationChannel
     public string ChannelType => "telegram";
 
     public TelegramNotificationChannel(
-        TelegramSettings settings,
+        IOptions<TelegramSettings> settings,
         IHttpClientFactory httpClientFactory,
         ILogger<TelegramNotificationChannel> logger)
     {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Create HttpClient with configured timeout

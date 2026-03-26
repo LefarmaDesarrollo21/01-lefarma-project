@@ -14,6 +14,14 @@ import {
   Users,
   CreditCard,
   FileCheck2,
+  Bell,
+  MapPin,
+  FileText,
+  List,
+  Building,
+  UserCircle,
+  LogOut,
+  HelpCircle,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -31,6 +39,7 @@ import {
   SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useAuthStore } from '@/store/authStore';
 
 const menuItems = [
   {
@@ -59,7 +68,17 @@ const menuItems = [
       { title: 'Gastos', icon: Wallet, path: '/catalogos/gastos' },
       { title: 'Medidas', icon: Ruler, path: '/catalogos/medidas' },
       { title: 'Formas de Pago', icon: CreditCard, path: '/catalogos/formas-pago' },
+      { title: 'Centros de Costo', icon: MapPin, path: '/catalogos/centros-costo' },
+      { title: 'Cuentas Contables', icon: FileText, path: '/catalogos/cuentas-contables' },
+      { title: 'Estatus de Orden', icon: List, path: '/catalogos/estatus-orden' },
+      { title: 'Proveedores', icon: Building, path: '/catalogos/proveedores' },
+      { title: 'Regímenes Fiscales', icon: UserCircle, path: '/catalogos/regimenes-fiscales' },
     ],
+  },
+  {
+    title: 'Notificaciones',
+    icon: Bell,
+    path: '/notificaciones',
   },
   {
     title: 'Configuración',
@@ -71,9 +90,20 @@ const menuItems = [
     icon: FileCheck2,
     path: '/ordenes/autorizaciones',
   },
+  {
+    title: 'Ayuda',
+    icon: HelpCircle,
+    path: '/help',
+  },
 ];
 
 export function AppSidebar() {
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -157,8 +187,14 @@ export function AppSidebar() {
             <SidebarMenuButton size="sm" asChild tooltip="Perfil">
               <NavLink to="/perfil">
                 <User className="h-4 w-4" />
-                <span>Perfil Usuario</span>
+                <span>{user?.nombre || 'Usuario'}</span>
               </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm" onClick={handleLogout} tooltip="Cerrar Sesión">
+              <LogOut className="h-4 w-4" />
+              <span>Cerrar Sesión</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

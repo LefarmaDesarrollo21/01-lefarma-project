@@ -14,12 +14,21 @@ import GastosList from '@/pages/catalogos/Gastos/GastosList';
 import MedidasList from '@/pages/catalogos/Medidas/MedidasList';
 import AreasList from '@/pages/catalogos/Areas/AreasList';
 import FormasPagoList from '@/pages/catalogos/FormasPago/FormasPagoList';
+import CentrosCostoList from '@/pages/catalogos/generales/CentrosCosto/CentrosCostoList';
+import CuentasContablesList from '@/pages/catalogos/generales/CuentasContables/CuentasContablesList';
+import EstatusOrdenList from '@/pages/catalogos/generales/EstatusOrden/EstatusOrdenList';
+import RegimenesFiscalesList from '@/pages/catalogos/generales/RegimenesFiscales/RegimenesFiscalesList';
+import ProveedoresList from '@/pages/catalogos/generales/Proveedores/ProveedoresList';
 import ConfiguracionGeneral from '@/pages/configuracion/ConfiguracionGeneral';
 import { WorkflowsList, WorkflowDiagram } from '@/pages/workflows';
 import { AutorizacionesOC } from '@/pages/ordenes';
 import Perfil from '@/pages/Perfil';
 import Roadmap from '@/pages/Roadmap';
 import DemoComponents from '@/pages/DemoComponents';
+import NotificationsPage from '@/pages/Notifications';
+import HelpList from '@/pages/help/HelpList';
+import HelpView from '@/pages/help/HelpView';
+import HelpEditor from '@/pages/help/HelpEditor';
 import NotFound from '@/pages/NotFound';
 
 export const AppRoutes = () => {
@@ -44,11 +53,21 @@ export const AppRoutes = () => {
           <Route path="/catalogos/medidas" element={<MedidasList />} />
           <Route path="/catalogos/areas" element={<AreasList />} />
           <Route path="/catalogos/formas-pago" element={<FormasPagoList />} />
+          <Route path="/catalogos/centros-costo" element={<CentrosCostoList />} />
+          <Route path="/catalogos/cuentas-contables" element={<CuentasContablesList />} />
+          <Route path="/catalogos/estatus-orden" element={<EstatusOrdenList />} />
+          <Route path="/catalogos/proveedores" element={<ProveedoresList />} />
+          <Route path="/catalogos/regimenes-fiscales" element={<RegimenesFiscalesList />} />
           <Route path="/configuracion" element={<ConfiguracionGeneral />} />
           <Route path="/workflows" element={<WorkflowsList />} />
           <Route path="/workflows/:id/diagram" element={<WorkflowDiagram />} />
           <Route path="/ordenes/autorizaciones" element={<AutorizacionesOC />} />
           <Route path="/perfil" element={<Perfil />} />
+          <Route path="/notificaciones" element={<NotificationsPage />} />
+          <Route path="/help" element={<HelpList />} />
+          <Route path="/help/new" element={<HelpEditor />} />
+          <Route path="/help/edit/:id" element={<HelpEditor />} />
+          <Route path="/help/:id" element={<HelpView />} />
           <Route path="/roadmap" element={<Roadmap />} />
           <Route path="/demo-components" element={<DemoComponents />} />
         </Route>

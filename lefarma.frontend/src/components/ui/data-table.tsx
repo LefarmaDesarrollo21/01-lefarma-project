@@ -12,7 +12,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState, type ReactNode } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback, type ReactNode } from "react";
 import {
   ArrowUpIcon,
   ArrowDownIcon,
@@ -35,6 +35,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useTableFilters } from "@/hooks/useTableFilters";
+import { FilterConfig } from "@/components/table/FilterConfig";
+import { ActiveFiltersBar } from "@/components/table/ActiveFiltersBar";
+import { ColumnFilterPopover } from "@/components/table/ColumnFilterPopover";
+import type { FilterConfig as FilterConfigType } from "@/types/table.types";
+import { useConfigStore } from '@/store/configStore';
 
 export type { ColumnDef } from "@tanstack/react-table";
 
@@ -68,6 +74,13 @@ export interface DataTableProps<TData> {
   onExport?: () => void;
   onRefresh?: () => void;
   onRowClick?: (row: TData) => void;
+
+  // Filter configuration
+  filterConfig?: FilterConfigType<TData>;
+
+  // NEW: Optional density and page size overrides
+  density?: 'compact' | 'standard' | 'comfortable';
+  pageSizeOverride?: number; // renamed to avoid conflict with existing pageSize
 }
 
 // ─── Sorting header helper ─────────────────────────────────────────────────────
@@ -76,6 +89,16 @@ function SortIcon({ direction }: { direction: "asc" | "desc" | false }) {
   if (direction === "asc") return <ArrowUpIcon className="ml-1.5 h-3.5 w-3.5" />;
   if (direction === "desc") return <ArrowDownIcon className="ml-1.5 h-3.5 w-3.5" />;
   return <ChevronsUpDownIcon className="ml-1.5 h-3.5 w-3.5 opacity-40" />;
+}
+
+// ─── Filter type helper ─────────────────────────────────────────────────────────
+
+function getFilterTypeForColumn(columnId: string): 'text' | 'number' | 'boolean' | 'select' | 'date' {
+  if (!columnId) return 'text';
+  if (columnId.includes('activo') || columnId.includes('Activo')) return 'boolean';
+  if (columnId.includes('fecha') || columnId.includes('Fecha') || columnId.includes('date') || columnId.includes('Date')) return 'date';
+  if (columnId.includes('Id') || columnId.includes('numero') || columnId.includes('empleados')) return 'number';
+  return 'text';
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -100,7 +123,16 @@ export function DataTable<TData>({
   onExport,
   onRefresh,
   onRowClick,
+  filterConfig,
+  density,
+  pageSizeOverride,
 }: DataTableProps<TData>) {
+  const { ui } = useConfigStore();
+
+  // Use config if not explicitly provided
+  const tableDensity = density || ui.componentes.tables.density;
+  const tablePageSize = pageSizeOverride || pageSize || ui.componentes.tables.defaultPageSize;
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -108,17 +140,84 @@ export function DataTable<TData>({
   const [globalFilterValue, setGlobalFilterValue] = useState("");
   const [paginationState, setPaginationState] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize,
+    pageSize: tablePageSize,
   });
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [showColMenu, setShowColMenu] = useState(false);
+
+  // Filter logic
+  const filterEnabled = !!filterConfig;
+  const {
+    activeFilters,
+    searchColumnIds,
+    visibleColumnIds,
+    addFilter,
+    removeFilter,
+    clearAllFilters,
+    setSearchColumns,
+    setVisibleColumns,
+    resetToDefaults,
+    columnFilterConfigs,
+    setColumnFilterConfig,
+    saveConfig,
+    loadConfig,
+  } = useTableFilters({
+    tableId: filterConfig?.tableId || '',
+    allColumns: columns,
+    defaultSearchColumns: filterConfig?.defaultSearchColumns,
+    columnFilterConfigs: filterConfig?.columnFilterConfigs,
+  });
+
+  // Save handler that receives current values from FilterConfig and saves immediately
+  const handleSave = useCallback((currentSearchColumns: string[], currentVisibleColumns: string[]) => {
+    // Save immediately with the current values from FilterConfig
+    saveConfig({
+      searchColumns: currentSearchColumns,
+      visibleColumns: currentVisibleColumns,
+    });
+    // Then update the hook state for consistency
+    setSearchColumns(currentSearchColumns);
+    setVisibleColumns(currentVisibleColumns);
+  }, [saveConfig, setSearchColumns, setVisibleColumns]);
+
+  // Sync column visibility when filterConfig is enabled and visibleColumnIds change
+  useEffect(() => {
+    if (filterEnabled && visibleColumnIds.length > 0) {
+      const allColumnIds = columns.map(col => col.id || (('accessorKey' in col && typeof col.accessorKey === 'string') ? col.accessorKey : '')).filter(Boolean);
+      const newVisibility: Record<string, boolean> = {};
+      allColumnIds.forEach(id => {
+        newVisibility[id] = visibleColumnIds.includes(id);
+      });
+      setColumnVisibility(newVisibility);
+    }
+  }, [filterEnabled, visibleColumnIds, columns]); // Run when visibleColumnIds changes
+
+  // Sync function - only called explicitly (Apply button, Reset, etc)
+  const syncColumnVisibility = useCallback(() => {
+    if (filterEnabled && visibleColumnIds.length > 0) {
+      const allColumnIds = columns.map(col => col.id || (('accessorKey' in col && typeof col.accessorKey === 'string') ? col.accessorKey : '')).filter(Boolean);
+      const newVisibility: Record<string, boolean> = {};
+      allColumnIds.forEach(id => {
+        newVisibility[id] = visibleColumnIds.includes(id);
+      });
+      setColumnVisibility(newVisibility);
+    }
+  }, [filterEnabled, visibleColumnIds, columns]);
+
+  // Convert activeFilters to TanStack Table format
+  const computedColumnFilters = useMemo(() => {
+    return activeFilters.map(filter => ({
+      id: filter.columnId,
+      value: filter.value,
+    }));
+  }, [activeFilters]);
 
   const table = useReactTable({
     data,
     columns,
     state: {
       sorting,
-      columnFilters,
+      columnFilters: filterEnabled ? computedColumnFilters : columnFilters,
       columnVisibility,
       rowSelection,
       globalFilter: globalFilterValue,
@@ -142,6 +241,8 @@ export function DataTable<TData>({
     <div
       className={cn(
         "w-full rounded-xl border bg-card shadow-md backdrop-blur-sm",
+        tableDensity === 'compact' && 'data-table-compact',
+        tableDensity === 'comfortable' && 'data-table-comfortable',
         className
       )}
     >
@@ -219,6 +320,25 @@ export function DataTable<TData>({
             </div>
           )}
 
+          {filterEnabled && (
+            <FilterConfig
+              tableId={filterConfig.tableId}
+              allColumns={columns.map(col => ({
+                id: col.id || (('accessorKey' in col && typeof col.accessorKey === 'string') ? col.accessorKey : '') || '',
+                header: String(col.header || col.id || (('accessorKey' in col && typeof col.accessorKey === 'string') ? col.accessorKey : ''))
+              }))}
+              searchableColumns={searchColumnIds}
+              visibleColumns={visibleColumnIds}
+              onSearchColumnsChange={setSearchColumns}
+              onVisibleColumnsChange={setVisibleColumns}
+              onReset={resetToDefaults}
+              columnFilterConfigs={columnFilterConfigs}
+              onColumnFilterChange={setColumnFilterConfig}
+              onSave={handleSave}
+              onApplyChanges={syncColumnVisibility}
+            />
+          )}
+
           {showRefreshButton && (
             <Button
               size="sm"
@@ -247,6 +367,13 @@ export function DataTable<TData>({
       {/* ── Table body ── */}
       {!collapsed && (
         <>
+          {filterEnabled && (
+            <ActiveFiltersBar
+              filters={activeFilters}
+              onRemoveFilter={removeFilter}
+              onClearAll={clearAllFilters}
+            />
+          )}
           <div
             className="overflow-auto"
             style={height ? { height } : undefined}
@@ -276,6 +403,16 @@ export function DataTable<TData>({
                             )}
                             {header.column.getCanSort() && (
                               <SortIcon direction={header.column.getIsSorted()} />
+                            )}
+                            {filterConfig && filterConfig.searchableColumns.includes(header.id) && (
+                              <ColumnFilterPopover
+                                columnId={header.id}
+                                columnName={String(header.column.columnDef.header)}
+                                filterType={getFilterTypeForColumn(header.id)}
+                                hasActiveFilter={activeFilters.some(f => f.columnId === header.id)}
+                                onApplyFilter={addFilter}
+                                onClearFilter={() => removeFilter(header.id)}
+                              />
                             )}
                           </div>
                         )}
