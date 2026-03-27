@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,7 @@ import { toast } from 'sonner';
 import type { NotificationType, NotificationPriority, NotificationCategory, NotificationChannelType } from '@/types/notification.types';
 
 export default function NotificationsPage() {
+  usePageTitle('Notificaciones', 'Gestión de notificaciones del sistema');
   const { user } = useAuthStore();
   const [testForm, setTestForm] = useState({
     title: 'Notificación de Prueba',
@@ -91,14 +93,6 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Notificaciones</h1>
-        <p className="text-muted-foreground">
-          Gestiona y visualiza todas tus notificaciones
-        </p>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Panel de prueba */}
         <Card className="lg:col-span-1">

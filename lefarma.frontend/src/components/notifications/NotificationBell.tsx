@@ -59,9 +59,9 @@ function getPriorityColor(priority: NotificationPriority): string {
     case 'high':
       return 'bg-orange-500';
     case 'low':
-      return 'bg-blue-500';
+      return 'bg-slate-400';
     default:
-      return 'bg-gray-500';
+      return 'bg-emerald-500';
   }
 }
 
@@ -195,8 +195,8 @@ export function NotificationBell({ onError }: NotificationBellProps) {
                 return (
                   <DropdownMenuItem
                     key={userNotification.id}
-                    className={`flex flex-col items-start p-3 cursor-pointer ${
-                      !userNotification.isRead ? 'bg-accent' : ''
+                    className={`flex flex-col items-start p-3 cursor-pointer group hover:bg-primary [&:hover]:text-white [&:hover_.text-muted-foreground]:text-blue-100 ${
+                      !userNotification.isRead ? 'bg-sky-50 dark:bg-sky-950/40' : ''
                     }`}
                     onClick={() => handleNotificationClick(userNotification.id)}
                   >

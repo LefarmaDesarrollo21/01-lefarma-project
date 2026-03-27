@@ -52,11 +52,11 @@ function getNotificationIcon(type: NotificationType) {
  * Retorna el badge de prioridad
  */
 function PriorityBadge({ priority }: { priority: NotificationPriority }) {
-  const variants: Record<NotificationPriority, string> = {
-    urgent: 'destructive',
-    high: 'secondary',
-    normal: 'outline',
-    low: 'outline',
+  const styles: Record<NotificationPriority, string> = {
+    urgent: 'bg-destructive text-white border-destructive',
+    high: 'bg-orange-500 text-white border-orange-500',
+    normal: 'bg-primary text-white border-primary',
+    low: 'bg-slate-500 text-white border-slate-500',
   };
 
   const labels: Record<NotificationPriority, string> = {
@@ -67,7 +67,7 @@ function PriorityBadge({ priority }: { priority: NotificationPriority }) {
   };
 
   return (
-    <Badge variant={variants[priority] as any} className="text-xs">
+    <Badge className={`text-xs !text-white ${styles[priority]}`}>
       {labels[priority]}
     </Badge>
   );
@@ -309,8 +309,10 @@ export function NotificationList({ userId, onNotificationClick }: NotificationLi
               return (
                 <Card
                   key={userNotification.id}
-                  className={`cursor-pointer transition-colors hover:bg-accent ${
-                    !userNotification.isRead ? 'border-l-4 border-l-primary' : ''
+                  className={`cursor-pointer transition-colors hover:bg-primary [&:hover]:text-white [&:hover_.text-muted-foreground]:text-blue-100 ${
+                    !userNotification.isRead 
+                      ? 'border-l-4 border-l-primary bg-sky-50 dark:bg-sky-950/40' 
+                      : ''
                   }`}
                   onClick={() => handleNotificationClick(userNotification)}
                 >
