@@ -140,7 +140,7 @@ export default function HelpList() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && articles.length === 0) {
     return (
       <div className="flex h-[calc(100vh-4rem)]">
         <div className="w-64 border-r shrink-0">
