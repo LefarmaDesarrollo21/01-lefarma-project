@@ -20,7 +20,7 @@ export default function TinyMceEditor({ initialContent, onChange }: TinyMceEdito
 
   return (
     <Editor
-      apiKey="no-api-key"
+      apiKey='1y98o7v8qkqc9big87lvk4ekuo85bc6xrxzgue0jlmv5ip57'
       onInit={(_, editor) => {
         editorRef.current = editor;
       }}
@@ -29,37 +29,23 @@ export default function TinyMceEditor({ initialContent, onChange }: TinyMceEdito
         height: 400,
         menubar: false,
         plugins: [
-          'advlist',
-          'autolink',
-          'lists',
-          'link',
-          'image',
-          'charmap',
-          'preview',
           'anchor',
-          'searchreplace',
-          'visualblocks',
-          'code',
-          'fullscreen',
-          'insertdatetime',
+          'autolink',
+          'charmap',
+          'codesample',
+          'emoticons',
+          'link',
+          'lists',
           'media',
+          'searchreplace',
           'table',
-          'help',
+          'visualblocks',
           'wordcount',
         ],
         toolbar:
-          'fontsize | bold italic underline strikethrough | ' +
-          'h1 h2 h3 | blockquote | code | ' +
-          'bullist numlist | alignleft aligncenter alignright | ' +
-          'link image | removeformat | help',
-        fontsize_formats: '12px 14px 16px 18px 20px 24px 28px 32px',
-        formats: {
-          h1: { block: 'h1' },
-          h2: { block: 'h2' },
-          h3: { block: 'h3' },
-          blockquote: { block: 'blockquote', wrapper: true },
-          code: { block: 'pre', classes: 'bg-muted p-4 rounded overflow-x-auto' },
-        },
+          'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | ' +
+          'link table | align lineheight | numlist bullist indent outdent | ' +
+          'emoticons charmap | removeformat',
         toolbar_mode: 'sliding',
         statusbar: false,
         promotion: false,
@@ -97,47 +83,7 @@ export default function TinyMceEditor({ initialContent, onChange }: TinyMceEdito
           img { max-width: 100%; height: auto; border-radius: 6px; }
           ul, ol { padding-left: 1.5em; }
         `,
-        file_picker_callback: (callback) => {
-          const input = document.createElement('input');
-          input.setAttribute('type', 'file');
-          input.setAttribute('accept', 'image/*');
-          input.onchange = async () => {
-            const file = input.files?.[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-              const response = await fetch('/api/help/images/upload', {
-                method: 'POST',
-                body: formData,
-              });
-              const data = await response.json();
-              if (data.success && data.data) {
-                callback(data.data.rutaRelativa, { alt: file.name });
-              }
-            } catch (error) {
-              console.error('Error uploading image:', error);
-            }
-          };
-          input.click();
-        },
-        images_upload_handler: async (blobInfo) => {
-          const formData = new FormData();
-          formData.append('file', blobInfo.blob(), blobInfo.filename());
-
-          const response = await fetch('/api/help/images/upload', {
-            method: 'POST',
-            body: formData,
-          });
-          const data = await response.json();
-          if (data.success && data.data) {
-            return data.data.rutaRelativa;
-          }
-          throw new Error('Error uploading image');
-         },
-       }}
+      }}
       onEditorChange={(content) => {
         onChange(content);
       }}
