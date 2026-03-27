@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   AlertDialog,
@@ -93,56 +94,60 @@ export function HelpSidebar({ selectedModule, onModuleSelect }: HelpSidebarProps
   return (
     <>
       <ScrollArea className="h-[calc(100vh-4rem)]">
-        <div className="space-y-6 p-4">
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => setIsAddModuleOpen(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar módulo
-            </Button>
-          </div>
+        <div className="space-y-4 p-4">
+          <Card>
+            <CardContent className="p-3">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => setIsAddModuleOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar módulo
+              </Button>
+            </CardContent>
+          </Card>
 
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Módulos
-            </h3>
-            <div className="space-y-1">
-              {isLoading ? (
-                <p className="text-sm text-muted-foreground">Cargando...</p>
-              ) : (
-                modules.map((module) => (
-                  <div key={module.id} className="flex items-center gap-1">
-                    <Button
-                      variant={selectedModule === module.nombre ? 'default' : 'ghost'}
-                      className="flex-1 justify-start"
-                      onClick={() => onModuleSelect(module.nombre)}
-                    >
-                      {module.label}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleEditModule(module)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => setDeletingModule(module)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <Card>
+            <CardContent className="p-3">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Módulos
+              </h3>
+              <div className="space-y-1">
+                {isLoading ? (
+                  <p className="text-sm text-muted-foreground">Cargando...</p>
+                ) : (
+                  modules.map((module) => (
+                    <div key={module.id} className="flex items-center gap-1">
+                      <Button
+                        variant={selectedModule === module.nombre ? 'default' : 'ghost'}
+                        className="flex-1 justify-start"
+                        onClick={() => onModuleSelect(module.nombre)}
+                      >
+                        {module.label}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEditModule(module)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => setDeletingModule(module)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </ScrollArea>
 
