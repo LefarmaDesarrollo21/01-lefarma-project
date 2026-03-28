@@ -142,7 +142,7 @@ export default function HelpList() {
 
   if (isLoading && articles.length === 0) {
     return (
-      <div className="flex h-[calc(100vh-4rem)]">
+      <div className="flex h-[calc(100vh-7rem)]">
         <div className="w-64 border-r shrink-0">
           <HelpSidebar 
             selectedModule={selectedModule}
@@ -168,7 +168,7 @@ export default function HelpList() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-7rem)]">
       <div className="w-64 border-r shrink-0">
         <HelpSidebar 
           selectedModule={selectedModule}

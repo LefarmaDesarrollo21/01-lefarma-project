@@ -93,7 +93,7 @@ export function HelpSidebar({ selectedModule, onModuleSelect }: HelpSidebarProps
 
   return (
     <>
-      <ScrollArea className="h-[calc(100vh-4rem)]">
+      <ScrollArea className="h-[calc(100vh-7rem)]">
         <div className="space-y-4 p-4">
           <Card>
             <CardContent className="p-3">
