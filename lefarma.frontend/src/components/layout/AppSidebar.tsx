@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import type { ElementType } from 'react';
 import {
   LayoutDashboard,
   Shield,
@@ -47,8 +48,32 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/store/authStore';
+import type { PermissionCheckOptions } from '@/utils/permissions';
+import { checkPermission } from '@/utils/permissions';
 
-const menuItems = [
+interface MenuItemBase {
+  title: string;
+  icon: ElementType;
+  permission?: PermissionCheckOptions;
+}
+
+interface MenuItem extends MenuItemBase {
+  path: string;
+}
+
+interface CollapsibleMenuItem extends MenuItemBase {
+  isCollapsible: true;
+  items: MenuItem[];
+}
+
+type SidebarMenuItem = MenuItem | CollapsibleMenuItem;
+
+function hasPermission(permission?: PermissionCheckOptions): boolean {
+  if (!permission) return true;
+  return checkPermission(permission);
+}
+
+const menuItems: SidebarMenuItem[] = [
   {
     title: 'Dashboard',
     icon: LayoutDashboard,
@@ -59,8 +84,8 @@ const menuItems = [
     icon: Shield,
     isCollapsible: true,
     items: [
-      { title: 'Usuarios', icon: User, path: '/seguridad/usuarios' },
-      { title: 'Roles', icon: Users, path: '/seguridad/roles' },
+      { title: 'Usuarios', icon: User, path: '/seguridad/usuarios', permission: { requireAny: ['usuarios.view', 'usuarios.manage'] } },
+      { title: 'Roles', icon: Users, path: '/seguridad/roles', permission: { require: 'usuarios.manage' } },
       { title: 'Permisos', icon: Key, path: '/seguridad/permisos' },
     ],
   },
@@ -113,7 +138,14 @@ export function AppSidebar() {
     await logout();
   };
 
-  const renderCollapsibleItem = (item: typeof menuItems[number]) => {
+  const getVisibleSubItems = (item: CollapsibleMenuItem) => {
+    return item.items.filter((sub) => hasPermission(sub.permission));
+  };
+
+  const renderCollapsibleItem = (item: CollapsibleMenuItem) => {
+    const visibleItems = getVisibleSubItems(item);
+    if (visibleItems.length === 0) return null;
+
     if (isCollapsed) {
       return (
         <SidebarMenuItem>
@@ -130,7 +162,7 @@ export function AppSidebar() {
               align="start"
               className="min-w-48"
             >
-              {item.items?.map((subItem) => (
+              {visibleItems.map((subItem) => (
                 <DropdownMenuItem key={subItem.path} asChild>
                   <NavLink
                     to={subItem.path}
@@ -161,7 +193,7 @@ export function AppSidebar() {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <SidebarMenuSub>
-              {item.items?.map((subItem) => (
+              {visibleItems.map((subItem) => (
                 <SidebarMenuSubItem key={subItem.path}>
                   <SidebarMenuSubButton asChild>
                     <NavLink
@@ -206,27 +238,29 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Navegación</SidebarGroupLabel>
           <SidebarMenu>
-            {menuItems.map((item) => (
-              <div key={item.title}>
-                {item.isCollapsible ? (
-                  renderCollapsibleItem(item)
-                ) : (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip={item.title}>
-                      <NavLink
-                        to={item.path!}
-                        className={({ isActive }) =>
-                          isActive ? 'bg-primary/10 font-medium text-primary' : ''
-                        }
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
-              </div>
-            ))}
+            {menuItems.map((item) => {
+              if (item.isCollapsible) {
+                return <div key={item.title}>{renderCollapsibleItem(item)}</div>;
+              }
+
+              if (!hasPermission(item.permission)) return null;
+
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild tooltip={item.title}>
+                    <NavLink
+                      to={item.path}
+                      className={({ isActive }) =>
+                        isActive ? 'bg-primary/10 font-medium text-primary' : ''
+                      }
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
