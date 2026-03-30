@@ -412,18 +412,17 @@ app.UseHttpsRedirection();
 
 app.UseSerilogRequestLogging(options =>
 {
-    // Se deshabilita el log automático de Serilog porque ya tenemos WideEvent
     options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode}";
-    options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Fatal; // Nunca se ejecuta
+    options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Fatal;
 });
 
-// Wide Event logging - logs one rich event per request
 app.UseWideEventLogging();
 
-// Use CORS
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseCors("CorsPolicy");
 
-// Static files for help images
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
@@ -446,6 +445,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 // Database seeding deshabilitado temporalmente
 // if (app.Environment.IsDevelopment())
