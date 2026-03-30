@@ -239,7 +239,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navegación</SidebarGroupLabel>
           <SidebarMenu>
             {menuItems.map((item) => {
-              if (item.isCollapsible) {
+              if ('isCollapsible' in item) {
                 return <div key={item.title}>{renderCollapsibleItem(item)}</div>;
               }
 

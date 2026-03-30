@@ -1,9 +1,11 @@
 import { Routes, Route } from 'react-router-dom';
 import { LandingRoute, ProtectedRoute, PublicOnlyRoute } from './LandingRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
 
 import Login from '@/pages/auth/Login';
 import SelectEmpresaSucursal from '@/pages/auth/SelectEmpresaSucursal';
+import BlockedPage from '@/pages/auth/BlockedPage';
 import Dashboard from '@/pages/Dashboard';
 import RolesList from '@/pages/admin/Roles/RolesList';
 import PermisosList from '@/pages/admin/Permisos/PermisosList';
@@ -44,9 +46,9 @@ export const AppRoutes = () => {
         <Route path="/select-empresa" element={<SelectEmpresaSucursal />} />
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/seguridad/usuarios" element={<UsuariosList />} />
-          <Route path="/seguridad/roles" element={<RolesList />} />
-          <Route path="/seguridad/permisos" element={<PermisosList />} />
+          <Route path="/seguridad/usuarios" element={<PermissionGuard requireAny={['usuarios.view', 'usuarios.manage']}><UsuariosList /></PermissionGuard>} />
+          <Route path="/seguridad/roles" element={<PermissionGuard require="usuarios.manage"><RolesList /></PermissionGuard>} />
+          <Route path="/seguridad/permisos" element={<PermisosList /> } />
           <Route path="/catalogos/empresas" element={<EmpresasList />} />
           <Route path="/catalogos/sucursales" element={<SucursalesList />} />
           <Route path="/catalogos/gastos" element={<GastosList />} />
@@ -73,6 +75,7 @@ export const AppRoutes = () => {
         </Route>
       </Route>
 
+      <Route path="/bloqueado" element={<BlockedPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
