@@ -63,42 +63,45 @@ export default function HelpView() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      {/* Action Buttons */}
-      <div className="flex items-center gap-2 mb-6">
+    <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6">
+      <div className="flex flex-wrap items-center gap-2 mb-4 md:mb-6">
         <Button
           variant="ghost"
+          size="sm"
           onClick={() => navigate('/help')}
         >
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Volver
+          <ChevronLeft className="mr-1 md:mr-2 h-4 w-4" />
+          <span className="hidden sm:inline">Volver</span>
         </Button>
         {!isEditing ? (
           <Button
             variant="outline"
+            size="sm"
             onClick={() => setIsEditing(true)}
           >
-            <Edit className="mr-2 h-4 w-4" />
+            <Edit className="mr-1 md:mr-2 h-4 w-4" />
             Editar
           </Button>
         ) : (
-          <>
+          <div className="flex gap-2 ml-auto">
             <Button
               variant="default"
+              size="sm"
               onClick={handleSave}
               disabled={isSaving}
             >
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="mr-1 md:mr-2 h-4 w-4" />
               {isSaving ? 'Guardando...' : 'Guardar'}
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={handleCancelEdit}
               disabled={isSaving}
             >
               Cancelar
             </Button>
-          </>
+          </div>
         )}
       </div>
 
@@ -132,32 +135,28 @@ export default function HelpView() {
 
       {/* Article Content */}
       {!isLoading && selectedArticle && (
-        <div className="space-y-6">
-          {/* Title */}
-          <h1 className="text-3xl font-bold">{selectedArticle.titulo}</h1>
+        <div className="space-y-4 md:space-y-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">{selectedArticle.titulo}</h1>
 
-          {/* Summary */}
           {selectedArticle.resumen && (
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base md:text-lg text-muted-foreground">
               {selectedArticle.resumen}
             </p>
           )}
 
-          {/* Metadata */}
-          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
             <span>Módulo: {selectedArticle.modulo}</span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
             <span>Tipo: {selectedArticle.tipo}</span>
             {selectedArticle.categoria && (
               <>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span>Categoría: {selectedArticle.categoria}</span>
               </>
             )}
           </div>
 
-          {/* Content */}
-          <div className="border-t pt-6">
+          <div className="border-t pt-4 md:pt-6">
             {isEditing ? (
               <TinyMceEditor
                 initialContent={selectedArticle.contenido}
