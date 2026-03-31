@@ -174,3 +174,153 @@ npx playwright test --grep "test name"           # Run specific test
 - **Validation messages**: In Spanish
 - **Docs**: Update `lefarma.docs/` when changing entities, endpoints, pages, or components
 - **Keep CLAUDE.md and AGENTS.md synchronized** when modifying either
+- **usePageTitle(title, subtitle?)**: Hook estándar para mostrar el título de la página en el nav/header. Debe llamarse al inicio de cada página.
+  ```typescript
+  // En cualquier page component
+  usePageTitle('Empresas', 'Gestión de empresas');  // subtítulo opcional
+  ```
+  El título aparece en el componente `Header`, no en `document.title`. Usa el store global `pageStore`.
+
+## Tech Stack
+
+**Backend:**
+- .NET 10 with C# 10 features (nullable reference types, implicit usings)
+- Entity Framework Core 10 with SQL Server
+- FluentValidation for request validation
+- JWT authentication configured
+- Serilog for logging
+- Swashbuckle for Swagger/OpenAPI
+
+**Frontend:**
+- React 19 with TypeScript
+- Vite 7
+- TailwindCSS with tailwind-merge and clsx
+- Radix UI primitives (@radix-ui/react-*)
+- Zustand for state
+- React Hook Form + Zod
+- Axios for HTTP
+- React Router v7
+- date-fns for dates
+- Lucide React for icons
+- react-hot-toast for notifications
+
+## Development Workflow
+
+1. Start backend: `dotnet run` from `lefarma.backend/src/Lefarma.API`
+2. Start frontend: `npm run dev` from `lefarma.frontend`
+3. Frontend proxies API calls to backend via Vite config
+4. Swagger UI available at root in Development
+
+## IMPORTANT: Documentation Maintenance
+
+**Whenever making changes to the codebase, always update the documentation in `lefarma.docs/` to reflect the actual and current state of the project. Seguir el estándar definido en `lefarma.docs/STANDARD_DOCUMENTATION_PLAN.md` (Técnico) y `lefarma.docs/USER_DOCUMENTATION_PLAN.md` (Usuarios).**
+
+### When to Update Docs
+
+- **Adding new entities**: Update `backend/entities.md` and `backend/dtos.md`
+- **Adding new endpoints**: Update `backend/api-routes.md`
+- **Adding new services**: Update `backend/services.md`
+- **Adding new pages**: Update `frontend/pages.md` and `frontend/routes.md`
+- **Adding new components**: Update `frontend/components.md`
+- **Adding new types**: Update `frontend/types.md`
+- **Modifying API contracts**: Update all affected documentation files
+
+### Documentation Structure
+
+```text
+lefarma.docs/
+├── README.md                 # Index and overview
+├── backend/
+│   ├── api-routes.md         # API endpoints
+│   ├── entities.md           # Database entities
+│   ├── services.md           # Business services
+│   └── dtos.md               # Data transfer objects
+├── frontend/
+│   ├── routes.md             # Route definitions
+│   ├── pages.md              # Page components
+│   ├── components.md         # Reusable components
+│   ├── services.md           # API client and auth
+│   └── types.md              # TypeScript types
+└── task/                     # PRDs and development tasks
+    ├── README.md             # Task system documentation
+    ├── 001-modulo-ejemplo.md # Task files with consecutive numbering
+    └── 002-otro-modulo.md
+```
+
+## Task System (lefarma.docs/task/)
+
+When working on new modules or features:
+
+### Finding the Next Task
+
+1. Check the `lefarma.docs/task/` directory for existing tasks
+2. Look for the highest consecutive number (001, 002, 003...)
+3. Read the task file to understand requirements
+
+### Creating New Tasks
+
+```powershell
+# Find the last task number
+Get-ChildItem lefarma.docs/task/*.md | Sort-Object Name -Descending | Select-Object -First 1
+
+# Create new task with next consecutive number
+# Format: XXX-nombre-del-modulo.md
+```
+
+### Task Status Workflow
+
+- `pending` → Not started
+- `in_progress` → Currently being worked on
+- `completed` → Finished and tested
+- `cancelled` → Discarded
+
+### Working on Tasks
+
+1. **Before starting**: Update task status to `in_progress` and add assignee
+2. **During work**: Follow the requirements and acceptance criteria in the task
+3. **After completion**:
+   - Update task status to `completed`
+   - Update all relevant documentation in `lefarma.docs/`
+   - Sync changes to CLAUDE.md and AGENTS.md
+
+### Task Template
+
+New tasks should follow this structure:
+
+```markdown
+---
+status: pending
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+assignee: null
+---
+
+# Task-XXX: Module Name
+
+## Description
+Brief description of the module.
+
+## Requirements
+- [ ] Requirement 1
+- [ ] Requirement 2
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Dependencies
+- Task-YYY: Dependency name
+```
+
+Keep documentation in sync with code to ensure it always reflects the real state of the project.
+
+### Synchronization Between CLAUDE.md and AGENTS.md
+
+**Both `CLAUDE.md` and `AGENTS.md` must always be synchronized.** When modifying either file:
+
+1. Check if the change affects both files
+2. Apply the same update to both files when relevant
+3. Keep architecture decisions, patterns, and guidelines consistent across both
+4. If adding new sections to one, consider if the other needs a corresponding update
+
+These two files serve the same purpose but for different AI contexts - they must remain aligned.

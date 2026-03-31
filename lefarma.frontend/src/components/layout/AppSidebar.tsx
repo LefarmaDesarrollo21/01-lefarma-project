@@ -21,6 +21,8 @@ import {
   UserCircle,
   LogOut,
   HelpCircle,
+  GitBranch,
+  ShoppingCart,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -107,6 +109,15 @@ const menuItems: SidebarMenuItem[] = [
     ],
   },
   {
+    title: 'Órdenes de compra',
+    icon: ShoppingCart,
+    isCollapsible: true,
+    items: [
+      { title: 'Crear orden', icon: FileText, path: '/ordenes/crear' },
+      { title: 'Bandeja de autorizaciones', icon: FileCheck2, path: '/ordenes/autorizaciones' },
+    ],
+  },
+  {
     title: 'Notificaciones',
     icon: Bell,
     path: '/notificaciones',
@@ -115,6 +126,11 @@ const menuItems: SidebarMenuItem[] = [
     title: 'Autorizaciones OC',
     icon: FileCheck2,
     path: '/ordenes/autorizaciones',
+  },
+  {
+    title: 'Workflows',
+    icon: GitBranch,
+    path: '/workflows',
   },
   {
     title: 'Ayuda',
