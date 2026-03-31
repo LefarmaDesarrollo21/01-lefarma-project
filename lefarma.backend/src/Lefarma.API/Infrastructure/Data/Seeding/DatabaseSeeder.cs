@@ -285,6 +285,136 @@ public class DatabaseSeeder : IDatabaseSeeder
                 EsActivo = true,
                 EsSistema = true,
                 FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 13,
+                CodigoPermiso = Permissions.Tesoreria.View,
+                NombrePermiso = "Ver Tesoreria",
+                Descripcion = "Permite visualizar modulo de tesoreria",
+                Categoria = "Tesoreria",
+                Recurso = "Tesoreria",
+                Accion = "View",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 14,
+                CodigoPermiso = Permissions.Tesoreria.Pay,
+                NombrePermiso = "Realizar Pagos",
+                Descripcion = "Permite registrar pagos en tesoreria",
+                Categoria = "Tesoreria",
+                Recurso = "Tesoreria",
+                Accion = "Pay",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 15,
+                CodigoPermiso = Permissions.Tesoreria.Export,
+                NombrePermiso = "Exportar Tesoreria",
+                Descripcion = "Permite exportar datos de tesoreria",
+                Categoria = "Tesoreria",
+                Recurso = "Tesoreria",
+                Accion = "Export",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 16,
+                CodigoPermiso = Permissions.Comprobaciones.View,
+                NombrePermiso = "Ver Comprobaciones",
+                Descripcion = "Permite visualizar comprobaciones de gastos",
+                Categoria = "Comprobaciones",
+                Recurso = "Comprobaciones",
+                Accion = "View",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 17,
+                CodigoPermiso = Permissions.Comprobaciones.Create,
+                NombrePermiso = "Crear Comprobaciones",
+                Descripcion = "Permite crear comprobaciones de gastos",
+                Categoria = "Comprobaciones",
+                Recurso = "Comprobaciones",
+                Accion = "Create",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 18,
+                CodigoPermiso = Permissions.Comprobaciones.Validate,
+                NombrePermiso = "Validar Comprobaciones",
+                Descripcion = "Permite validar comprobaciones de gastos",
+                Categoria = "Comprobaciones",
+                Recurso = "Comprobaciones",
+                Accion = "Validate",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 19,
+                CodigoPermiso = Permissions.Config.View,
+                NombrePermiso = "Ver Configuracion",
+                Descripcion = "Permite visualizar configuracion del sistema",
+                Categoria = "Config",
+                Recurso = "Config",
+                Accion = "View",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 20,
+                CodigoPermiso = Permissions.Config.Manage,
+                NombrePermiso = "Gestionar Configuracion",
+                Descripcion = "Permite gestionar configuracion del sistema",
+                Categoria = "Config",
+                Recurso = "Config",
+                Accion = "Manage",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 21,
+                CodigoPermiso = Permissions.Workflows.View,
+                NombrePermiso = "Ver Workflows",
+                Descripcion = "Permite visualizar workflows del sistema",
+                Categoria = "Workflows",
+                Recurso = "Workflows",
+                Accion = "View",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
+            },
+            new()
+            {
+                IdPermiso = 22,
+                CodigoPermiso = Permissions.Workflows.Manage,
+                NombrePermiso = "Gestionar Workflows",
+                Descripcion = "Permite crear, editar y eliminar workflows",
+                Categoria = "Workflows",
+                Recurso = "Workflows",
+                Accion = "Manage",
+                EsActivo = true,
+                EsSistema = true,
+                FechaCreacion = DateTime.UtcNow
             }
         };
 
@@ -307,14 +437,14 @@ public class DatabaseSeeder : IDatabaseSeeder
         var rolPermisos = new List<RolPermiso>();
         int nextId = 1;
 
-        AddRolePermissions(rolPermisos, ref nextId, 1, new[] { 1, 3, 4 });
-        AddRolePermissions(rolPermisos, ref nextId, 2, new[] { 1, 3, 4, 5 });
-        AddRolePermissions(rolPermisos, ref nextId, 3, new[] { 1, 2, 3, 4, 5, 6, 8 });
-        AddRolePermissions(rolPermisos, ref nextId, 4, new[] { 1, 2, 3, 4, 5, 6, 7, 8 });
-        AddRolePermissions(rolPermisos, ref nextId, 5, new[] { 1, 2, 3, 4, 5, 6, 7, 8, 11, 12 });
-        AddRolePermissions(rolPermisos, ref nextId, 6, new[] { 1, 3, 11 });
-        AddRolePermissions(rolPermisos, ref nextId, 7, new[] { 1, 3, 11 });
-        AddRolePermissions(rolPermisos, ref nextId, 8, new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 });
+        AddRolePermissions(rolPermisos, ref nextId, 1, new[] { 1, 3, 4, 13, 16, 19 });
+        AddRolePermissions(rolPermisos, ref nextId, 2, new[] { 1, 3, 4, 5, 13, 16, 19 });
+        AddRolePermissions(rolPermisos, ref nextId, 3, new[] { 1, 2, 3, 4, 5, 6, 8, 14, 16, 17, 18, 19, 21, 22 });
+        AddRolePermissions(rolPermisos, ref nextId, 4, new[] { 1, 2, 3, 4, 5, 6, 7, 8, 14, 16, 17, 18, 19, 20, 21, 22 });
+        AddRolePermissions(rolPermisos, ref nextId, 5, new[] { 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 14, 16, 17, 18, 19, 20, 21, 22 });
+        AddRolePermissions(rolPermisos, ref nextId, 6, new[] { 1, 3, 11, 13, 14, 15, 16 });
+        AddRolePermissions(rolPermisos, ref nextId, 7, new[] { 1, 3, 11, 13, 16 });
+        AddRolePermissions(rolPermisos, ref nextId, 8, new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22 });
 
         await _context.RolesPermisos.AddRangeAsync(rolPermisos);
         await _context.SaveChangesAsync();
