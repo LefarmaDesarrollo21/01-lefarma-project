@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Shield,
   Key,
-  Settings,
   User,
   ChevronRight,
   Database,
@@ -110,11 +109,6 @@ const menuItems: SidebarMenuItem[] = [
     title: 'Notificaciones',
     icon: Bell,
     path: '/notificaciones',
-  },
-  {
-    title: 'Configuración',
-    icon: Settings,
-    path: '/configuracion',
   },
   {
     title: 'Autorizaciones OC',
