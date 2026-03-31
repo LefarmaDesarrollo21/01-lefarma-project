@@ -166,7 +166,7 @@ export function AppSidebar() {
                   <NavLink
                     to={subItem.path}
                     className={({ isActive }) =>
-                      `flex items-center gap-2 w-full ${isActive ? 'bg-primary/10 font-medium text-primary' : ''}`
+                      `flex items-center gap-2 w-full ${isActive ? 'bg-primary/10 font-medium text-primary-foreground' : ''}`
                     }
                   >
                     {subItem.icon && <subItem.icon className="h-4 w-4" />}
@@ -198,7 +198,7 @@ export function AppSidebar() {
                     <NavLink
                       to={subItem.path}
                       className={({ isActive }) =>
-                        isActive ? 'font-medium text-primary' : ''
+                        isActive ? 'font-medium text-primary-foreground' : ''
                       }
                     >
                       <span>{subItem.title}</span>
@@ -250,7 +250,7 @@ export function AppSidebar() {
                     <NavLink
                       to={item.path}
                       className={({ isActive }) =>
-                        isActive ? 'bg-primary/10 font-medium text-primary' : ''
+                        isActive ? 'bg-primary/10 font-medium text-primary-foreground' : ''
                       }
                     >
                       <item.icon className="h-4 w-4" />
