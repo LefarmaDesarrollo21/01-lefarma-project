@@ -280,8 +280,8 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="sm" asChild tooltip="Perfil">
-              <NavLink to="/perfil">
+            <SidebarMenuButton size="sm" asChild tooltip="Configuración">
+              <NavLink to="/configuracion">
                 <User className="h-4 w-4" />
                 <span>{user?.nombre || 'Usuario'}</span>
               </NavLink>

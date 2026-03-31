@@ -47,8 +47,8 @@ export const AppRoutes = () => {
         <Route path="/select-empresa" element={<SelectEmpresaSucursal />} />
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/seguridad/usuarios" element={<PermissionGuard requireAny={['usuarios.view', 'usuarios.manage']}><UsuariosList /></PermissionGuard>} />
-          <Route path="/seguridad/roles" element={<PermissionGuard require="usuarios.manage"><RolesList /></PermissionGuard>} />
+          <Route path="/seguridad/usuarios" element={<PermissionGuard requireAny={['usuarios.ver_detalle', 'usuarios.manage']}><UsuariosList /></PermissionGuard>} />
+          <Route path="/seguridad/roles" element={<PermissionGuard require="usuarios.ver_detalle"><RolesList /></PermissionGuard>} />
           <Route path="/seguridad/permisos" element={<PermisosList /> } />
           <Route path="/catalogos/empresas" element={<EmpresasList />} />
           <Route path="/catalogos/sucursales" element={<SucursalesList />} />

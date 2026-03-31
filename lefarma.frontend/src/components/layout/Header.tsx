@@ -142,9 +142,9 @@ export const Header = () => {
             <DropdownMenuSeparator />
 
             {/* Actions */}
-            <DropdownMenuItem onClick={() => navigate('/perfil')}>
+            <DropdownMenuItem onClick={() => navigate('/configuracion')}>
               <User className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
+              <span>Configuración</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setModalOpen(true)}>
               <Building2 className="mr-2 h-4 w-4" />

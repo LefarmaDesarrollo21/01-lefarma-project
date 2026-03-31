@@ -119,6 +119,102 @@ lib/              → Utilities (utils.ts with cn() helper)
 - Type files: `*.types.ts` convention
 - No `any` — use `unknown` or proper types
 
+### Permission System (UI Blocking)
+
+El sistema de permisos permite bloquear elementos de la UI basándose en los permisos del usuario autenticado.
+
+#### Archivos Clave
+
+| Archivo | Descripción |
+|--------|-------------|
+| `src/components/auth/PermissionGuard.tsx` | Componente wrapper para rutas/secciones |
+| `src/hooks/usePermission.ts` | Hook reactivo para componentes |
+| `src/utils/permissions.ts` | Función utilitaria (fuera de React) |
+
+#### Orden de Evaluación
+
+1. `exclude` — Si el usuario tiene **CUALQUIER** permiso excluido → **denegar**
+2. `require` — Usuario debe tener **TODOS** los permisos listados
+3. `requireAny` — Usuario debe tener **AL MENOS UNO** de los permisos listados
+4. Sin opciones → **permitir** (sin restricciones)
+
+#### Uso en Rutas (PermissionGuard)
+
+```tsx
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
+
+// Requiere un permiso específico
+<Route 
+  path="/seguridad/usuarios" 
+  element={
+    <PermissionGuard require="usuarios.manage">
+      <UsuariosList />
+    </PermissionGuard>
+  } 
+/>
+
+// Requiere CUALQUIERA de los permisos listados
+<Route 
+  path="/seguridad/roles" 
+  element={
+    <PermissionGuard requireAny={['usuarios.view', 'usuarios.manage']}>
+      <RolesList />
+    </PermissionGuard>
+  } 
+/>
+
+// Con fallback personalizado
+<PermissionGuard require="admin.access" fallback={<div>No tienes acceso</div>}>
+  <AdminPanel />
+</PermissionGuard>
+```
+
+#### Uso en Componentes (usePermission hook)
+
+```tsx
+import { usePermission } from '@/hooks/usePermission';
+
+function MyComponent() {
+  const canEdit = usePermission({ require: 'usuarios.editar' });
+  const canViewReports = usePermission({ requireAny: ['reportes.ver', 'reportes.exportar'] });
+  const isBlocked = usePermission({ exclude: 'solo_lectura' });
+
+  return (
+    <div>
+      {canEdit && <Button>Editar</Button>}
+      {canViewReports && <ReportsSection />}
+      {!isBlocked && <DeleteButton />}
+    </div>
+  );
+}
+```
+
+#### Uso Fuera de React (checkPermission)
+
+```tsx
+import { checkPermission } from '@/utils/permissions';
+
+// En menú del sidebar, rutas, interceptores, etc.
+if (checkPermission({ require: 'usuarios.ver_detalle' })) {
+  // mostrar opción de menú
+}
+
+// Verificar múltiples permisos
+const hasAccess = checkPermission({ 
+  requireAny: ['usuarios.ver_detalle', 'usuarios.manage'] 
+});
+```
+
+#### Props del PermissionGuard
+
+| Prop | Tipo | Descripción |
+|------|------|-------------|
+| `require` | `string \| string[]` | Permisos requeridos (debe tener TODOS) |
+| `requireAny` | `string \| string[]` | Al menos uno de los permisos listados |
+| `exclude` | `string \| string[]` | Si tiene alguno, bloquea acceso |
+| `fallback` | `ReactNode` | Contenido alternativo si no tiene permiso (default: redirect a `/bloqueado`) |
+| `children` | `ReactNode` | Contenido a mostrar si tiene permiso |
+
 ### Component Patterns
 - **Functional components** only — no class components
 - **Default exports** for page components
