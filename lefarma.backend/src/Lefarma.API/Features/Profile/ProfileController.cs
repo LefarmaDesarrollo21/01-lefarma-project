@@ -3,6 +3,7 @@ using Lefarma.API.Features.Profile.DTOs;
 using Lefarma.API.Shared.Extensions;
 using Lefarma.API.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -76,6 +77,65 @@ public class ProfileController : ControllerBase
             Success = true,
             Data = data,
             Message = "Perfil actualizado exitosamente"
+        }));
+    }
+
+    [HttpPost("firma")]
+    [SwaggerOperation(Summary = "Subir firma digital")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [RequestSizeLimit(5_000_000)]
+    public async Task<IActionResult> UploadSignature(
+        IFormFile file,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetAuthenticatedUserId();
+        if (userId == null)
+            return Unauthorized(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Usuario no autenticado"
+            });
+
+        if (file == null || file.Length == 0)
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "No se seleccionó ningún archivo"
+            });
+
+        var result = await _profileService.UploadSignatureAsync(userId.Value, file, file.FileName, file.ContentType, cancellationToken);
+        return result.ToActionResult(this, url => Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Data = url,
+            Message = "Firma subida exitosamente"
+        }));
+    }
+
+    [HttpDelete("firma")]
+    [SwaggerOperation(Summary = "Eliminar firma digital")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteSignature(
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetAuthenticatedUserId();
+        if (userId == null)
+            return Unauthorized(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Usuario no autenticado"
+            });
+
+        var result = await _profileService.DeleteSignatureAsync(userId.Value, cancellationToken);
+        return result.ToActionResult(this, url => Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Data = url,
+            Message = "Firma eliminada exitosamente"
         }));
     }
 

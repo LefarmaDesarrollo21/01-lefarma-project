@@ -1,10 +1,14 @@
 using ErrorOr;
+using Lefarma.API.Features.Archivos.Settings;
 using Lefarma.API.Features.Profile.DTOs;
 using Lefarma.API.Infrastructure.Data;
 using Lefarma.API.Shared.Errors;
 using Lefarma.API.Shared.Logging;
 using Lefarma.API.Shared.Services;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Lefarma.API.Features.Profile;
 
@@ -15,16 +19,22 @@ public class ProfileService : BaseService, IProfileService
 {
     private readonly AsokamDbContext _asokamContext;
     private readonly ApplicationDbContext _appContext;
+    private readonly IOptions<ArchivosSettings> _archivosSettings;
+    private readonly IWebHostEnvironment _env;
     protected override string EntityName => "Profile";
 
     public ProfileService(
         AsokamDbContext asokamContext,
         ApplicationDbContext appContext,
+        IOptions<ArchivosSettings> archivosSettings,
+        IWebHostEnvironment env,
         IWideEventAccessor wideEventAccessor)
         : base(wideEventAccessor)
     {
         _asokamContext = asokamContext;
         _appContext = appContext;
+        _archivosSettings = archivosSettings;
+        _env = env;
     }
 
     public async Task<ErrorOr<ProfileResponse>> GetProfileAsync(int userId, CancellationToken cancellationToken = default)
@@ -90,7 +100,7 @@ public class ProfileService : BaseService, IProfileService
                     IdCentroCosto = detalle.IdCentroCosto,
                     Puesto = detalle.Puesto,
                     NumeroEmpleado = detalle.NumeroEmpleado,
-                    FirmaDigital = detalle.FirmaDigital,
+                    FirmaPath = detalle.FirmaPath,
                     TelefonoOficina = detalle.TelefonoOficina,
                     Extension = detalle.Extension,
                     Celular = detalle.Celular,
@@ -167,8 +177,9 @@ public class ProfileService : BaseService, IProfileService
             if (!string.IsNullOrWhiteSpace(request.NumeroEmpleado))
                 detalle.NumeroEmpleado = request.NumeroEmpleado;
 
-            if (!string.IsNullOrWhiteSpace(request.FirmaDigital))
-                detalle.FirmaDigital = request.FirmaDigital;
+            if (!string.IsNullOrWhiteSpace(request.FirmaPath))
+                detalle.FirmaPath = request.FirmaPath;
+
 
             if (!string.IsNullOrWhiteSpace(request.TelefonoOficina))
                 detalle.TelefonoOficina = request.TelefonoOficina;
@@ -241,6 +252,87 @@ public class ProfileService : BaseService, IProfileService
         {
             EnrichWideEvent(action: "UpdateProfile", entityId: userId, exception: ex);
             return CommonErrors.DatabaseError("actualizar el perfil");
+        }
+    }
+
+    public async Task<ErrorOr<string>> UploadSignatureAsync(int userId, IFormFile file, string fileName, string contentType, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+            if (extension != ".png" && extension != ".jpg" && extension != ".jpeg")
+                return Error.Validation("Firma.InvalidExtension", "Solo se permiten archivos PNG, JPG o JPEG");
+
+            if (file.Length > 2 * 1024 * 1024)
+                return Error.Validation("Firma.FileTooLarge", "El archivo no puede ex exceder 2 MB");
+
+            var detalle = await _appContext.UsuariosDetalle
+                .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
+
+            if (detalle == null)
+            {
+                EnrichWideEvent(action: "UploadSignature", entityId: userId, notFound: true);
+                return CommonErrors.NotFound("UsuarioDetalle", userId.ToString());
+            }
+
+            if (!string.IsNullOrEmpty(detalle.FirmaPath))
+            {
+                var oldPhysicalPath = Path.Combine(_env.WebRootPath, detalle.FirmaPath.TrimStart('/'));
+                if (File.Exists(oldPhysicalPath))
+                    File.Delete(oldPhysicalPath);
+            }
+
+            var firmasFolder = "firmas_usuarios";
+            var directoryPath = Path.Combine(_archivosSettings.Value.BasePath, firmasFolder);
+            Directory.CreateDirectory(directoryPath);
+
+            var newFileName = $"{userId}{extension}";
+            var fullPath = Path.Combine(directoryPath, newFileName);
+            await using (var stream = new FileStream(fullPath, FileMode.Create, FileAccess.Write))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var relativePath = $"{firmasFolder}/{newFileName}";
+            detalle.FirmaPath = relativePath;
+            detalle.FechaModificacion = DateTime.UtcNow;
+            await _appContext.SaveChangesAsync(cancellationToken);
+
+            EnrichWideEvent(action: "UploadSignature", entityId: userId, nombre: newFileName);
+            return relativePath;
+        }
+        catch (Exception ex)
+        {
+            EnrichWideEvent(action: "UploadSignature", entityId: userId, exception: ex);
+            return CommonErrors.DatabaseError("subir la firma digital");
+        }
+    }
+
+    public async Task<ErrorOr<string>> DeleteSignatureAsync(int userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var detalle = await _appContext.UsuariosDetalle
+                .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
+
+            if (detalle == null || string.IsNullOrEmpty(detalle.FirmaPath))
+                return Error.NotFound("Profile.FirmaNotFound", "No hay firma digital para eliminar");
+
+            var oldPhysicalPath = Path.Combine(_env.WebRootPath, detalle.FirmaPath.TrimStart('/'));
+            if (File.Exists(oldPhysicalPath))
+                File.Delete(oldPhysicalPath);
+
+            detalle.FirmaPath = null;
+            detalle.FechaModificacion = DateTime.UtcNow;
+            await _appContext.SaveChangesAsync(cancellationToken);
+
+            EnrichWideEvent(action: "DeleteSignature", entityId: userId);
+            return "Firma eliminada";
+        }
+        catch (Exception ex)
+        {
+            EnrichWideEvent(action: "DeleteSignature", entityId: userId, exception: ex);
+            return CommonErrors.DatabaseError("eliminar la firma digital");
         }
     }
 }

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuthStore } from '@/store/authStore';
 import { API } from '@/services/api';
+import { archivoService } from '@/services/archivoService';
 import { ApiResponse } from '@/types/api.types';
 import { Usuario } from '@/types/usuario.types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,13 +21,18 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
-import { User, Mail, Phone, Bell, Loader2, Smartphone } from 'lucide-react';
+import { User, Mail, Phone, Bell, Loader2, Smartphone, PenLine, Upload, Trash2, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
+
+import type { ChangeEvent } from 'react';
+
+const MAX_FIRMA_SIZE = 2 * 1024 * 1024;
 
 const perfilSchema = z.object({
   nombreCompleto: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   correo: z.string().email('Email inválido').optional().or(z.literal('')),
+  firmaPath: z.string().optional().nullable(),
   detalle: z.object({
     celular: z.string().optional().nullable(),
     telefonoOficina: z.string().optional().nullable(),
@@ -52,12 +58,16 @@ export function PerfilConfig() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [firmaPreviewUrl, setFirmaPreviewUrl] = useState<string | null>(null);
+  const [isUploadingFirma, setIsUploadingFirma] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<PerfilFormValues>({
     resolver: zodResolver(perfilSchema),
-    defaultValues: {
+  defaultValues: {
       nombreCompleto: '',
       correo: '',
+      firmaPath: null,
       detalle: {
         celular: '',
         telefonoOficina: '',
@@ -76,6 +86,69 @@ export function PerfilConfig() {
     },
   });
 
+  const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/png', 'image/jpeg', 'image/svg+xml'].includes(file.type)) {
+      toast.error('Formato no válido. Use PNG, JPG o SVG.');
+      return;
+    }
+
+    if (file.size > MAX_FIRMA_SIZE) {
+      toast.error('La imagen no puede superar 2 MB.');
+      return;
+    }
+
+    if (!usuario) return;
+
+    setIsUploadingFirma(true);
+    try {
+      const archivo = await archivoService.upload(file, {
+        entidadTipo: 'usuario',
+        entidadId: usuario.idUsuario,
+        carpeta: 'firmas',
+      });
+
+      const response = await API.put('/profile', {
+        ...(form.getValues() as any),
+        firmaPath: archivo.nombreFisico,
+      });
+
+      if (response.data.success) {
+        toast.success('Firma subida exitosamente');
+        fetchPerfil();
+      } else {
+        toast.error(response.data.message ?? 'Error al guardar la firma');
+      }
+    } catch (error: any) {
+      toast.error(error?.message ?? 'Error al subir firma');
+    } finally {
+      setIsUploadingFirma(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveFirma = async () => {
+    setIsUploadingFirma(true);
+    try {
+      const response = await API.put('/profile', {
+        ...(form.getValues() as any),
+        firmaPath: '',
+      });
+      if (response.data.success) {
+        toast.success('Firma eliminada');
+        fetchPerfil();
+      } else {
+        toast.error(response.data.message ?? 'Error al eliminar firma');
+      }
+    } catch (error: any) {
+      toast.error(error?.message ?? 'Error al eliminar firma');
+    } finally {
+      setIsUploadingFirma(false);
+    }
+  };
+
   const fetchPerfil = async () => {
     try {
       setLoading(true);
@@ -83,9 +156,15 @@ export function PerfilConfig() {
       if (response.data.success && response.data.data) {
         const u = response.data.data;
         setUsuario(u);
+        const firmaPathValue = (u.detalle as any)?.firmaPath ?? null;
+        const firmaUrl = firmaPathValue
+          ? `/api/archivos/${encodeURIComponent(firmaPathValue.split('/').pop() ?? '')}/preview`
+          : null;
+
         form.reset({
           nombreCompleto: u.nombreCompleto || '',
           correo: u.correo || '',
+          firmaPath: firmaPathValue,
           detalle: {
             celular: u.detalle?.celular || '',
             telefonoOficina: u.detalle?.telefonoOficina || '',
@@ -102,6 +181,8 @@ export function PerfilConfig() {
             notificarVencimientos: u.detalle?.notificarVencimientos ?? true,
           },
         });
+        setFirmaPreviewUrl(firmaUrl);
+
       }
     } catch (error: any) {
       toast.error(error?.message ?? 'Error al cargar el perfil');
@@ -121,6 +202,7 @@ export function PerfilConfig() {
       const payload = {
         nombreCompleto: values.nombreCompleto,
         correo: values.correo,
+        firmaPath: values.firmaPath,
         ...(usuario.detalle && {
           detalle: {
             ...usuario.detalle,
@@ -148,6 +230,10 @@ export function PerfilConfig() {
       setIsSaving(false);
     }
   };
+
+  const currentFirmaPreview = firmaPreviewUrl;
+
+  const hasFirma = !!currentFirmaPreview;
 
   if (loading) {
     return (
@@ -288,6 +374,78 @@ export function PerfilConfig() {
           </CardContent>
         </Card>
 
+        {/* Firma Digital */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PenLine className="h-5 w-5" />
+              Firma Digital
+            </CardTitle>
+            <CardDescription>Tu firma digital para autorizar documentos</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/svg+xml"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+
+            {isUploadingFirma ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <p className="ml-2 text-sm text-muted-foreground">Subiendo firma...</p>
+              </div>
+            ) : hasFirma ? (
+              <div className="space-y-3">
+                <div className="flex justify-center rounded-lg border bg-muted/30 p-4">
+                  <img
+                    src={currentFirmaPreview!}
+                    alt="Firma digital"
+                    className="max-h-32 max-w-full object-contain"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Reemplazar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={handleRemoveFirma}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar firma
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/10 p-8 transition-colors hover:border-primary/50 hover:bg-muted/20"
+              >
+                <ImagePlus className="mb-2 h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  Arrastra tu firma aquí o haz clic para seleccionar
+                </p>
+                <p className="text-xs text-muted-foreground/70">
+                  PNG, JPG o SVG — máximo 2 MB
+                </p>
+              </button>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Notificaciones */}
         <Card>
           <CardHeader>
@@ -363,4 +521,3 @@ export function PerfilConfig() {
     </Form>
   );
 }
-

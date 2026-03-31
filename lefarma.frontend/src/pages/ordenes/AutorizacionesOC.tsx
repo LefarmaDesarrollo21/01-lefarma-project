@@ -15,41 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
 import { Loader2, FileText, Search, RefreshCcw, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface OrdenCompraPartidaResponse {
-  idPartida: number;
-  numeroPartida: number;
-  descripcion: string;
-  cantidad: number;
-  idUnidadMedida: number;
-  precioUnitario: number;
-  descuento: number;
-  porcentajeIva: number;
-  totalRetenciones: number;
-  otrosImpuestos: number;
-  deducible: boolean;
-  total: number;
-}
-
-interface OrdenCompraResponse {
-  idOrden: number;
-  folio: string;
-  estado: string;
-  idPasoActual?: number | null;
-  razonSocialProveedor: string;
-  personaContacto?: string;
-  fechaSolicitud: string;
-  fechaLimitePago: string;
-  subtotal: number;
-  totalIva: number;
-  total: number;
-  notasGenerales?: string;
-  idCentroCosto?: number | null;
-  cuentaContable?: string | null;
-  requiereComprobacionPago: boolean;
-  requiereComprobacionGasto: boolean;
-  partidas: OrdenCompraPartidaResponse[];
-}
+import type { OrdenCompraResponse, OrdenCompraPartidaResponse } from '@/types/ordenCompra.types';
 
 interface AccionDisponibleResponse {
   idAccion: number;

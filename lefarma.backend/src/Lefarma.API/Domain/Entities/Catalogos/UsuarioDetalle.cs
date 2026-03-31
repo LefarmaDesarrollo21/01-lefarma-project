@@ -11,7 +11,10 @@ public class UsuarioDetalle
     // Información laboral
     public string? Puesto { get; set; }
     public string? NumeroEmpleado { get; set; }
-    public string? FirmaDigital { get; set; }
+    /// <summary>
+    /// Ruta del archivo de firma digital del usuario
+    /// </summary>
+    public string? FirmaPath { get; set; }
 
     // Contacto
     public string? TelefonoOficina { get; set; }

@@ -9,7 +9,7 @@ export interface UsuarioDetalle {
   idCentroCosto?: number;
   puesto?: string;
   numeroEmpleado?: string;
-  firmaDigital?: string;
+  firmaPath?: string;
   telefonoOficina?: string;
   extension?: string;
   celular?: string;

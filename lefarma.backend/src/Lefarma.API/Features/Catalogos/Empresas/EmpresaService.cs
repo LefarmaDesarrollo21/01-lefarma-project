@@ -72,15 +72,6 @@ namespace Lefarma.API.Features.Catalogos.Empresas
 
                 var empresas = await empresasQuery.ToListAsync();
 
-                if (!empresas.Any())
-                {
-                    EnrichWideEvent(action: "GetAll", count: 0, additionalContext: new Dictionary<string, object>
-                    {
-                        ["filters"] = new { query.Nombre, query.RFC, query.Ciudad, query.Activo }
-                    });
-                    return CommonErrors.NotFound("Empresas");
-                }
-
                 var response = empresas.Select(e => e.ToResponse()).ToList();
 
                 EnrichWideEvent(action: "GetAll", count: response.Count, additionalContext: new Dictionary<string, object>

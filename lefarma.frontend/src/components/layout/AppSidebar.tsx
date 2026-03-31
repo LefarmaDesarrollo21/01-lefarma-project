@@ -50,6 +50,7 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import type { PermissionCheckOptions } from '@/utils/permissions';
 import { checkPermission } from '@/utils/permissions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface MenuItemBase {
   title: string;
@@ -140,7 +141,7 @@ const menuItems: SidebarMenuItem[] = [
 ];
 
 export function AppSidebar() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, hasFirma } = useAuthStore();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
@@ -282,7 +283,24 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="sm" asChild tooltip="Configuración">
               <NavLink to="/configuracion">
-                <User className="h-4 w-4" />
+                <span className="relative">
+                  <User className="h-4 w-4" />
+                  {hasFirma === false && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="text-xs">
+                          <p>Falta subir firma digital</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </span>
                 <span>{user?.nombre || 'Usuario'}</span>
               </NavLink>
             </SidebarMenuButton>

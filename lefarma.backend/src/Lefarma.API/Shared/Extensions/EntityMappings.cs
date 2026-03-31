@@ -163,7 +163,7 @@ namespace Lefarma.API.Shared.Extensions
             IdCentroCosto = entity.IdCentroCosto,
             Puesto = entity.Puesto,
             NumeroEmpleado = entity.NumeroEmpleado,
-            FirmaDigital = entity.FirmaDigital,
+            FirmaPath = entity.FirmaPath,
             TelefonoOficina = entity.TelefonoOficina,
             Extension = entity.Extension,
             Celular = entity.Celular,

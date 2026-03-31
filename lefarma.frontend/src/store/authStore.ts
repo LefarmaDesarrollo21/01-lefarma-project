@@ -5,9 +5,14 @@ import {
   Empresa,
   Sucursal,
 } from '@/types/auth.types';
+import type { Area } from '@/types/catalogo.types';
 import type { SseUserInfo } from '@/types/sse.types';
 import { authService } from '@/services/authService';
+import { API } from '@/services/api';
+import type { ApiResponse } from '@/types/api.types';
+import type { Usuario } from '@/types/usuario.types';
 import { useConfigStore } from './configStore';
+import { toast } from 'sonner';
 
 const LEGACY_TOKEN_KEY = 'token';
 
@@ -26,6 +31,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   pendingUsername: null,
   empresas: [],
   sucursales: [],
+  areas: [],
+  area: null,
+  hasFirma: null as boolean | null,
+
 
   loginStepOne: async (username: string) => {
     set({ isLoading: true });
@@ -73,9 +82,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.removeItem('loginFlow');
 
       // Cargar empresas y sucursales para el paso 3
-      const [empresas, sucursales] = await Promise.all([
+      const [empresas, sucursales, areas] = await Promise.all([
         authService.getEmpresas(),
         authService.getSucursales(),
+        authService.getAreas(),
       ]);
 
       // Sincronizar con configStore
@@ -87,15 +97,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         user: response.user,
         token: response.accessToken,
-        isAuthenticated: false, // No autenticado hasta seleccionar empresa/sucursal
+        isAuthenticated: false,
         isLoading: false,
-        loginStep: 3, // Pasar al paso 3
+        loginStep: 3,
         availableDomains: [],
         requiresDomainSelection: false,
         displayName: null,
         pendingUsername: null,
         empresas,
         sucursales,
+        areas,
       });
     } catch (error) {
       set({ isLoading: false });
@@ -103,8 +114,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  loginStepThree: async (empresaId: string, sucursalId: string) => {
-    const { empresas, sucursales } = get();
+  loginStepThree: async (empresaId: string, sucursalId: string, areaId?: string) => {
+    const { empresas, sucursales, areas } = get();
 
     const empresa = empresas.find((e) => String(e.idEmpresa) === String(empresaId));
     const sucursal = sucursales.find((s) => String(s.idSucursal) === String(sucursalId));
@@ -113,18 +124,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw new Error('Empresa o sucursal no encontrada');
     }
 
-    // Persist to localStorage
     authService.setEmpresa(empresa);
     authService.setSucursal(sucursal);
+
+    let selectedArea: Area | null = null;
+    if (areaId) {
+      selectedArea = areas.find((a) => String(a.idArea) === String(areaId)) || null;
+      if (selectedArea) {
+        authService.setArea(selectedArea);
+      }
+    }
 
     set({
       empresa,
       sucursal,
+      area: selectedArea,
       isAuthenticated: true,
       loginStep: 1,
       empresas: [],
       sucursales: [],
+      areas: [],
     });
+
+    await get().fetchProfileSignature();
+
+    const { hasFirma } = get();
+    if (hasFirma === false) {
+      toast.warning('No has cargado tu firma digital', {
+        description: 'Ve a Configuración para subir tu firma y poder autorizar documentos.',
+        duration: 6000,
+      });
+    }
   },
 
   resetLoginFlow: () => {
@@ -137,6 +167,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       pendingUsername: null,
       empresas: [],
       sucursales: [],
+      areas: [],
     });
   },
 
@@ -147,13 +178,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       token: null,
       empresa: null,
       sucursal: null,
+      area: null,
       isAuthenticated: false,
       loginStep: 1,
       empresas: [],
       sucursales: [],
-    });
+        areas: [],
+        hasFirma: null,
+      });
 
-    // Redirect to login after logout
     if (window.location.pathname !== '/login') {
       window.location.href = '/login';
     }
@@ -210,6 +243,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user });
   },
 
+  setHasFirma: (has: boolean) => {
+    set({ hasFirma: has });
+  },
+
+  fetchProfileSignature: async () => {
+    try {
+      const response = await API.get<ApiResponse<Usuario>>('/profile');
+      const firmaPath = response.data.data?.detalle?.firmaPath;
+      set({ hasFirma: !!firmaPath });
+    } catch {
+    }
+  },
+
   initialize: () => {
     const legacyToken = localStorage.getItem(LEGACY_TOKEN_KEY);
     if (legacyToken && !localStorage.getItem('accessToken')) {
@@ -221,24 +267,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const user = authService.getCurrentUser();
     const empresa = authService.getEmpresa();
     const sucursal = authService.getSucursal();
+    const area = authService.getArea();
 
     if (token && user) {
-      // User is authenticated if they have token + empresa + sucursal
-      const isAuthenticated = Boolean(empresa && sucursal);
+      const isAuthenticated = Boolean(empresa && sucursal && area);
 
       set({
         token,
         user,
         empresa,
         sucursal,
-        isAuthenticated,
-      });
-
-      // Sincronizar perfil con configStore
+        area,
+        isAuthenticated: true,
+        isLoading: false,
+        loginStep: 1,
+        availableDomains: [],
+        requiresDomainSelection: false,
+        displayName: null,
+        pendingUsername: null,
+        empresas: [],
+      sucursales: [],
+      areas: [],
+      hasFirma: null,
+    });
       useConfigStore.getState().updatePerfil({
         nombre: user.nombre || '',
         correo: user.correo || '',
       });
+
+      get().fetchProfileSignature();
     } else {
       // No auth data
       set({

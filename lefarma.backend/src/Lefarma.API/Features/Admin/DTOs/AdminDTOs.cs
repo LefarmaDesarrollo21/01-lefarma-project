@@ -99,6 +99,7 @@
         public DateTime? DelegacionHasta { get; set; }
 
         public string? AvatarUrl { get; set; }
+        public string? FirmaPath { get; set; }
         public string TemaInterfaz { get; set; } = "light";
         public string? DashboardInicio { get; set; }
 
@@ -139,6 +140,7 @@
         public DateTime? DelegacionHasta { get; set; }
 
         public string? AvatarUrl { get; set; }
+        public string? FirmaPath { get; set; }
         public string TemaInterfaz { get; set; } = "light";
         public string? DashboardInicio { get; set; }
 

@@ -30,7 +30,7 @@ public record UsuarioDetalleData
     public int? IdCentroCosto { get; init; }
     public string? Puesto { get; init; }
     public string? NumeroEmpleado { get; init; }
-    public string? FirmaDigital { get; init; }
+    public string? FirmaPath { get; init; }
     public string? TelefonoOficina { get; init; }
     public string? Extension { get; init; }
     public string? Celular { get; init; }
@@ -64,7 +64,7 @@ public record UpdateProfileRequest
     public int? IdCentroCosto { get; init; }
     public string? Puesto { get; init; }
     public string? NumeroEmpleado { get; init; }
-    public string? FirmaDigital { get; init; }
+    public string? FirmaPath { get; init; }
     public string? TelefonoOficina { get; init; }
     public string? Extension { get; init; }
     public string? Celular { get; init; }
