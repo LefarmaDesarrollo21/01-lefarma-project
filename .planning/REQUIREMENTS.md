@@ -145,10 +145,10 @@ Cada requisito mapea exactamente a una fase del roadmap (ver ROADMAP.md).
 | DASH-02 | Phase 6: Dashboard | Pending | Tesoreria dashboard with KPIs |
 
 **Coverage:**
-- v1 requirements: 34 total
-- Mapped to phases: 34
+- v1 requirements: 35 total
+- Mapped to phases: 35
 - Unmapped: 0 ✓
-- Success criteria: 34 (one per requirement) ✓
+- Success criteria: 35 (one per requirement) ✓
 
 ---
 *Requirements defined: 2026-03-30*

@@ -2,7 +2,7 @@
 
 **Created:** 2026-03-30
 **Core Value:** El flujo completo de una orden de compra — desde captura hasta cierre contable — con trazabilidad total y autorizaciones configurables.
-**Total v1 Requirements:** 34
+**Total v1 Requirements:** 35
 **Phases:** 6
 
 ## Build Order Rationale
@@ -244,7 +244,7 @@ Phase 6 (Dashboard) ← aggregates ALL prior data
 | Phase 4 | REP-01, REP-02, REP-03, REP-04, REP-05 | 5 |
 | Phase 5 | CONT-01, CONT-02, CONT-03 | 3 |
 | Phase 6 | DASH-01, DASH-02 | 2 |
-| **Total** | | **34** |
+| **Total** | | **35** |
 
 **Unmapped requirements:** 0
 **Coverage:** 100% of v1 requirements
