@@ -7,6 +7,7 @@ import { API } from '@/services/api';
 import { ApiResponse } from '@/types/api.types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { toast } from 'sonner';
+import { authService } from '@/services/authService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -167,31 +168,64 @@ export default function CrearOrdenCompra() {
   }, [partidas]);
   const fetchCatalogs = async () => {
     setLoadingCatalogs(true);
+    const errors: string[] = [];
+
     try {
-      const [empRes, sucRes, areaRes, gastoRes, fpRes, umRes, rfRes] = await Promise.all([
-        API.get<ApiResponse<Empresa[]>>('/catalogos/Empresas'),
-        API.get<ApiResponse<Sucursal[]>>('/catalogos/Sucursales'),
-        API.get<ApiResponse<Area[]>>('/catalogos/Areas'),
-        API.get<ApiResponse<Gasto[]>>('/catalogos/Gastos'),
-        API.get<ApiResponse<FormaPago[]>>('/catalogos/FormasPago'),
-        API.get<ApiResponse<UnidadMedida[]>>('/catalogos/UnidadesMedida'),
-        API.get<ApiResponse<RegimenFiscalItem[]>>('/catalogos/RegimenesFiscales'),
+      // Cargar Empresas, Sucursales y Áreas (esenciales - deben funcionar)
+      const [empresasData, sucursalesData, areasData] = await Promise.all([
+        authService.getEmpresas(),
+        authService.getSucursales(),
+        authService.getAreas(),
       ]);
-      console.log('[Empresas] status:', empRes.status, 'data:', empRes.data);
-      console.log('[Empresas] success:', empRes.data.success, 'items:', empRes.data.data?.length);
-      if (empRes.data.success) setEmpresas(empRes.data.data || []);
-      if (sucRes.data.success) setSucursales(sucRes.data.data || []);
-      if (areaRes.data.success) setAreas(areaRes.data.data || []);
+      console.log('[Empresas] items:', empresasData?.length);
+      setEmpresas(empresasData || []);
+      setSucursales(sucursalesData || []);
+      setAreas(areasData || []);
+    } catch (err) {
+      console.error('[fetchCatalogs] ERROR en catálogos principales:', err);
+      toast.error('Error al cargar empresas, sucursales o áreas');
+      setLoadingCatalogs(false);
+      return;
+    }
+
+    // Cargar catálogos secundarios de forma independiente (si fallan uno, no afectan los otros)
+    try {
+      const gastoRes = await API.get<ApiResponse<Gasto[]>>('/catalogos/Gastos');
       if (gastoRes.data.success) setTiposGasto(gastoRes.data.data || []);
+    } catch (err) {
+      console.warn('[fetchCatalogs] Error al cargar Gastos:', err);
+      errors.push('Tipos de Gasto');
+    }
+
+    try {
+      const fpRes = await API.get<ApiResponse<FormaPago[]>>('/catalogos/FormasPago');
       if (fpRes.data.success) setFormasPago(fpRes.data.data || []);
+    } catch (err) {
+      console.warn('[fetchCatalogs] Error al cargar FormasPago:', err);
+      errors.push('Formas de Pago');
+    }
+
+    try {
+      const umRes = await API.get<ApiResponse<UnidadMedida[]>>('/catalogos/UnidadesMedida');
       if (umRes.data.success) setUnidadesMedida(umRes.data.data || []);
+    } catch (err) {
+      console.warn('[fetchCatalogs] Error al cargar UnidadesMedida:', err);
+      errors.push('Unidades de Medida');
+    }
+
+    try {
+      const rfRes = await API.get<ApiResponse<RegimenFiscalItem[]>>('/catalogos/RegimenesFiscales');
       if (rfRes.data.success) setRegimenesFiscales(rfRes.data.data || []);
     } catch (err) {
-      console.error('[fetchCatalogs] ERROR:', err);
-      toast.error('Error al cargar los catálogos');
-    } finally {
-      setLoadingCatalogs(false);
+      console.warn('[fetchCatalogs] Error al cargar RegimenesFiscales:', err);
+      errors.push('Regímenes Fiscales');
     }
+
+    if (errors.length > 0) {
+      toast.warning(`No tienes permisos para ver: ${errors.join(', ')}`);
+    }
+
+    setLoadingCatalogs(false);
   };
   useEffect(() => {
     fetchCatalogs();
