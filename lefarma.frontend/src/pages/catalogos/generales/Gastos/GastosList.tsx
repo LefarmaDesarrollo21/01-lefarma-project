@@ -1,3 +1,4 @@
+// @lat: [[frontend#Pages]]
 import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
@@ -108,7 +109,11 @@ export default function GastosList() {
       }
     } catch (error: any) {
       const isNotFound = error?.errors?.some((e: any) => e.code === 'Gastos.NotFound');
+      const isForbidden = error?.statusCode === 403;
       if (isNotFound) {
+        setGastos([]);
+      } else if (isForbidden) {
+        toast.error('No tienes permisos para ver los gastos');
         setGastos([]);
       } else {
         toast.error(error?.message ?? 'Error al cargar los gastos');
