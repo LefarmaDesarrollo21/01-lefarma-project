@@ -62,7 +62,7 @@ public class SucursalesController : ControllerBase
 
         return result.ToActionResult(this, data => CreatedAtAction(
             nameof(GetById),
-            new { id = data.IdSucursal },
+            new { id = data.IdSucursal },  
             new ApiResponse<SucursalResponse>
             {
                 Success = true,

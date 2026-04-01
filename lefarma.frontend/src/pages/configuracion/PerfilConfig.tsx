@@ -247,56 +247,75 @@ export function PerfilConfig() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
 
-        {/* Información General */}
+        {/* Firma Digital */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Información General
+              <PenLine className="h-5 w-5" />
+              Firma Digital
             </CardTitle>
-            <CardDescription>Tu información personal básica</CardDescription>
+            <CardDescription>Tu firma digital para autorizar documentos</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-sm font-medium">
-                <User className="h-4 w-4" />
-                Usuario (AD)
-              </Label>
-              <Input value={usuario?.samAccountName || user?.username || ''} disabled className="bg-muted" />
-              <p className="text-xs text-muted-foreground">El nombre de usuario no se puede cambiar</p>
-            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/svg+xml"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="nombreCompleto"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre Completo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Tu nombre completo" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="correo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      Correo Electrónico
-                    </FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="tu.correo@empresa.com" {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {isUploadingFirma ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <p className="ml-2 text-sm text-muted-foreground">Subiendo firma...</p>
+              </div>
+            ) : hasFirma ? (
+              <div className="space-y-3">
+                <div className="flex justify-center rounded-lg border bg-muted/30 p-4">
+                  <img
+                    src={currentFirmaPreview!}
+                    alt="Firma digital"
+                    className="max-h-32 max-w-full object-contain"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Reemplazar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={handleRemoveFirma}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar firma
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/10 p-8 transition-colors hover:border-primary/50 hover:bg-muted/20"
+              >
+                <ImagePlus className="mb-2 h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  Arrastra tu firma aquí o haz clic para seleccionar
+                </p>
+                <p className="text-xs text-muted-foreground/70">
+                  PNG, JPG o SVG — máximo 2 MB
+                </p>
+              </button>
+            )}
           </CardContent>
         </Card>
 
@@ -371,78 +390,6 @@ export function PerfilConfig() {
                 )}
               />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Firma Digital */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PenLine className="h-5 w-5" />
-              Firma Digital
-            </CardTitle>
-            <CardDescription>Tu firma digital para autorizar documentos</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/svg+xml"
-              className="hidden"
-              onChange={handleFileSelect}
-            />
-
-            {isUploadingFirma ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                <p className="ml-2 text-sm text-muted-foreground">Subiendo firma...</p>
-              </div>
-            ) : hasFirma ? (
-              <div className="space-y-3">
-                <div className="flex justify-center rounded-lg border bg-muted/30 p-4">
-                  <img
-                    src={currentFirmaPreview!}
-                    alt="Firma digital"
-                    className="max-h-32 max-w-full object-contain"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Reemplazar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={handleRemoveFirma}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Eliminar firma
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/10 p-8 transition-colors hover:border-primary/50 hover:bg-muted/20"
-              >
-                <ImagePlus className="mb-2 h-8 w-8 text-muted-foreground" />
-                <p className="text-sm font-medium text-muted-foreground">
-                  Arrastra tu firma aquí o haz clic para seleccionar
-                </p>
-                <p className="text-xs text-muted-foreground/70">
-                  PNG, JPG o SVG — máximo 2 MB
-                </p>
-              </button>
-            )}
           </CardContent>
         </Card>
 
