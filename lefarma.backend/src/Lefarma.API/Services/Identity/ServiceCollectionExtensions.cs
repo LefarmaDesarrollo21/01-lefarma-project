@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Lefarma.API.Services.Identity;
 
+// @lat: [[auth]]
+
 /// <summary>
 /// Extension methods for configuring Identity services.
 /// </summary>

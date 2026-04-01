@@ -1,9 +1,11 @@
-﻿using Lefarma.API.Domain.Entities.Auth;
+using Lefarma.API.Domain.Entities.Auth;
 using Lefarma.API.Domain.Entities.Catalogos;
 using Lefarma.API.Domain.Interfaces.Admin;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Infrastructure.Data.Repositories.Admin;
+
+    // @lat: [[backend#Infrastructure]]
 
 /// <summary>
 /// Repositorio para operaciones de administración de usuarios, roles y permisos.

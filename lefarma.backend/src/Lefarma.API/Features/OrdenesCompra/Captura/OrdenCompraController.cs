@@ -9,6 +9,8 @@ using System.Security.Claims;
 
 namespace Lefarma.API.Features.OrdenesCompra.Captura
 {
+
+// @lat: [[backend#Features]]
     [Route("api/ordenes")]
     [ApiController]
     [EndpointGroupName("OrdenesCompra")]

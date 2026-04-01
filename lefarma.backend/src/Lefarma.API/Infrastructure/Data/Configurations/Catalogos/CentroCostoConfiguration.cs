@@ -2,8 +2,8 @@ using Lefarma.API.Domain.Entities.Catalogos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+    // @lat: [[backend#Infrastructure]]
     public class CentroCostoConfiguration : IEntityTypeConfiguration<CentroCosto>
     {
         public void Configure(EntityTypeBuilder<CentroCosto> builder)

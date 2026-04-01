@@ -1,5 +1,7 @@
 // ─── Partida (Response) ──────────────────────────────────────────────────────
 
+// @lat: [[frontend#Types]]
+
 export interface OrdenCompraPartidaResponse {
   idPartida: number;
   numeroPartida: number;

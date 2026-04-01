@@ -3,6 +3,7 @@ using Lefarma.API.Features.Catalogos.CentrosCosto.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.CentrosCosto
 {
+// @lat: [[backend#Features]]
     public interface ICentroCostoService
     {
         Task<ErrorOr<IEnumerable<CentroCostoResponse>>> GetAllAsync(CentroCostoRequest query);

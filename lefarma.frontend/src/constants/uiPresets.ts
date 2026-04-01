@@ -1,3 +1,4 @@
+// @lat: [[frontend]]
 import { Target, BarChart3, Armchair, Accessibility } from 'lucide-react';
 import type { UIPreset, UIPresetId } from '@/types/config.types';
 

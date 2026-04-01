@@ -1,5 +1,7 @@
 namespace Lefarma.API.Features.Notifications.DTOs;
 
+// @lat: [[backend#Features]]
+
 public class NotificationSettings
 {
     public int MaxRetryCount { get; set; } = 3;

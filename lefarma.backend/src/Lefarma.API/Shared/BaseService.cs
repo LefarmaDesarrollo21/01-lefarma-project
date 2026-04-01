@@ -3,6 +3,8 @@ using Lefarma.API.Shared.Logging;
 
 namespace Lefarma.API.Shared.Services;
 
+// @lat: [[backend#Shared]]
+
 /// <summary>
 /// Clase base para servicios que proporciona funcionalidad común de enriquecimiento de WideEvent.
 /// </summary>

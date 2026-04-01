@@ -1,3 +1,4 @@
+// @lat: [[frontend#Components#Table]]
 import { useState } from "react";
 import { Settings } from "lucide-react";
 import {

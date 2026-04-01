@@ -3,6 +3,8 @@
  * Se activa con ?autotest=true en la URL
  */
 
+// @lat: [[frontend#Components#Dev]]
+
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 

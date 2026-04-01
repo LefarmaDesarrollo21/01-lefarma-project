@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Catalogos.Empresas
 {
+
+// @lat: [[backend#Features]]
     public class EmpresaService : BaseService, IEmpresaService
     {
         private readonly IEmpresaRepository _empresaRepository;

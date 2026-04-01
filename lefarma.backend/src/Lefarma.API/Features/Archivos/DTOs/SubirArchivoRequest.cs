@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Lefarma.API.Features.Archivos.DTOs;
 
+// @lat: [[backend#Features]]
+
 public record SubirArchivoRequest
 {
     [Required]

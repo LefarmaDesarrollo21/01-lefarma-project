@@ -2,6 +2,7 @@
 
 namespace Lefarma.API.Features.OrdenesCompra.Captura.DTOs
 {
+// @lat: [[backend#Features]]
     public class OrdenCompraResponse
     {
         public int IdOrden { get; set; }

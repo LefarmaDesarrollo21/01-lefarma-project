@@ -9,6 +9,8 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Profile;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// Controller para operaciones del usuario autenticado sobre su propio perfil
 /// </summary>

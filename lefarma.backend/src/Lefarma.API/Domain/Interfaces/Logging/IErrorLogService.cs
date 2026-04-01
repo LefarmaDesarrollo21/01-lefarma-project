@@ -2,6 +2,8 @@ using Lefarma.API.Shared.Logging;
 
 namespace Lefarma.API.Domain.Interfaces.Logging;
 
+    // @lat: [[backend#Domain]]
+
 /// <summary>
 /// Servicio para persistir errores en base de datos
 /// </summary>

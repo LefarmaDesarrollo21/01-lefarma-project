@@ -7,6 +7,8 @@ using System.Security.Claims;
 
 namespace Lefarma.API.Features.Notifications.Controllers;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// Controller for Server-Sent Events (SSE) streaming of real-time notifications.
 /// Maintains persistent connections with clients for instant notification delivery.

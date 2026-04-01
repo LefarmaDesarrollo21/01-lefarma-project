@@ -5,6 +5,8 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+// @lat: [[frontend#Components#Config]]
+
 export function AdvancedConfigUI() {
   const { ui, updateVisualPreferences, updateComponentPreferences, setPreset } = useConfigStore();
 

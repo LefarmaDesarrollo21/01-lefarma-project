@@ -2,6 +2,8 @@
 
 import { RolBasicoResponse, UsuarioBasico } from './rol.types';
 
+// @lat: [[frontend#Types]]
+
 export interface Permiso {
   idPermiso: number;
   codigoPermiso: string;

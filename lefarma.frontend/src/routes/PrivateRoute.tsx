@@ -1,6 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 
+// @lat: [[frontend#Routing]]
+
 /**
  * Componente para proteger rutas que requieren autenticación
  */

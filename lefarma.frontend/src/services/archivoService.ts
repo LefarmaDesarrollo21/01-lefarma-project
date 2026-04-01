@@ -7,6 +7,8 @@ import type {
   ReemplazarArchivoParams 
 } from '@/types/archivo.types';
 
+// @lat: [[frontend#API Integration]]
+
 const BASE_URL = '/archivos';
 
 export const archivoService = {

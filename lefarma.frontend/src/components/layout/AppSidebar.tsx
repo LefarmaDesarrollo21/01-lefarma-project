@@ -1,3 +1,4 @@
+// @lat: [[frontend#Components#Layout]]
 import { NavLink } from 'react-router-dom';
 import type { ElementType } from 'react';
 import {
@@ -24,6 +25,8 @@ import {
   GitBranch,
   ShoppingCart,
 } from 'lucide-react';
+
+// @lat: [[frontend#Components#Layout]]
 import {
   Sidebar,
   SidebarContent,

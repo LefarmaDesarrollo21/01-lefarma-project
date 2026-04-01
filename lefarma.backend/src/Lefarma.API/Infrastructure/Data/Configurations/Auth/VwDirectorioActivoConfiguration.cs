@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Lefarma.API.Infrastructure.Data.Configurations.Auth;
 
+    // @lat: [[backend#Infrastructure]]
+
 /// <summary>
 /// Configuration for the vwDirectorioActivo view (read-only).
 /// </summary>

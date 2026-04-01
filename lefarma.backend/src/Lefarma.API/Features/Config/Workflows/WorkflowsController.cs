@@ -8,6 +8,8 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Config.Workflows
 {
+
+// @lat: [[backend#Features]]
     [Route("api/config/[controller]")]
     [ApiController]
     [EndpointGroupName("Config")]

@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Help.Services;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// Servicio de artículos de ayuda
 /// </summary>

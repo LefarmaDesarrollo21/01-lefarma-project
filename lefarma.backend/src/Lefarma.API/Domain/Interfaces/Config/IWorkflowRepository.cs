@@ -1,7 +1,7 @@
-﻿using Lefarma.API.Domain.Entities.Config;
+using Lefarma.API.Domain.Entities.Config;
 
-namespace Lefarma.API.Domain.Interfaces.Config
-{
+namespace Lefarma.API.Domain.Interfaces.Config {
+    // @lat: [[backend#Domain]]
     public interface IWorkflowRepository : IBaseRepository<Workflow>
     {
         Task<Workflow?> GetByCodigoProcesoAsync(string codigoProceso);

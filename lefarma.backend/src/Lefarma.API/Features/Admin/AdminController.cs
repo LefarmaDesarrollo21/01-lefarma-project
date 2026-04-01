@@ -7,6 +7,8 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Admin;
 
+// @lat: [[backend#Features]]
+
 [Route("api/[controller]")]
 [ApiController]
 [EndpointGroupName("Admin")]

@@ -8,6 +8,8 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Help.Controllers;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// Controlador API para gestionar artículos de ayuda
 /// </summary>

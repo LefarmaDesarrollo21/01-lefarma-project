@@ -1,4 +1,4 @@
-﻿using Lefarma.API.Domain.Entities.Auth;
+using Lefarma.API.Domain.Entities.Auth;
 using Lefarma.API.Domain.Entities.Catalogos;
 using Lefarma.API.Domain.Entities.Config;
 using Lefarma.API.Domain.Entities.Logging;
@@ -9,8 +9,8 @@ using Lefarma.API.Domain.Entities.Archivos;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
-namespace Lefarma.API.Infrastructure.Data
-{
+namespace Lefarma.API.Infrastructure.Data {
+    // @lat: [[backend#Infrastructure]]
     public class ApplicationDbContext : DbContext
     {
         // Constructor del ApplicationDbContext

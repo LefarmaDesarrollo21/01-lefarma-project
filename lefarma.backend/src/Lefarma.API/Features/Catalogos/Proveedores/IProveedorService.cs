@@ -3,6 +3,7 @@ using Lefarma.API.Features.Catalogos.Proveedores.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.Proveedores
 {
+// @lat: [[backend#Features]]
     public interface IProveedorService
     {
         Task<ErrorOr<IEnumerable<ProveedorResponse>>> GetAllAsync(ProveedorRequest query);

@@ -1,3 +1,5 @@
+// @lat: [[frontend#Components#Help]]
+
 interface TinyMceViewerProps {
   contenido: string;
 }

@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Catalogos.FormasPago
 {
+
+// @lat: [[backend#Features]]
     public class FormaPagoService : BaseService, IFormaPagoService
     {
         private readonly IFormaPagoRepository _formaPagoRepository;

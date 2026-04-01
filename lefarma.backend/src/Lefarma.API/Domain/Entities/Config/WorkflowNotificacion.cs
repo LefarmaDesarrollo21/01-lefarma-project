@@ -1,5 +1,5 @@
-﻿namespace Lefarma.API.Domain.Entities.Config
-{
+namespace Lefarma.API.Domain.Entities.Config {
+    // @lat: [[backend#Domain]]
     public class WorkflowNotificacion
     {
         public int IdNotificacion { get; set; }

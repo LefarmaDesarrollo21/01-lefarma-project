@@ -1,5 +1,7 @@
 ﻿namespace Lefarma.API.Features.Admin.DTOs
 {
+
+// @lat: [[backend#Features]]
     #region Usuario DTOs
 
     /// <summary>

@@ -15,6 +15,7 @@ using System.Linq;
 
 namespace Lefarma.API.Features.Catalogos.Areas
 {
+// @lat: [[backend#Features]]
     public class AreaService : BaseService, IAreaService
     {
         private readonly IAreaRepository _areaRepository;

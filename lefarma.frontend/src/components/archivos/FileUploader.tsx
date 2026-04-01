@@ -4,6 +4,8 @@ import { archivoService } from '@/services/archivoService';
 import type { Archivo, SubirArchivoParams } from '@/types/archivo.types';
 import { toast } from 'sonner';
 
+// @lat: [[frontend#Components#Files]]
+
 interface FileUploaderProps {
   entidadTipo: string;
   entidadId: number;

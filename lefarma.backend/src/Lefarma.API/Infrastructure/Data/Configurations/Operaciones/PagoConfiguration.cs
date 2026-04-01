@@ -2,8 +2,8 @@ using Lefarma.API.Domain.Entities.Operaciones;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Operaciones
-{
+namespace Lefarma.API.Infrastructure.Data.Configurations.Operaciones {
+    // @lat: [[backend#Infrastructure]]
     public class PagoConfiguration : IEntityTypeConfiguration<Pago>
     {
         public void Configure(EntityTypeBuilder<Pago> builder)

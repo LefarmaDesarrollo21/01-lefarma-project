@@ -3,6 +3,7 @@ using Lefarma.API.Features.Catalogos.Empresas.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.Empresas
 {
+// @lat: [[backend#Features]]
     public class EmpresaQueryRequestValidator : AbstractValidator<EmpresaRequest>
     {
         public EmpresaQueryRequestValidator()

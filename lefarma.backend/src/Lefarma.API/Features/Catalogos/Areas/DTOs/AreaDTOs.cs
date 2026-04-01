@@ -1,5 +1,6 @@
 namespace Lefarma.API.Features.Catalogos.Areas.DTOs
 {
+// @lat: [[backend#Features]]
     public class AreaResponse
     {
         public int IdArea { get; set; }

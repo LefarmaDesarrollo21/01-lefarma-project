@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Infrastructure.Data.Repositories;
 
+    // @lat: [[backend#Infrastructure]]
+
 /// <summary>
 /// Repositorio para operaciones de artículos de ayuda.
 /// Extiende BaseRepository para mantener consistencia con otros repositorios de catálogos.

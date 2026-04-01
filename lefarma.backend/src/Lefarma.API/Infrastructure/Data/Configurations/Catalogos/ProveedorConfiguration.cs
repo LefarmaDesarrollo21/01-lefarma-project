@@ -2,8 +2,8 @@ using Lefarma.API.Domain.Entities.Catalogos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+    // @lat: [[backend#Infrastructure]]
     public class ProveedorConfiguration : IEntityTypeConfiguration<Proveedor>
     {
         public void Configure(EntityTypeBuilder<Proveedor> builder)

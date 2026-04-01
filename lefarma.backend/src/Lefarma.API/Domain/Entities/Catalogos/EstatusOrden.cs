@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Lefarma.API.Domain.Entities.Catalogos
-{
+namespace Lefarma.API.Domain.Entities.Catalogos {
+    // @lat: [[backend#Domain]]
     public class EstatusOrden
     {
         public int IdEstatusOrden { get; set; }

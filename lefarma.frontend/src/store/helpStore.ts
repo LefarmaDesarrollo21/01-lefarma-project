@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import type { HelpArticle } from '@/types/help.types';
 import { helpService } from '@/services/helpService';
 
+// @lat: [[frontend#State Management]]
+
 interface HelpState {
   articles: HelpArticle[];
   selectedArticle: HelpArticle | null;

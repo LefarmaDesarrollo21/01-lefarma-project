@@ -1,5 +1,7 @@
 import type { TableConfig } from '@/types/table.types';
 
+// @lat: [[frontend#Lib]]
+
 const STORAGE_KEY = 'table-configs';
 
 /**

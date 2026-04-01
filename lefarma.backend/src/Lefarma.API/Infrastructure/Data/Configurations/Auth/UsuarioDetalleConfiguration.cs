@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Lefarma.API.Infrastructure.Data.Configurations.Auth;
 
+    // @lat: [[backend#Infrastructure]]
+
 public class UsuarioDetalleConfiguration : IEntityTypeConfiguration<UsuarioDetalle>
 {
     public void Configure(EntityTypeBuilder<UsuarioDetalle> builder)

@@ -3,6 +3,8 @@ using Lefarma.API.Features.OrdenesCompra.Firmas.DTOs;
 
 namespace Lefarma.API.Features.OrdenesCompra.Firmas
 {
+
+// @lat: [[backend#Features]]
     public interface IFirmasService
     {
         Task<ErrorOr<FirmarResponse>> FirmarAsync(int idOrden, FirmarRequest request, int idUsuario);

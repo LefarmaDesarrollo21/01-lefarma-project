@@ -2,6 +2,7 @@
 
 namespace Lefarma.API.Features.OrdenesCompra.Firmas.Handlers
 {
+// @lat: [[backend#Features]]
     // Firma 3 - CxP: asigna centro de costo y cuenta contable (specs sección 5.2)
     public class Firma3Handler : IStepHandler
     {

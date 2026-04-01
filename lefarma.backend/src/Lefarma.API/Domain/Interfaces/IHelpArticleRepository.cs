@@ -2,6 +2,8 @@ using Lefarma.API.Domain.Entities.Help;
 
 namespace Lefarma.API.Domain.Interfaces;
 
+    // @lat: [[backend#Domain]]
+
 /// <summary>
 /// Repositorio para operaciones de artículos de ayuda.
 /// </summary>

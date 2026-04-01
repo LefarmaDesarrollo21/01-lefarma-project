@@ -1,3 +1,4 @@
+// @lat: [[frontend#Pages]]
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { User, Palette, Server, type LucideIcon } from 'lucide-react';
@@ -6,6 +7,8 @@ import { PerfilConfig } from './PerfilConfig';
 import { SistemaConfig } from './SistemaConfig';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn } from '@/lib/utils';
+
+// @lat: [[frontend#Pages]]
 
 interface TabItem {
   value: string;
@@ -42,7 +45,7 @@ export default function ConfiguracionGeneral() {
   const activeItem = tabs.find((t) => t.value === activeTab)!;
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-[220px_1fr]">
+    <div className="grid gap-6 md:grid-cols-[220px_1fr]">
       {/* Sidebar */}
       <Card className="h-fit">
         <CardContent className="p-2">
@@ -73,11 +76,7 @@ export default function ConfiguracionGeneral() {
       {/* Content */}
       <Card>
         <CardContent className="p-6">
-          <div className="border-l-4 border-primary pl-4 py-2">
-            <h2 className="text-xl font-semibold">{activeItem.label}</h2>
-            <p className="text-muted-foreground text-sm">{activeItem.description}</p>
-          </div>
-          <div className="mt-6">
+          <div>
             {activeTab === 'perfil' && <PerfilConfig />}
             {activeTab === 'ui' && <UIConfig />}
             {activeTab === 'sistema' && <SistemaConfig />}

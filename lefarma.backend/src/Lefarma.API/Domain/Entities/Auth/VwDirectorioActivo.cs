@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Lefarma.API.Domain.Entities.Auth;
 
+    // @lat: [[backend#Domain]]
+
 /// <summary>
 /// Entity representing the vwDirectorioActivo view from the linked server.
 /// This view provides read-only access to Active Directory user information.

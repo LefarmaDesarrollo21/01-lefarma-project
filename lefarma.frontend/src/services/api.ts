@@ -3,6 +3,8 @@ import { authService } from './authService';
 import { useAuthStore } from '@/store/authStore';
 import { ApiError } from '@/types/api.types';
 
+// @lat: [[frontend#API Integration]]
+
 const baseURL = import.meta.env.VITE_API_URL || '/api';
 
 const apiClient: AxiosInstance = axios.create({

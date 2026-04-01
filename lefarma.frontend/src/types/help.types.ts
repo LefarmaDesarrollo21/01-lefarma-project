@@ -1,5 +1,7 @@
 // ─── Help Article ──────────────────────────────────────────────────────────────
 
+// @lat: [[frontend#Types]]
+
 export interface HelpArticle {
   id: number;
   titulo: string;

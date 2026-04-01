@@ -3,6 +3,8 @@
  * Soporta múltiples canales: email, telegram, in-app
  */
 
+// @lat: [[frontend#Types]]
+
 // ============= Notificaciones =============
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';

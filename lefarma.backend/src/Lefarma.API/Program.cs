@@ -60,6 +60,7 @@ using Serilog.Formatting.Json;
 using System.Reflection;
 using System.Text;
 
+// @lat: [[backend#Entry Point]]
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog first

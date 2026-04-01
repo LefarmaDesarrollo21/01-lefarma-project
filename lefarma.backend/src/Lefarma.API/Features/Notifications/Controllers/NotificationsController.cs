@@ -7,6 +7,8 @@ using Lefarma.API.Features.Auth;
 
 namespace Lefarma.API.Features.Notifications.Controllers;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// API controller for managing notifications.
 /// Provides endpoints for sending, retrieving, and managing notifications across multiple channels.

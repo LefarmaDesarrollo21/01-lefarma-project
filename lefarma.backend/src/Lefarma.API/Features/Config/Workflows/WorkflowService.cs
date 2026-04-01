@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Features.Config.Workflows
 {
+
+// @lat: [[backend#Features]]
     public class WorkflowService : BaseService, IWorkflowService
     {
         private readonly IWorkflowRepository _repo;

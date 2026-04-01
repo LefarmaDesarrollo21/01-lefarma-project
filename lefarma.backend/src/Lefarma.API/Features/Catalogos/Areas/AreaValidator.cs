@@ -3,6 +3,7 @@ using Lefarma.API.Features.Catalogos.Areas.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.Areas
 {
+// @lat: [[backend#Features]]
     public class CreateAreaRequestValidator : AbstractValidator<CreateAreaRequest>
     {
         public CreateAreaRequestValidator()

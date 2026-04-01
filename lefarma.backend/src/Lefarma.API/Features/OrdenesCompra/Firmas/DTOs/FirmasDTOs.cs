@@ -1,5 +1,6 @@
 ﻿namespace Lefarma.API.Features.OrdenesCompra.Firmas.DTOs
 {
+// @lat: [[backend#Features]]
     public class FirmarRequest
     {
         public required int IdAccion { get; set; }

@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Features.OrdenesCompra.Captura
 {
+
+// @lat: [[backend#Features]]
     public class OrdenCompraService : BaseService, IOrdenCompraService
     {
         private readonly IOrdenCompraRepository _repo;

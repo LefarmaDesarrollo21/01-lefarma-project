@@ -3,6 +3,8 @@
  * Maneja el envío y recepción de notificaciones a través de múltiples canales
  */
 
+// @lat: [[frontend#API Integration]]
+
 import { API } from './api';
 import { ApiResponse } from '@/types/api.types';
 import {

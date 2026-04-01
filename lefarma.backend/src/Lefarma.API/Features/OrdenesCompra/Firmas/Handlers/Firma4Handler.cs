@@ -2,6 +2,7 @@
 
 namespace Lefarma.API.Features.OrdenesCompra.Firmas.Handlers
 {
+// @lat: [[backend#Features]]
     // Firma 4 - GAF: configura checkboxes de comprobación (specs sección 5.3)
     public class Firma4Handler : IStepHandler
     {

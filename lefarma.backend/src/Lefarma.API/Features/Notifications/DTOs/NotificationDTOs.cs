@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Lefarma.API.Features.Notifications.DTOs;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// Request to send a notification through one or more channels
 /// </summary>

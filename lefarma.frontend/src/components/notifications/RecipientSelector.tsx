@@ -3,6 +3,8 @@
  * Permite selección múltiple de usuarios y roles para envío de notificaciones
  */
 
+// @lat: [[frontend#Components#Notifications]]
+
 import { useState, useEffect } from 'react';
 import { Check, ChevronsUpDown, Users } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';

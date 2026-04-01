@@ -4,6 +4,7 @@ using Lefarma.API.Features.Catalogos.Gastos.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.Gastos
 {
+// @lat: [[backend#Features]]
     public class CreateGastoRequestValidator : AbstractValidator<CreateGastoRequest>
     {
         public CreateGastoRequestValidator()

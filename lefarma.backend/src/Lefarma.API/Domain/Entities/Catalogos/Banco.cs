@@ -1,7 +1,7 @@
 using Lefarma.API.Shared.Extensions;
 
-namespace Lefarma.API.Domain.Entities.Catalogos
-{
+namespace Lefarma.API.Domain.Entities.Catalogos {
+    // @lat: [[backend#Domain]]
     public class Banco
     {
         public int IdBanco { get; set; }

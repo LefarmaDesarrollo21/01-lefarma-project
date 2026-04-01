@@ -14,6 +14,8 @@ import type { Usuario } from '@/types/usuario.types';
 import { useConfigStore } from './configStore';
 import { toast } from 'sonner';
 
+// @lat: [[frontend#State Management]]
+
 const LEGACY_TOKEN_KEY = 'token';
 
 export const useAuthStore = create<AuthState>((set, get) => ({

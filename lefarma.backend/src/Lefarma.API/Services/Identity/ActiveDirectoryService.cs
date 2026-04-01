@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 
 namespace Lefarma.API.Services.Identity;
 
+// @lat: [[auth#Active Directory]]
 /// <summary>
 /// Service for LDAP/Active Directory authentication and user management.
 /// Uses System.DirectoryServices.Protocols for cross-platform LDAP support.

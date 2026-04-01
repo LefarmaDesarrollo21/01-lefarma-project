@@ -3,8 +3,8 @@ using Lefarma.API.Domain.Interfaces;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace Lefarma.API.Domain.Interfaces.Catalogos
-{
+namespace Lefarma.API.Domain.Interfaces.Catalogos {
+    // @lat: [[backend#Domain]]
     public interface IMedioPagoRepository : IBaseRepository<MedioPago>
     {
         // Métodos específicos para MedioPago si es necesario

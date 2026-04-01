@@ -1,5 +1,7 @@
 // ─── Workflow ─────────────────────────────────────────────────────────────────
 
+// @lat: [[frontend#Types]]
+
 export interface Workflow {
   idWorkflow: number;
   nombre: string;

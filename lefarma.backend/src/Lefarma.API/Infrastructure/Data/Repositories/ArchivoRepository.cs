@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Infrastructure.Data.Repositories;
 
+    // @lat: [[backend#Infrastructure]]
+
 public class ArchivoRepository : IArchivoRepository
 {
     private readonly ApplicationDbContext _context;

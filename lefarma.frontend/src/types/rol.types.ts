@@ -1,5 +1,7 @@
 import { Permiso } from './permiso.types';
 
+// @lat: [[frontend#Types]]
+
 export interface UsuarioBasico {
   idUsuario: number;
   samAccountName?: string;

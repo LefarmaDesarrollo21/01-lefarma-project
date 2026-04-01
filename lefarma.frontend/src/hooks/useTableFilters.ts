@@ -14,6 +14,8 @@ import {
   createDefaultConfig,
 } from '@/lib/tableConfigStorage';
 
+// @lat: [[frontend#Hooks]]
+
 export function useTableFilters<TData>({
   tableId,
   allColumns,

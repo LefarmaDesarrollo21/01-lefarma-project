@@ -3,6 +3,8 @@ using Lefarma.API.Features.Config.Workflows.DTOs;
 
 namespace Lefarma.API.Features.Config.Workflows
 {
+
+// @lat: [[backend#Features]]
     public class CreateWorkflowRequestValidator : AbstractValidator<CreateWorkflowRequest>
     {
         public CreateWorkflowRequestValidator()

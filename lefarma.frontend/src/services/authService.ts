@@ -12,6 +12,8 @@ import {
 import type { Area } from '@/types/catalogo.types';
 import { ApiResponse } from '@/types/api.types';
 
+// @lat: [[frontend#API Integration]]
+
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';

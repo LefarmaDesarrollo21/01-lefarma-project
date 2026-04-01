@@ -1,5 +1,7 @@
 namespace Lefarma.API.Shared.Models.Configuracion
 {
+
+// @lat: [[backend#Shared]]
     public class BackendConfigResponse
     {
         public JwtSettingsPublic Jwt { get; set; }

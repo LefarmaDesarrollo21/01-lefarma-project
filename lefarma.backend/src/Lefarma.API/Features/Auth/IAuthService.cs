@@ -3,6 +3,8 @@ using Lefarma.API.Features.Auth.DTOs;
 
 namespace Lefarma.API.Features.Auth;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// Service for authentication operations including two-step login flow.
 /// </summary>

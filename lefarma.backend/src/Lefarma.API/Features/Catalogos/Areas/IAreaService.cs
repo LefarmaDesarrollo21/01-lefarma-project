@@ -3,6 +3,7 @@ using Lefarma.API.Features.Catalogos.Areas.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.Areas
 {
+// @lat: [[backend#Features]]
     public interface IAreaService
     {
         Task<ErrorOr<IEnumerable<AreaResponse>>> GetAllAsync(AreaRequest query);

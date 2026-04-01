@@ -8,6 +8,8 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Auth;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// Controller for authentication operations including two-step login flow.
 /// </summary>

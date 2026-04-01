@@ -1,3 +1,4 @@
+// @lat: [[frontend#Pages]]
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,9 +22,16 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
-import { User, Mail, Phone, Bell, Loader2, Smartphone, PenLine, Upload, Trash2, ImagePlus } from 'lucide-react';
+import { User, Mail, Phone, Bell, Loader2, Smartphone, PenLine, Upload, Trash2, ImagePlus, X, Crop, RotateCcwIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ImageCrop, ImageCropContent, ImageCropApply, ImageCropReset } from '@/components/kibo-ui/image-crop';
 
 import type { ChangeEvent } from 'react';
 
@@ -54,12 +62,15 @@ type PerfilFormValues = z.infer<typeof perfilSchema>;
 
 export function PerfilConfig() {
   usePageTitle('Mi Perfil', 'Configuración de tu perfil y notificaciones');
-  const { user } = useAuthStore();
+  const { user, hasFirma, fetchProfileSignature } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [firmaPreviewUrl, setFirmaPreviewUrl] = useState<string | null>(null);
   const [isUploadingFirma, setIsUploadingFirma] = useState(false);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<PerfilFormValues>({
@@ -100,32 +111,56 @@ export function PerfilConfig() {
       return;
     }
 
-    if (!usuario) return;
+    // Abrir dialog de cropper
+    setSelectedFile(file);
+    setCropDialogOpen(true);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
+  const handleCropComplete = async (croppedImageUrl: string) => {
+    if (!usuario || !selectedFile) return;
+
+    setCroppedImage(croppedImageUrl);
+    setCropDialogOpen(false);
     setIsUploadingFirma(true);
+
     try {
-      const archivo = await archivoService.upload(file, {
+      // Convertir base64 a File
+      const response = await fetch(croppedImageUrl);
+      const blob = await response.blob();
+      const croppedFile = new File([blob], selectedFile.name, {
+        type: 'image/png',
+        lastModified: Date.now(),
+      });
+
+      const archivo = await archivoService.upload(croppedFile, {
         entidadTipo: 'usuario',
         entidadId: usuario.idUsuario,
         carpeta: 'firmas',
       });
 
-      const response = await API.put('/profile', {
+      const apiResponse = await API.put('/profile', {
         ...(form.getValues() as any),
         firmaPath: archivo.nombreFisico,
       });
 
-      if (response.data.success) {
+      if (apiResponse.data.success) {
         toast.success('Firma subida exitosamente');
-        fetchPerfil();
+        await fetchPerfil();
+        await fetchProfileSignature();
       } else {
-        toast.error(response.data.message ?? 'Error al guardar la firma');
+        toast.error(apiResponse.data.message ?? 'Error al guardar la firma');
       }
     } catch (error: any) {
-      toast.error(error?.message ?? 'Error al subir firma');
+      console.error('Error completo:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Error al subir firma';
+      toast.error('Error al subir firma', { 
+        description: errorMessage 
+      });
     } finally {
       setIsUploadingFirma(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setSelectedFile(null);
+      setCroppedImage(null);
     }
   };
 
@@ -138,7 +173,8 @@ export function PerfilConfig() {
       });
       if (response.data.success) {
         toast.success('Firma eliminada');
-        fetchPerfil();
+        await fetchPerfil();
+        await fetchProfileSignature();
       } else {
         toast.error(response.data.message ?? 'Error al eliminar firma');
       }
@@ -160,6 +196,8 @@ export function PerfilConfig() {
         const firmaUrl = firmaPathValue
           ? `/api/archivos/${encodeURIComponent(firmaPathValue.split('/').pop() ?? '')}/preview`
           : null;
+
+        setFirmaPreviewUrl(firmaUrl);
 
         form.reset({
           nombreCompleto: u.nombreCompleto || '',
@@ -193,6 +231,7 @@ export function PerfilConfig() {
 
   useEffect(() => {
     fetchPerfil();
+    fetchProfileSignature();
   }, []);
 
   const handleSave = async (values: PerfilFormValues) => {
@@ -233,8 +272,6 @@ export function PerfilConfig() {
 
   const currentFirmaPreview = firmaPreviewUrl;
 
-  const hasFirma = !!currentFirmaPreview;
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -272,14 +309,14 @@ export function PerfilConfig() {
               </div>
             ) : hasFirma ? (
               <div className="space-y-3">
-                <div className="flex justify-center rounded-lg border bg-muted/30 p-4">
+                <div className="relative flex justify-center rounded-lg border bg-muted/30 p-4">
                   <img
                     src={currentFirmaPreview!}
                     alt="Firma digital"
                     className="max-h-32 max-w-full object-contain"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex justify-center">
                   <Button
                     type="button"
                     variant="outline"
@@ -287,17 +324,7 @@ export function PerfilConfig() {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    Reemplazar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={handleRemoveFirma}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Eliminar firma
+                    Reemplazar firma
                   </Button>
                 </div>
               </div>
@@ -465,6 +492,46 @@ export function PerfilConfig() {
         </div>
 
       </form>
+
+      {/* Dialog de Cropper para Firma */}
+      <Dialog open={cropDialogOpen} onOpenChange={setCropDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crop className="h-5 w-5" />
+              Recortar Firma Digital
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Ajusta tu firma dentro del área de recorte. Puedes mover y redimensionar la selección.
+            </p>
+            {selectedFile && (
+              <ImageCrop
+                file={selectedFile}
+                aspect={16 / 9}
+                onCrop={handleCropComplete}
+              >
+                <div className="space-y-4">
+                  <div className="flex justify-center rounded-lg border bg-muted/50 p-4">
+                    <ImageCropContent className="max-h-[300px] w-full" />
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <ImageCropReset variant="outline" size="sm">
+                      <RotateCcwIcon className="mr-2 h-4 w-4" />
+                      Reiniciar
+                    </ImageCropReset>
+                    <ImageCropApply variant="default" size="sm">
+                      <Crop className="mr-2 h-4 w-4" />
+                      Aplicar y Guardar
+                    </ImageCropApply>
+                  </div>
+                </div>
+              </ImageCrop>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Form>
   );
 }

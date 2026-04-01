@@ -1,9 +1,9 @@
-﻿using Lefarma.API.Domain.Entities.Catalogos;
+using Lefarma.API.Domain.Entities.Catalogos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+    // @lat: [[backend#Infrastructure]]
     public class GastoConfiguration : IEntityTypeConfiguration<Gasto>
     {
         public void Configure(EntityTypeBuilder<Gasto> builder)

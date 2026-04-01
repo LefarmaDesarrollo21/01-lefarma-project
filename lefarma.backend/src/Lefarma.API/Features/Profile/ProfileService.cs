@@ -12,6 +12,8 @@ using Microsoft.Extensions.Options;
 
 namespace Lefarma.API.Features.Profile;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// Implementación del servicio de perfil de usuario
 /// </summary>

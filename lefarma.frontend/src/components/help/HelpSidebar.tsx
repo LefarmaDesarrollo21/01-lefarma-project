@@ -3,6 +3,8 @@ import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+// @lat: [[frontend#Components#Help]]
 import {
   AlertDialog,
   AlertDialogAction,

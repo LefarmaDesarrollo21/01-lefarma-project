@@ -17,6 +17,8 @@ import { Loader2, FileText, Search, RefreshCcw, ChevronDown, ChevronRight } from
 import { toast } from 'sonner';
 import type { OrdenCompraResponse, OrdenCompraPartidaResponse } from '@/types/ordenCompra.types';
 
+// @lat: [[frontend#Pages]]
+
 interface AccionDisponibleResponse {
   idAccion: number;
   nombreAccion: string;

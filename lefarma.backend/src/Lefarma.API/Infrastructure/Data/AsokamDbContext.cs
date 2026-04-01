@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Infrastructure.Data;
 
+    // @lat: [[backend#Infrastructure]]
+
 public class AsokamDbContext : DbContext
 {
     public AsokamDbContext(DbContextOptions<AsokamDbContext> options) : base(options)

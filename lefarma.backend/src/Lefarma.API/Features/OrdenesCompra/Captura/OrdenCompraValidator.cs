@@ -3,6 +3,8 @@ using Lefarma.API.Features.OrdenesCompra.Captura.DTOs;
 
 namespace Lefarma.API.Features.OrdenesCompra.Captura
 {
+
+// @lat: [[backend#Features]]
     public class CreateOrdenCompraRequestValidator : AbstractValidator<CreateOrdenCompraRequest>
     {
         public CreateOrdenCompraRequestValidator()

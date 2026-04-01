@@ -1,5 +1,7 @@
 // ─── Empresa ─────────────────────────────────────────────────────────────────
 
+// @lat: [[frontend#Types]]
+
 export interface Empresa {
   idEmpresa: number;
   nombre: string;

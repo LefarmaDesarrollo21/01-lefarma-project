@@ -3,6 +3,7 @@ using Lefarma.API.Features.Catalogos.RegimenesFiscales.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.RegimenesFiscales
 {
+// @lat: [[backend#Features]]
     public class CreateRegimenFiscalRequestValidator : AbstractValidator<CreateRegimenFiscalRequest>
     {
         public CreateRegimenFiscalRequestValidator()

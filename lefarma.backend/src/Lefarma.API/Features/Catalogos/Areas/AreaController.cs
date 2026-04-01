@@ -10,6 +10,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Catalogos
 {
+// @lat: [[backend#Features]]
     [Route("api/catalogos/[controller]")]
     [ApiController]
     [EndpointGroupName("Catalogos")]

@@ -1,3 +1,4 @@
+// @lat: [[frontend#Pages]]
 import { useConfigStore } from '@/store/configStore';
 import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

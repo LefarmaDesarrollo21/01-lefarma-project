@@ -5,6 +5,8 @@ using System.Diagnostics;
 
 namespace Lefarma.API.Infrastructure.Middleware;
 
+// @lat: [[backend#Infrastructure]]
+
 /// <summary>
 /// Middleware that creates and emits a WideEvent for each HTTP request.
 /// Implements the "one rich event per request" logging philosophy (loggingsucks.com).

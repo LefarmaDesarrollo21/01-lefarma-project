@@ -1,5 +1,7 @@
 namespace Lefarma.API.Domain.Entities.Archivos;
 
+    // @lat: [[backend#Domain]]
+
 public class Archivo
 {
     public int Id { get; set; }

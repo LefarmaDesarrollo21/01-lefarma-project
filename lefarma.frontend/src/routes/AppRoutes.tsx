@@ -3,6 +3,8 @@ import { LandingRoute, ProtectedRoute, PublicOnlyRoute } from './LandingRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 
+// @lat: [[frontend#Routing]]
+
 import Login from '@/pages/auth/Login';
 import SelectEmpresaSucursal from '@/pages/auth/SelectEmpresaSucursal';
 import BlockedPage from '@/pages/auth/BlockedPage';

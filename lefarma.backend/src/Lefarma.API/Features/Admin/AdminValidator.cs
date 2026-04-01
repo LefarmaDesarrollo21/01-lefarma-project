@@ -3,6 +3,8 @@ using Lefarma.API.Features.Admin.DTOs;
 
 namespace Lefarma.API.Features.Admin;
 
+// @lat: [[backend#Features]]
+
 public class CreateUsuarioValidator : AbstractValidator<CreateUsuarioRequest>
 {
     public CreateUsuarioValidator()

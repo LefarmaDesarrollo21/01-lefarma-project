@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Lefarma.API.Shared.Extensions
 {
+    // @lat: [[backend-architecture#Key Abstractions]]
     public static class ResultExtensions
     {
         public static IActionResult ToActionResult<T>(

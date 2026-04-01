@@ -1,3 +1,5 @@
+// @lat: [[frontend#Components#Help]]
+
 interface HtmlViewerProps {
   contenido: string;
   className?: string;

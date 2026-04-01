@@ -1,5 +1,6 @@
 namespace Lefarma.API.Features.Catalogos.EstatusOrden.DTOs
 {
+// @lat: [[backend#Features]]
     public class EstatusOrdenResponse
     {
         public int IdEstatusOrden { get; set; }

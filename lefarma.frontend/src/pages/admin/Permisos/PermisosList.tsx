@@ -1,3 +1,4 @@
+// @lat: [[frontend#Pages]]
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';

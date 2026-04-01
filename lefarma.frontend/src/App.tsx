@@ -6,6 +6,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { AutoVerify } from '@/components/AutoVerify';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 
+// @lat: [[frontend#Entry Points]]
+
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
 

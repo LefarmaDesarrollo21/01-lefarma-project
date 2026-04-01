@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Catalogos.MediosPago
 {
+// @lat: [[backend#Features]]
     public class MedioPagoService : BaseService, IMedioPagoService
     {
         private readonly IMedioPagoRepository _medioPagoRepository;

@@ -6,6 +6,8 @@ using System.Text.Json;
 
 namespace Lefarma.API.Features.Notifications.Services.Channels;
 
+// @lat: [[backend#Features]]
+
 /// <summary>
 /// In-App notification channel implementation using Server-Sent Events (SSE).
 /// Creates UserNotification records and sends real-time notifications to connected users.

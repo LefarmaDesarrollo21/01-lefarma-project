@@ -2,6 +2,7 @@
 
 namespace Lefarma.API.Features.OrdenesCompra.Firmas.Handlers
 {
+// @lat: [[backend#Features]]
     public interface IStepHandler
     {
         string HandlerKey { get; }

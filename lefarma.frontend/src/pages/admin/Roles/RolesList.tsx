@@ -1,3 +1,4 @@
+// @lat: [[frontend#Pages]]
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
@@ -27,6 +28,8 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { cn } from '@/lib/utils';
+
+// @lat: [[frontend#Pages]]
 
 const rolSchema = z.object({
   nombreRol: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),

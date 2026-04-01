@@ -3,6 +3,8 @@
  * Maneja la recepción de notificaciones en tiempo real
  */
 
+// @lat: [[frontend#Hooks]]
+
 import { useEffect, useRef, useCallback } from 'react';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useAuthStore } from '@/store/authStore';
