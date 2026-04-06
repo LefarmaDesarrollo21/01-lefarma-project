@@ -8,6 +8,7 @@ import { ApiResponse } from '@/types/api.types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { toast } from 'sonner';
 import { authService } from '@/services/authService';
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,10 +31,28 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Plus, Trash2, Save, X, Building2, MapPin, Tag, CreditCard, Calendar, User, FileText } from 'lucide-react';
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  Save,
+  X,
+  Building2,
+  Tag,
+  CreditCard,
+  Calendar,
+  User,
+  FileText,
+} from 'lucide-react';
 import type { CreateOrdenCompraRequest } from '@/types/ordenCompra.types';
-import type { Empresa, Sucursal, Area, FormaPago, UnidadMedida, Gasto } from '@/types/catalogo.types';
-
+import type {
+  Empresa,
+  Sucursal,
+  Area,
+  FormaPago,
+  UnidadMedida,
+  Gasto,
+} from '@/types/catalogo.types';
 
 const partidaSchema = z.object({
   descripcion: z.string().min(1, 'La descripción es requerida').max(500),
@@ -59,6 +78,7 @@ const ordenCompraSchema = z.object({
   rfcProveedor: z.string(),
   codigoPostalProveedor: z.string(),
   idRegimenFiscal: z.number(),
+  usoCFDI: z.string().optional(),
   personaContacto: z.string(),
   notaFormaPago: z.string(),
   notasGenerales: z.string(),
@@ -89,12 +109,22 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 
 // Componente para secciones con icono
-function FormSection({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
+function FormSection({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ElementType;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 pb-2 border-b">
+      <div className="flex items-center gap-2 border-b pb-2">
         <Icon className="h-4 w-4 text-muted-foreground" />
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{title}</h3>
+        <h3 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
+          {title}
+        </h3>
       </div>
       {children}
     </div>
@@ -104,6 +134,7 @@ function FormSection({ icon: Icon, title, children }: { icon: React.ElementType;
 export default function CrearOrdenCompra() {
   usePageTitle('Orden de compra', 'Captura de orden de compra');
   const navigate = useNavigate();
+  const { empresa, sucursal, area } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
@@ -114,12 +145,13 @@ export default function CrearOrdenCompra() {
   const [regimenesFiscales, setRegimenesFiscales] = useState<RegimenFiscalItem[]>([]);
   const [loadingCatalogs, setLoadingCatalogs] = useState(true);
   const catalogFetched = useRef(false);
+  const userHasInteracted = useRef(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(ordenCompraSchema),
     defaultValues: {
-      idEmpresa: 0,
-      idSucursal: 0,
-      idArea: 0,
+      idEmpresa: empresa?.idEmpresa ? Number(empresa.idEmpresa) : 0,
+      idSucursal: sucursal?.idSucursal ? Number(sucursal.idSucursal) : 0,
+      idArea: area?.idArea ? Number(area.idArea) : 0,
       idTipoGasto: 0,
       idFormaPago: 0,
       fechaLimitePago: '',
@@ -128,6 +160,7 @@ export default function CrearOrdenCompra() {
       rfcProveedor: '',
       codigoPostalProveedor: '',
       idRegimenFiscal: 0,
+      usoCFDI: '',
       personaContacto: '',
       notaFormaPago: '',
       notasGenerales: '',
@@ -138,33 +171,28 @@ export default function CrearOrdenCompra() {
     control: form.control,
     name: 'partidas',
   });
+
   const selectedEmpresaId = form.watch('idEmpresa');
-  const filteredSucursales = useMemo(
-    () => sucursales.filter((s) => !selectedEmpresaId || s.idEmpresa === selectedEmpresaId),
-    [sucursales, selectedEmpresaId],
-  );
-  const filteredAreas = useMemo(
-    () => areas.filter((a) => !selectedEmpresaId || a.idEmpresa === selectedEmpresaId),
-    [areas, selectedEmpresaId],
-  );
-  useEffect(() => {
-    const currentSucursal = form.getValues('idSucursal');
-    if (currentSucursal) {
-      const belongsToNewEmpresa = sucursales.some(
-        (s) => s.idSucursal === currentSucursal && s.idEmpresa === selectedEmpresaId,
-      );
-      if (!belongsToNewEmpresa) {
-        form.setValue('idSucursal', 0);
-      }
-    }
-  }, [selectedEmpresaId]);
+
+  const filteredSucursales = useMemo(() => {
+    if (!userHasInteracted.current) return sucursales;
+    return sucursales.filter((s) => !selectedEmpresaId || s.idEmpresa === selectedEmpresaId);
+  }, [sucursales, selectedEmpresaId, userHasInteracted.current]);
+
+  const filteredAreas = useMemo(() => {
+    if (!userHasInteracted.current) return areas;
+    return areas.filter((a) => !selectedEmpresaId || a.idEmpresa === selectedEmpresaId);
+  }, [areas, selectedEmpresaId, userHasInteracted.current]);
+
   const sinDatosFiscales = form.watch('sinDatosFiscales');
   useEffect(() => {
     if (sinDatosFiscales) {
       form.setValue('rfcProveedor', '');
       form.setValue('codigoPostalProveedor', '');
       form.setValue('idRegimenFiscal', 0);
+      form.setValue('usoCFDI', '');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sinDatosFiscales]);
   const watchedPartidas = useWatch({ control: form.control, name: 'partidas' });
   const totales = useMemo(() => {
@@ -173,8 +201,7 @@ export default function CrearOrdenCompra() {
     let totalRetenciones = 0;
     let totalOtrosImpuestos = 0;
     for (const p of watchedPartidas || []) {
-      const base =
-        (p.precioUnitario || 0) * (p.cantidad || 0) - (p.descuento || 0);
+      const base = (p.precioUnitario || 0) * (p.cantidad || 0) - (p.descuento || 0);
       subtotal += base;
       totalIva += base * ((p.porcentajeIva || 0) / 100);
       totalRetenciones += p.totalRetenciones || 0;
@@ -248,6 +275,7 @@ export default function CrearOrdenCompra() {
     catalogFetched.current = true;
     fetchCatalogs();
   }, []);
+
   const handleSave = async (values: FormValues) => {
     setIsSaving(true);
     try {
@@ -282,12 +310,13 @@ export default function CrearOrdenCompra() {
       } else {
         toast.error(response.data.message ?? 'Error al crear la orden de compra');
       }
-    } catch (error: any) {
-      const errs: Array<{ description: string }> = error?.errors ?? [];
+    } catch (error) {
+      const apiError = error as { errors?: Array<{ description: string }>; message?: string };
+      const errs = apiError.errors ?? [];
       if (errs.length > 0) {
-        errs.forEach((e) => toast.error(error.message, { description: e.description }));
+        errs.forEach((e) => toast.error(apiError.message ?? 'Error', { description: e.description }));
       } else {
-        toast.error(error?.message ?? 'Error al crear la orden de compra');
+        toast.error(apiError.message ?? 'Error al crear la orden de compra');
       }
     } finally {
       setIsSaving(false);
@@ -307,7 +336,7 @@ export default function CrearOrdenCompra() {
           {/* Card: Datos Generales */}
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
                 <FileText className="h-5 w-5" />
                 Datos Generales
               </CardTitle>
@@ -323,7 +352,11 @@ export default function CrearOrdenCompra() {
                       <FormItem>
                         <FormLabel>Empresa *</FormLabel>
                         <Select
-                          onValueChange={(val) => field.onChange(Number(val))} value={field.value ? String(field.value) : ''}
+                          onValueChange={(val) => {
+                            userHasInteracted.current = true;
+                            field.onChange(Number(val));
+                          }}
+                          value={field.value ? String(field.value) : ''}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -349,12 +382,15 @@ export default function CrearOrdenCompra() {
                       <FormItem>
                         <FormLabel>Sucursal *</FormLabel>
                         <Select
-                          onValueChange={(val) => field.onChange(Number(val))} value={field.value ? String(field.value) : ''}
-                          disabled={!selectedEmpresaId}
+                          onValueChange={(val) => {
+                            userHasInteracted.current = true;
+                            field.onChange(Number(val));
+                          }}
+                          value={field.value ? String(field.value) : ''}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={selectedEmpresaId ? "Selecciona sucursal..." : "Primero selecciona empresa"} />
+                              <SelectValue placeholder="Selecciona sucursal..." />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -376,12 +412,15 @@ export default function CrearOrdenCompra() {
                       <FormItem>
                         <FormLabel>Área *</FormLabel>
                         <Select
-                          onValueChange={(val) => field.onChange(Number(val))} value={field.value ? String(field.value) : ''}
-                          disabled={!selectedEmpresaId}
+                          onValueChange={(val) => {
+                            userHasInteracted.current = true;
+                            field.onChange(Number(val));
+                          }}
+                          value={field.value ? String(field.value) : ''}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={selectedEmpresaId ? "Selecciona área..." : "Primero selecciona empresa"} />
+                              <SelectValue placeholder="Selecciona área..." />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -398,90 +437,99 @@ export default function CrearOrdenCompra() {
                   />
                 </div>
               </FormSection>
+            </CardContent>
+          </Card>
 
-              {/* Sección: Detalles de la Orden */}
-              <FormSection icon={Tag} title="Detalles de la Orden">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <FormField
-                    control={form.control}
-                    name="idTipoGasto"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tipo de Gasto *</FormLabel>
-                        <Select
-                          onValueChange={(val) => field.onChange(Number(val))} value={field.value ? String(field.value) : ''}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona tipo de gasto..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {tiposGasto.map((g) => (
-                              <SelectItem key={g.idGasto} value={String(g.idGasto)}>
-                                {g.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="idFormaPago"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Forma de Pago *</FormLabel>
-                        <Select
-                          onValueChange={(val) => field.onChange(Number(val))} value={field.value ? String(field.value) : ''}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona forma de pago..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {formasPago.map((fp) => (
-                              <SelectItem key={fp.idFormaPago} value={String(fp.idFormaPago)}>
-                                {fp.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="fechaLimitePago"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2 lg:col-span-2">
-                        <FormLabel className="flex items-center gap-2">
-                          <Calendar className="h-3.5 w-3.5" />
-                          Fecha Límite de Pago *
-                        </FormLabel>
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Tag className="h-5 w-5" />
+                Detalles de la Orden
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <FormField
+                  control={form.control}
+                  name="idTipoGasto"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Gasto *</FormLabel>
+                      <Select
+                        onValueChange={(val) => field.onChange(Number(val))}
+                        value={field.value ? String(field.value) : ''}
+                      >
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona tipo de gasto..." />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormDescription className="text-xs">
-                          Fecha máxima para realizar el pago al proveedor
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </FormSection>
+                        <SelectContent>
+                          {tiposGasto.map((g) => (
+                            <SelectItem key={g.idGasto} value={String(g.idGasto)}>
+                              {g.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="idFormaPago"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma de Pago *</FormLabel>
+                      <Select
+                        onValueChange={(val) => field.onChange(Number(val))}
+                        value={field.value ? String(field.value) : ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona forma de pago..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {formasPago.map((fp) => (
+                            <SelectItem key={fp.idFormaPago} value={String(fp.idFormaPago)}>
+                              {fp.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fechaLimitePago"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2 lg:col-span-2">
+                      <FormLabel className="flex items-center gap-2">
+                        <Calendar className="h-3.5 w-3.5" />
+                        Fecha Límite de Pago *
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Fecha máxima para realizar el pago al proveedor
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 
           {/* Card: Datos del Proveedor */}
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
                 <User className="h-5 w-5" />
                 Datos del Proveedor
               </CardTitle>
@@ -491,20 +539,21 @@ export default function CrearOrdenCompra() {
                 control={form.control}
                 name="sinDatosFiscales"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-muted/30">
+                  <FormItem className="bg-muted/30 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="!mt-0 font-medium">Sin Datos Fiscales</FormLabel>
                       <p className="text-xs text-muted-foreground">
-                        Marcar si el proveedor no cuenta con RFC ni información fiscal completa (ej. persona física sin actividad empresarial)
+                        Marcar si el proveedor no cuenta con RFC ni información fiscal completa (ej.
+                        persona física sin actividad empresarial)
                       </p>
                     </div>
                   </FormItem>
                 )}
               />
-              
+
               <FormSection icon={Building2} title="Información General">
                 <div className="grid grid-cols-1 gap-4">
                   <FormField
@@ -514,7 +563,10 @@ export default function CrearOrdenCompra() {
                       <FormItem>
                         <FormLabel>Razón Social *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Nombre completo o razón social del proveedor" {...field} />
+                          <Input
+                            placeholder="Nombre completo o razón social del proveedor"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -525,7 +577,7 @@ export default function CrearOrdenCompra() {
 
               {!sinDatosFiscales && (
                 <FormSection icon={FileText} title="Datos Fiscales">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <FormField
                       control={form.control}
                       name="rfcProveedor"
@@ -572,12 +624,51 @@ export default function CrearOrdenCompra() {
                             </FormControl>
                             <SelectContent>
                               {regimenesFiscales.map((r) => (
-                                <SelectItem key={r.idRegimenFiscal} value={String(r.idRegimenFiscal)}>
+                                <SelectItem
+                                  key={r.idRegimenFiscal}
+                                  value={String(r.idRegimenFiscal)}
+                                >
                                   {r.clave} - {r.descripcion}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="usoCFDI"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Uso del CFDI</FormLabel>
+                          <Select
+                            onValueChange={(val) => field.onChange(val)}
+                            value={field.value || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecciona uso del CFDI..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="G01">G01 - Adquisición de mercancías</SelectItem>
+                              <SelectItem value="G02">G02 - Devoluciones, descuentos o bonificaciones</SelectItem>
+                              <SelectItem value="G03">G03 - Gastos en general</SelectItem>
+                              <SelectItem value="I01">I01 - Construcciones</SelectItem>
+                              <SelectItem value="I02">I02 - Mobiliario y equipo de oficina</SelectItem>
+                              <SelectItem value="I03">I03 - Equipo de transporte</SelectItem>
+                              <SelectItem value="I04">I04 - Equipo de cómputo</SelectItem>
+                              <SelectItem value="D01">D01 - Honorarios médicos</SelectItem>
+                              <SelectItem value="D02">D02 - Gastos médicos por incapacidad</SelectItem>
+                              <SelectItem value="S01">S01 - Sin efectos fiscales</SelectItem>
+                              <SelectItem value="P01">P01 - Por definir</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription className="text-xs">
+                            Cómo debe facturarte el proveedor
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -638,26 +729,22 @@ export default function CrearOrdenCompra() {
             <CardContent className="space-y-4">
               {fields.map((item, index) => {
                 const p = watchedPartidas?.[index];
-                const lineBase = (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
+                const lineBase =
+                  (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
                 const lineIva = lineBase * ((p?.porcentajeIva || 0) / 100);
                 const lineTotal =
                   lineBase + lineIva - (p?.totalRetenciones || 0) + (p?.otrosImpuestos || 0);
                 return (
-                  <div
-                    key={item.id}
-                    className="rounded-lg border bg-card p-4 space-y-4"
-                  >
-                    <div className="flex items-center justify-between pb-3 border-b">
+                  <div key={item.id} className="space-y-4 rounded-lg border bg-card p-4">
+                    <div className="flex items-center justify-between border-b pb-3">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                        <span className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold text-primary">
                           {index + 1}
                         </span>
-                        <span className="text-sm font-medium text-muted-foreground">
-                          Partida
-                        </span>
+                        <span className="text-sm font-medium text-muted-foreground">Partida</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                        <span className="bg-primary/10 rounded-full px-3 py-1 text-sm font-semibold text-primary">
                           Total: {fmt(lineTotal)}
                         </span>
                         <Button
@@ -722,7 +809,10 @@ export default function CrearOrdenCompra() {
                               </FormControl>
                               <SelectContent>
                                 {unidadesMedida.map((um) => (
-                                  <SelectItem key={um.idUnidadMedida} value={String(um.idUnidadMedida)}>
+                                  <SelectItem
+                                    key={um.idUnidadMedida}
+                                    value={String(um.idUnidadMedida)}
+                                  >
                                     {um.nombre} ({um.abreviatura})
                                   </SelectItem>
                                 ))}
@@ -866,16 +956,22 @@ export default function CrearOrdenCompra() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Retenciones</span>
-                  <span className="text-sm font-medium text-destructive tabular-nums">−{fmt(totales.totalRetenciones)}</span>
+                  <span className="text-sm font-medium tabular-nums text-destructive">
+                    −{fmt(totales.totalRetenciones)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Otros Impuestos</span>
-                  <span className="text-sm font-medium tabular-nums">{fmt(totales.totalOtrosImpuestos)}</span>
+                  <span className="text-sm font-medium tabular-nums">
+                    {fmt(totales.totalOtrosImpuestos)}
+                  </span>
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between bg-primary/5 px-4 py-3 rounded-lg">
+                <div className="bg-primary/5 flex items-center justify-between rounded-lg px-4 py-3">
                   <span className="text-base font-bold">Total de la Orden</span>
-                  <span className="text-xl font-bold text-primary tabular-nums">{fmt(totales.total)}</span>
+                  <span className="text-xl font-bold tabular-nums text-primary">
+                    {fmt(totales.total)}
+                  </span>
                 </div>
               </div>
             </CardContent>

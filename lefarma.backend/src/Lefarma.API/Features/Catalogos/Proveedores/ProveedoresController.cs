@@ -12,7 +12,7 @@ namespace Lefarma.API.Features.Catalogos;
 [Route("api/catalogos/[controller]")]
 [ApiController]
 [EndpointGroupName("Catalogos")]
-[HasPermission(Permissions.Catalogos.View)]
+// [HasPermission(Permissions.Catalogos.View)]
 public class ProveedoresController : ControllerBase
 {
     private readonly IProveedorService _proveedorService;
@@ -24,8 +24,12 @@ public class ProveedoresController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todos los proveedores", Description = "Retorna la lista completa de proveedores con filtros opcionales")]
-    public async Task<IActionResult> GetAll(ProveedorRequest query)
+    public async Task<IActionResult> GetAll(ProveedorRequest? query)
     {
+        if (query == null)
+        {
+            query = new ProveedorRequest();
+        }
         var result = await _proveedorService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<ProveedorResponse>>

@@ -12,7 +12,7 @@ namespace Lefarma.API.Features.Help.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/help/articles")]
-[Authorize]
+// [Authorize]
 public class HelpArticlesController : ControllerBase
 {
     private readonly IHelpArticleService _helpArticleService;
