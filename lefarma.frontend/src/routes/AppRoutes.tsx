@@ -14,6 +14,7 @@ import EmpresasList from '@/pages/catalogos/generales/Empresas/EmpresasList';
 import SucursalesList from '@/pages/catalogos/generales/Sucursales/SucursalesList';
 import GastosList from '@/pages/catalogos/generales/Gastos/GastosList';
 import MedidasList from '@/pages/catalogos/generales/Medidas/MedidasList';
+
 import AreasList from '@/pages/catalogos/generales/Areas/AreasList';
 import FormasPagoList from '@/pages/catalogos/generales/FormasPago/FormasPagoList';
 import CentrosCostoList from '@/pages/catalogos/generales/CentrosCosto/CentrosCostoList';
@@ -62,6 +63,7 @@ export const AppRoutes = () => {
           <Route path="/catalogos/sucursales" element={<SucursalesList />} />
           <Route path="/catalogos/gastos" element={<GastosList />} />
           <Route path="/catalogos/medidas" element={<MedidasList />} />
+
           <Route path="/catalogos/areas" element={<AreasList />} />
           <Route path="/catalogos/formas-pago" element={<FormasPagoList />} />
           <Route path="/catalogos/centros-costo" element={<CentrosCostoList />} />
@@ -85,6 +87,7 @@ export const AppRoutes = () => {
         </Route>
       </Route>
       <Route path="/ayuda" element={<PublicHelpList />} />
+      <Route path="/ayuda/:modulo" element={<PublicHelpList />} />
       <Route path="/bloqueado" element={<BlockedPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

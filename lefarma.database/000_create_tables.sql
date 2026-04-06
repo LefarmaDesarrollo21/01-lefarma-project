@@ -433,28 +433,32 @@ GO
 -- ---------------------------------------------------------------------------
 -- catalogos.proveedores (FK -> regimenes_fiscales)
 -- ---------------------------------------------------------------------------
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE object_id = OBJECT_ID('[catalogos].[proveedores]'))
+-- DROP IF EXISTS
+IF EXISTS (SELECT * FROM sys.tables WHERE object_id = OBJECT_ID('[catalogos].[proveedores]'))
 BEGIN
-    CREATE TABLE catalogos.proveedores (
-        id_proveedor INT IDENTITY(1,1) PRIMARY KEY,
-        razon_social VARCHAR(255) NOT NULL,
-        razon_social_normalizada VARCHAR(255) NOT NULL,
-        rfc VARCHAR(13),
-        codigo_postal VARCHAR(10),
-        regimen_fiscal_id INT NULL,
-        persona_contacto VARCHAR(255),
-        nota_forma_pago VARCHAR(500),
-        notas_generales VARCHAR(1000),
-        sin_datos_fiscales BIT DEFAULT 0,
-        autorizado_por_cxp BIT DEFAULT 0,
-        fecha_registro DATETIME DEFAULT GETDATE() NOT NULL,
-        fecha_modificacion DATETIME DEFAULT GETDATE(),
-        CONSTRAINT FK_Proveedores_RegimenFiscal FOREIGN KEY (regimen_fiscal_id)
-            REFERENCES catalogos.regimenes_fiscales(id_regimen_fiscal),
-        CONSTRAINT UQ_Proveedores_RFC UNIQUE (rfc)
-    );
-    PRINT 'Tabla [catalogos].[proveedores] creada';
+    DROP TABLE [catalogos].[proveedores];
+    PRINT 'Tabla [catalogos].[proveedores] eliminada';
 END
+GO
+
+-- CREATE TABLE proveedores (solo datos fiscales del proveedor)
+CREATE TABLE [catalogos].[proveedores] (
+    id_proveedor INT IDENTITY(1,1) PRIMARY KEY,
+    razon_social VARCHAR(255) NOT NULL,
+    razon_social_normalizada VARCHAR(255) NOT NULL,
+    rfc VARCHAR(13),
+    codigo_postal VARCHAR(10),
+    regimen_fiscal_id INT NULL,
+    persona_contacto VARCHAR(255),
+    notas_generales VARCHAR(1000),
+    uso_cfdi VARCHAR(10) NULL,
+    fecha_registro DATETIME DEFAULT GETDATE() NOT NULL,
+    fecha_modificacion DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_Proveedores_RegimenFiscal FOREIGN KEY (regimen_fiscal_id)
+        REFERENCES [catalogos].[regimenes_fiscales](id_regimen_fiscal),
+    CONSTRAINT UQ_Proveedores_RFC UNIQUE (rfc)
+);
+PRINT 'Tabla [catalogos].[proveedores] creada con columna autorizado';
 GO
 
 PRINT '';
