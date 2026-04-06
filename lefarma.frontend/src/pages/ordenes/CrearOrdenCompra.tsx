@@ -910,7 +910,7 @@ export default function CrearOrdenCompra() {
                           <span className="bg-primary/10 flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold text-primary">
                             {index + 1}
                           </span>
-                          <span className="text-sm font-medium text-muted-foreground">Partida</span>
+                          <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-sm font-bold text-transparent">Partida</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
@@ -1206,8 +1206,8 @@ export default function CrearOrdenCompra() {
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold">Resumen</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
+            <CardContent className="space-y-3">
+              <div>
                 {watchedPartidas?.map((p, idx) => {
                   const base =
                     (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
@@ -1218,80 +1218,54 @@ export default function CrearOrdenCompra() {
                   return (
                     <div
                       key={idx}
-                      className="rounded-lg border p-3 even:bg-muted/20 odd:bg-transparent"
+                      className="border-b py-1.5 last:border-0 even:bg-muted/10"
                     >
-                      <div className="mb-2 flex items-center justify-between">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
                             {idx + 1}
                           </span>
-                          <span className="font-medium">{pDesc}</span>
+                          <span className="text-sm font-medium">{pDesc}</span>
                         </div>
-                        <span className="font-bold text-primary">{fmt(partTotal)}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-8 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Subtotal</span>
-                          <span className="tabular-nums">{fmt(base)}</span>
-                        </div>
-                        {(p?.descuento || 0) > 0 && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Descuento</span>
-                            <span className="tabular-nums text-destructive">−{fmt(p.descuento)}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">IVA ({p?.porcentajeIva || 0}%)</span>
-                          <span className="tabular-nums">{fmt(iva)}</span>
-                        </div>
-                        {(p?.totalRetenciones || 0) > 0 && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Retenciones</span>
-                            <span className="tabular-nums text-destructive">−{fmt(p.totalRetenciones)}</span>
-                          </div>
-                        )}
-                        {(p?.otrosImpuestos || 0) > 0 && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Otros</span>
-                            <span className="tabular-nums">{fmt(p.otrosImpuestos)}</span>
-                          </div>
-                        )}
+                        <span className="text-sm font-bold text-primary">{fmt(partTotal)}</span>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="rounded-lg border bg-muted/50 p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-lg font-bold">Total de la Orden</span>
-                  <span className="text-xl font-bold text-primary">{fmt(totales.total)}</span>
+              <div className="rounded-lg border-2 border-primary/30 bg-primary/10 p-3 shadow-md">
+                <div className="mb-2 flex items-center justify-between border-b border-primary/20 pb-2">
+                  <span className="text-base font-bold">Total de la Orden</span>
+                  <span className="rounded-lg bg-primary px-4 py-1 text-xl font-bold text-primary-foreground shadow-sm">
+                    {fmt(totales.total)}
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium tabular-nums">{fmt(totales.subtotal)}</span>
+                    <span className="tabular-nums">{fmt(totales.subtotal)}</span>
                   </div>
                   {totales.totalDescuentos > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Descuentos</span>
-                      <span className="font-medium tabular-nums text-destructive">−{fmt(totales.totalDescuentos)}</span>
+                      <span className="tabular-nums text-destructive">−{fmt(totales.totalDescuentos)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">IVA</span>
-                    <span className="font-medium tabular-nums">{fmt(totales.totalIva)}</span>
+                    <span className="tabular-nums">{fmt(totales.totalIva)}</span>
                   </div>
                   {totales.totalRetenciones > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Retenciones</span>
-                      <span className="font-medium tabular-nums text-destructive">−{fmt(totales.totalRetenciones)}</span>
+                      <span className="tabular-nums text-destructive">−{fmt(totales.totalRetenciones)}</span>
                     </div>
                   )}
                   {totales.totalOtrosImpuestos > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Otros Impuestos</span>
-                      <span className="font-medium tabular-nums">{fmt(totales.totalOtrosImpuestos)}</span>
+                      <span className="text-muted-foreground">Otros</span>
+                      <span className="tabular-nums">{fmt(totales.totalOtrosImpuestos)}</span>
                     </div>
                   )}
                 </div>

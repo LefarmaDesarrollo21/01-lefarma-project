@@ -156,9 +156,9 @@ None.
 | 260330-qbk | Sistema permisos dinamicos backend [HasPermission] en endpoints | 2026-03-31 | aa12521 | [260330-qbk-sistema-practico-de-permisos-hook-ui-fun](./quick/260330-qbk-sistema-practico-de-permisos-hook-ui-fun/) |
 | 260401-31 | Cambiar tema por defecto a claro cuando no hay preferencias guardadas | 2026-04-01 | 005c2b4 | [260401-31-cambiar-tema-por-defecto-a-claro](./quick/260401-31-cambiar-tema-por-defecto-a-claro/) |
 | 260401-bi | Mejorar UI formulario órdenes de compra | 2026-04-01 | bcb38ef | [260401-bi-mejorar-ui-formulario-ordenes-crear](./quick/260401-bi-mejorar-ui-formulario-ordenes-crear/) |
-| 260406-lh4 | Crear catálogo de tipos de impuestos (IVA 16%, IVA 8%, IVA 0%, Exento, ISR, Sin Impuesto) | 2026-04-06 | pending | [260406-lh4-crear-cat-logo-de-tipos-de-impuestos-iva](./quick/260406-lh4-crear-cat-logo-de-tipos-de-impuestos-iva/) |
+| 260406-lh4 | Crear catálogo de tipos de impuestos (IVA 16%, IVA 8%, IVA 0%, Exento, ISR, Sin Impuesto) | 2026-04-06 | e421c77 | [260406-lh4-crear-cat-logo-de-tipos-de-impuestos-iva](./quick/260406-lh4-crear-cat-logo-de-tipos-de-impuestos-iva/) |
 
-Last activity: 2026-04-06
+Last activity: 2026-04-06 - Completed quick task 260406-lh4: Tax Types catalog (Tipos de Impuestos)
 
 ---
 
