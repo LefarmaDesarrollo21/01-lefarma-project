@@ -19,7 +19,7 @@ namespace Lefarma.API.Features.Config.Workflows
 
         [HttpGet]
         [SwaggerOperation(Summary = "Obtener todos los workflows")]
-        public async Task<IActionResult> GetAll([FromQuery] WorkflowRequest query)
+        public async Task<IActionResult> GetAll(WorkflowRequest query)
         {
             var result = await _service.GetAllAsync(query);
             return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<WorkflowResponse>>
@@ -47,7 +47,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPost]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Crear nuevo workflow")]
-        public async Task<IActionResult> Create([FromBody] CreateWorkflowRequest request)
+        public async Task<IActionResult> Create( CreateWorkflowRequest request)
         {
             var result = await _service.CreateAsync(request);
             return result.ToActionResult(this, data => CreatedAtAction(nameof(GetById),
@@ -58,7 +58,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPut("{id}")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Actualizar workflow")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateWorkflowRequest request)
+        public async Task<IActionResult> Update(int id,  UpdateWorkflowRequest request)
         {
             var result = await _service.UpdateAsync(id, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<WorkflowResponse>
@@ -78,7 +78,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPut("{idWorkflow}/pasos/{idPaso}")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Actualizar paso de workflow")]
-        public async Task<IActionResult> UpdatePaso(int idWorkflow, int idPaso, [FromBody] UpdatePasoRequest request)
+        public async Task<IActionResult> UpdatePaso(int idWorkflow, int idPaso,  UpdatePasoRequest request)
         {
             var result = await _service.UpdatePasoAsync(idWorkflow, idPaso, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<WorkflowPasoResponse>
@@ -87,7 +87,7 @@ namespace Lefarma.API.Features.Config.Workflows
 
         [HttpPost("{idWorkflow}/pasos")]
         [SwaggerOperation(Summary = "Crear paso de workflow")]
-        public async Task<IActionResult> CreatePaso(int idWorkflow, [FromBody] CreatePasoRequest request)
+        public async Task<IActionResult> CreatePaso(int idWorkflow,  CreatePasoRequest request)
         {
             var result = await _service.CreatePasoAsync(idWorkflow, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<WorkflowPasoResponse>
@@ -110,7 +110,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPost("{idWorkflow}/pasos/{idPaso}/acciones")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Crear acci�n en un paso")]
-        public async Task<IActionResult> CreateAccion(int idWorkflow, int idPaso, [FromBody] CreateAccionRequest request)
+        public async Task<IActionResult> CreateAccion(int idWorkflow, int idPaso,  CreateAccionRequest request)
         {
             var result = await _service.CreateAccionAsync(idWorkflow, idPaso, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<WorkflowAccionResponse>
@@ -120,7 +120,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPut("{idWorkflow}/pasos/{idPaso}/acciones/{idAccion}")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Actualizar acci�n de un paso")]
-        public async Task<IActionResult> UpdateAccion(int idWorkflow, int idPaso, int idAccion, [FromBody] UpdateAccionRequest request)
+        public async Task<IActionResult> UpdateAccion(int idWorkflow, int idPaso, int idAccion,  UpdateAccionRequest request)
         {
             var result = await _service.UpdateAccionAsync(idWorkflow, idPaso, idAccion, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<WorkflowAccionResponse>
@@ -144,7 +144,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPost("{idWorkflow}/pasos/{idPaso}/condiciones")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Crear condici�n en un paso")]
-        public async Task<IActionResult> CreateCondicion(int idWorkflow, int idPaso, [FromBody] CreateCondicionRequest request)
+        public async Task<IActionResult> CreateCondicion(int idWorkflow, int idPaso,  CreateCondicionRequest request)
         {
             var result = await _service.CreateCondicionAsync(idWorkflow, idPaso, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<CondicionResponse>
@@ -154,7 +154,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPut("{idWorkflow}/pasos/{idPaso}/condiciones/{idCondicion}")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Actualizar condici�n de un paso")]
-        public async Task<IActionResult> UpdateCondicion(int idWorkflow, int idPaso, int idCondicion, [FromBody] UpdateCondicionRequest request)
+        public async Task<IActionResult> UpdateCondicion(int idWorkflow, int idPaso, int idCondicion,  UpdateCondicionRequest request)
         {
             var result = await _service.UpdateCondicionAsync(idWorkflow, idPaso, idCondicion, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<CondicionResponse>
@@ -178,7 +178,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPost("{idWorkflow}/pasos/{idPaso}/participantes")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Crear participante en un paso")]
-        public async Task<IActionResult> CreateParticipante(int idWorkflow, int idPaso, [FromBody] CreateParticipanteRequest request)
+        public async Task<IActionResult> CreateParticipante(int idWorkflow, int idPaso,  CreateParticipanteRequest request)
         {
             var result = await _service.CreateParticipanteAsync(idWorkflow, idPaso, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<ParticipanteResponse>
@@ -188,7 +188,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPut("{idWorkflow}/pasos/{idPaso}/participantes/{idParticipante}")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Actualizar participante de un paso")]
-        public async Task<IActionResult> UpdateParticipante(int idWorkflow, int idPaso, int idParticipante, [FromBody] UpdateParticipanteRequest request)
+        public async Task<IActionResult> UpdateParticipante(int idWorkflow, int idPaso, int idParticipante,  UpdateParticipanteRequest request)
         {
             var result = await _service.UpdateParticipanteAsync(idWorkflow, idPaso, idParticipante, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<ParticipanteResponse>
@@ -212,7 +212,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPost("{idWorkflow}/acciones/{idAccion}/notificaciones")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Crear notificaci�n para una acci�n")]
-        public async Task<IActionResult> CreateNotificacion(int idWorkflow, int idAccion, [FromBody] CreateNotificacionRequest request)
+        public async Task<IActionResult> CreateNotificacion(int idWorkflow, int idAccion,  CreateNotificacionRequest request)
         {
             var result = await _service.CreateNotificacionAsync(idWorkflow, idAccion, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<NotificacionResponse>
@@ -222,7 +222,7 @@ namespace Lefarma.API.Features.Config.Workflows
         [HttpPut("{idWorkflow}/acciones/{idAccion}/notificaciones/{idNotificacion}")]
     //    [HasPermission(Permissions.Workflows.Manage)]
         [SwaggerOperation(Summary = "Actualizar notificaci�n de una acci�n")]
-        public async Task<IActionResult> UpdateNotificacion(int idWorkflow, int idAccion, int idNotificacion, [FromBody] UpdateNotificacionRequest request)
+        public async Task<IActionResult> UpdateNotificacion(int idWorkflow, int idAccion, int idNotificacion,  UpdateNotificacionRequest request)
         {
             var result = await _service.UpdateNotificacionAsync(idWorkflow, idAccion, idNotificacion, request);
             return result.ToActionResult(this, data => Ok(new ApiResponse<NotificacionResponse>

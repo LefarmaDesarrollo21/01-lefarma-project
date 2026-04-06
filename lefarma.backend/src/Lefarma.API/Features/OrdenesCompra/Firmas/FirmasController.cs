@@ -27,7 +27,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Firmas
             Description = "Endpoint gen�rico. DatosAdicionales var�a por paso: " +
                           "Firma3 requiere CentroCosto y CuentaContable. " +
                           "Firma4 acepta RequiereComprobacionPago y RequiereComprobacionGasto.")]
-        public async Task<IActionResult> Firmar(int id, [FromBody] FirmarRequest request)
+        public async Task<IActionResult> Firmar(int id,  FirmarRequest request)
         {
             var result = await _service.FirmarAsync(id, request, GetUserId());
             return result.ToActionResult(this, data => Ok(new ApiResponse<FirmarResponse>

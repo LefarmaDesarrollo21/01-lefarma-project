@@ -23,7 +23,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
 
         [HttpGet]
         [SwaggerOperation(Summary = "Obtener �rdenes de compra con filtros")]
-        public async Task<IActionResult> GetAll([FromQuery] OrdenCompraRequest query)
+        public async Task<IActionResult> GetAll(OrdenCompraRequest query)
         {
             var result = await _service.GetAllAsync(query, GetUserId());
             return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<OrdenCompraResponse>>
@@ -42,7 +42,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
         [HttpPost]
     //    [HasPermission(Permissions.OrdenesCompra.Create)]
         [SwaggerOperation(Summary = "Crear nueva orden de compra")]
-        public async Task<IActionResult> Create([FromBody] CreateOrdenCompraRequest request)
+        public async Task<IActionResult> Create( CreateOrdenCompraRequest request)
         {
             var result = await _service.CreateAsync(request, GetUserId());
             return result.ToActionResult(this, data => CreatedAtAction(nameof(GetById),

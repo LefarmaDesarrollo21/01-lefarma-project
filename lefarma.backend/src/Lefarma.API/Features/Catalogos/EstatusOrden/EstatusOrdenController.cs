@@ -24,7 +24,7 @@ public class EstatusOrdenController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todos los estatus de orden", Description = "Retorna la lista completa de estatus de orden (READ-ONLY)")]
-    public async Task<IActionResult> GetAll([FromQuery] EstatusOrdenRequest query)
+    public async Task<IActionResult> GetAll(EstatusOrdenRequest query)
     {
         var result = await _estatusOrdenService.GetAllAsync(query);
 
@@ -39,7 +39,7 @@ public class EstatusOrdenController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener estatus de orden por ID", Description = "Retorna un estatus de orden específico por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único del estatus de orden", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único del estatus de orden", Required = true)] int id)
     {
         var result = await _estatusOrdenService.GetByIdAsync(id);
 

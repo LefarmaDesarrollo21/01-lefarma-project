@@ -39,7 +39,7 @@ public class AuthController : ControllerBase
     [SwaggerResponse(400, "Datos de entrada invalidos", typeof(ApiResponse<object>))]
     [SwaggerResponse(404, "Usuario no encontrado", typeof(ApiResponse<object>))]
     public async Task<IActionResult> LoginStepOne(
-        [FromBody][SwaggerRequestBody(Description = "Datos del paso 1 del login", Required = true)]
+        [SwaggerRequestBody(Description = "Datos del paso 1 del login", Required = true)]
         LoginStepOneRequest request,
         CancellationToken cancellationToken)
     {
@@ -70,7 +70,7 @@ public class AuthController : ControllerBase
     [SwaggerResponse(400, "Credenciales invalidas", typeof(ApiResponse<object>))]
     [SwaggerResponse(401, "No autorizado", typeof(ApiResponse<object>))]
     public async Task<IActionResult> LoginStepTwo(
-        [FromBody][SwaggerRequestBody(Description = "Datos del paso 2 del login", Required = true)]
+        [SwaggerRequestBody(Description = "Datos del paso 2 del login", Required = true)]
         LoginStepTwoRequest request,
         CancellationToken cancellationToken)
     {
@@ -101,7 +101,7 @@ public class AuthController : ControllerBase
     [SwaggerResponse(200, "Token refrescado exitosamente", typeof(ApiResponse<LoginResponse>))]
     [SwaggerResponse(400, "Refresh token invalido", typeof(ApiResponse<object>))]
     public async Task<IActionResult> RefreshToken(
-        [FromBody][SwaggerRequestBody(Description = "Refresh token", Required = true)]
+        [SwaggerRequestBody(Description = "Refresh token", Required = true)]
         RefreshTokenRequest request,
         CancellationToken cancellationToken)
     {
@@ -128,7 +128,7 @@ public class AuthController : ControllerBase
         Description = "Revoca los tokens del usuario y cierra la sesion activa.")]
     [SwaggerResponse(200, "Sesion cerrada exitosamente", typeof(ApiResponse<LogoutResponse>))]
     public async Task<IActionResult> Logout(
-        [FromBody][SwaggerRequestBody(Description = "Datos del logout (opcional)")]
+        [SwaggerRequestBody(Description = "Datos del logout (opcional)")]
         LogoutRequest? request,
         CancellationToken cancellationToken)
     {

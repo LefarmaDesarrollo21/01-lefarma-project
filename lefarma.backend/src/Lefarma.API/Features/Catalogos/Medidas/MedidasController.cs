@@ -24,7 +24,7 @@ public class MedidasController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todos las medidas", Description = "Retorna la lista completa de medidas con filtros opcionales")]
-    public async Task<IActionResult> GetAll([FromQuery] MedidaRequest query)
+    public async Task<IActionResult> GetAll(MedidaRequest query)
     {
         var result = await _service.GetAllAsync(query);
 
@@ -39,7 +39,7 @@ public class MedidasController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener medida por ID", Description = "Retorna una medida específico por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único de la medida", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único de la medida", Required = true)] int id)
     {
         var result = await _service.GetByIdAsync(id);
 
@@ -55,7 +55,7 @@ public class MedidasController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nueva medida", Description = "Crea una medida con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos de la medida a crear", Required = true)] CreateMedidaRequest request)
+        [SwaggerRequestBody(Description = "Datos de la medida a crear", Required = true)] CreateMedidaRequest request)
     {
         var result = await _service.CreateAsync(request);
 
@@ -74,8 +74,8 @@ public class MedidasController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar medida", Description = "Actualiza los datos de una medida existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la medida a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados de la medida", Required = true)] UpdateMedidaRequest request)
+        [SwaggerParameter(Description = "Identificador de la medida a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados de la medida", Required = true)] UpdateMedidaRequest request)
     {
         var result = await _service.UpdateAsync(id, request);
 
@@ -91,7 +91,7 @@ public class MedidasController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Eliminar medida", Description = "Elimina una medida por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la medida a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador de la medida a eliminar", Required = true)] int id)
     {
         var result = await _service.DeleteAsync(id);
 

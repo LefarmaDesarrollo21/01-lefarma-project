@@ -24,7 +24,7 @@ public class SucursalesController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todas las sucursales", Description = "Retorna la lista completa de sucursales con filtros opcionales")]
-    public async Task<IActionResult> GetAll([FromQuery] SucursalRequest query)
+    public async Task<IActionResult> GetAll(SucursalRequest query)
     {
         var result = await _sucursalService.GetAllAsync(query);
 
@@ -39,7 +39,7 @@ public class SucursalesController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener sucursal por ID", Description = "Retorna una sucursal específica por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único de la sucursal", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único de la sucursal", Required = true)] int id)
     {
         var result = await _sucursalService.GetByIdAsync(id);
 
@@ -55,7 +55,7 @@ public class SucursalesController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nueva sucursal", Description = "Crea una sucursal con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos de la sucursal a crear", Required = true)] CreateSucursalRequest request)
+        [SwaggerRequestBody(Description = "Datos de la sucursal a crear", Required = true)] CreateSucursalRequest request)
     {
         var result = await _sucursalService.CreateAsync(request);
 
@@ -74,8 +74,8 @@ public class SucursalesController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar sucursal", Description = "Actualiza los datos de una sucursal existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la sucursal a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados de la sucursal", Required = true)] UpdateSucursalRequest request)
+        [SwaggerParameter(Description = "Identificador de la sucursal a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados de la sucursal", Required = true)] UpdateSucursalRequest request)
     {
         var result = await _sucursalService.UpdateAsync(id, request);
 
@@ -90,7 +90,7 @@ public class SucursalesController : ControllerBase
     [HttpDelete("{id}")]
     [SwaggerOperation(Summary = "Eliminar sucursal", Description = "Elimina una sucursal por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la sucursal a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador de la sucursal a eliminar", Required = true)] int id)
     {
         var result = await _sucursalService.DeleteAsync(id);
 

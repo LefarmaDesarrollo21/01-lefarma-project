@@ -59,7 +59,7 @@ public class ProfileController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateProfile(
-        [FromBody] UpdateProfileRequest request,
+        UpdateProfileRequest request,
         CancellationToken cancellationToken = default)
     {
         var userId = GetAuthenticatedUserId();
@@ -86,7 +86,7 @@ public class ProfileController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     [RequestSizeLimit(5_000_000)]
     public async Task<IActionResult> UploadSignature(
-        [FromForm] IFormFile file,
+        IFormFile file,
         CancellationToken cancellationToken = default)
     {
         var userId = GetAuthenticatedUserId();

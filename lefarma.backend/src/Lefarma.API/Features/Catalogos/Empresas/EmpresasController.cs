@@ -24,7 +24,7 @@ public class EmpresasController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todas las empresas con filtros", Description = "Retorna la lista de empresas aplicando filtros opcionales")]
-    public async Task<IActionResult> GetAll([FromQuery] EmpresaRequest query)
+    public async Task<IActionResult> GetAll(EmpresaRequest query)
     {
         var result = await _empresaService.GetAllAsync(query);
 
@@ -39,7 +39,7 @@ public class EmpresasController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener empresa por ID", Description = "Retorna una empresa específica por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único de la empresa", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único de la empresa", Required = true)] int id)
     {
         var result = await _empresaService.GetByIdAsync(id);
 
@@ -55,7 +55,7 @@ public class EmpresasController : ControllerBase
     //[HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nueva empresa", Description = "Crea una empresa con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos de la empresa a crear", Required = true)] CreateEmpresaRequest request)
+        [SwaggerRequestBody(Description = "Datos de la empresa a crear", Required = true)] CreateEmpresaRequest request)
     {
         var result = await _empresaService.CreateAsync(request);
 
@@ -74,8 +74,8 @@ public class EmpresasController : ControllerBase
     //[HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar empresa", Description = "Actualiza los datos de una empresa existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la empresa a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados de la empresa", Required = true)] UpdateEmpresaRequest request)
+        [SwaggerParameter(Description = "Identificador de la empresa a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados de la empresa", Required = true)] UpdateEmpresaRequest request)
     {
         var result = await _empresaService.UpdateAsync(id, request);
 
@@ -91,7 +91,7 @@ public class EmpresasController : ControllerBase
     //[HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Eliminar empresa", Description = "Elimina una empresa por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la empresa a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador de la empresa a eliminar", Required = true)] int id)
     {
         var result = await _empresaService.DeleteAsync(id);
 

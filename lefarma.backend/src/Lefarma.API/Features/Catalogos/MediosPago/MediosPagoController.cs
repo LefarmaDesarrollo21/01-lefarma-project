@@ -39,7 +39,7 @@ public class MediosPagoController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener medio de pago por ID", Description = "Retorna un medio de pago específico por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único del medio de pago", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único del medio de pago", Required = true)] int id)
     {
         var result = await _medioPagoService.GetByIdAsync(id);
 
@@ -55,7 +55,7 @@ public class MediosPagoController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nuevo medio de pago", Description = "Crea un medio de pago con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos del medio de pago a crear", Required = true)] CreateMedioPagoRequest request)
+        [SwaggerRequestBody(Description = "Datos del medio de pago a crear", Required = true)] CreateMedioPagoRequest request)
     {
         var result = await _medioPagoService.CreateAsync(request);
 
@@ -74,8 +74,8 @@ public class MediosPagoController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar medio de pago", Description = "Actualiza los datos de un medio de pago existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador del medio de pago a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados del medio de pago", Required = true)] UpdateMedioPagoRequest request)
+        [SwaggerParameter(Description = "Identificador del medio de pago a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados del medio de pago", Required = true)] UpdateMedioPagoRequest request)
     {
         var result = await _medioPagoService.UpdateAsync(id, request);
 
@@ -91,7 +91,7 @@ public class MediosPagoController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Eliminar medio de pago", Description = "Elimina un medio de pago por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador del medio de pago a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador del medio de pago a eliminar", Required = true)] int id)
     {
         var result = await _medioPagoService.DeleteAsync(id);
 

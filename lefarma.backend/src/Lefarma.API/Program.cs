@@ -379,7 +379,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         return true;
     });
-    options.TagActionsBy(api => new List<string>() { api.GroupName ?? "Sin Categor�a" });
+    options.TagActionsBy(api => new List<string>() { api.GroupName ?? "Sin Categoría" });
 });
 
 // Configure CORS to allow all origins
