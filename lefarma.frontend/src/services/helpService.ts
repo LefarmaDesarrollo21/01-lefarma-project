@@ -58,6 +58,15 @@ export const helpService = {
     return response.data.data;
   },
 
+  getPublicForUser: async (modulo?: string): Promise<HelpArticle[]> => {
+    const params = modulo ? { modulo } : {};
+    const response = await API.get<ApiResponse<HelpArticle[]>>(
+      `${HELP_URL}/public`,
+      { params }
+    );
+    return response.data.data;
+  },
+
   uploadImage: async (file: File): Promise<HelpImageUploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);

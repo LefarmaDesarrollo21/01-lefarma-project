@@ -3,7 +3,6 @@ import { LandingRoute, ProtectedRoute, PublicOnlyRoute } from './LandingRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 
-
 import Login from '@/pages/auth/Login';
 import SelectEmpresaSucursal from '@/pages/auth/SelectEmpresaSucursal';
 import BlockedPage from '@/pages/auth/BlockedPage';
@@ -31,6 +30,7 @@ import Roadmap from '@/pages/Roadmap';
 import DemoComponents from '@/pages/DemoComponents';
 import NotificationsPage from '@/pages/Notifications';
 import HelpList from '@/pages/help/HelpList';
+import PublicHelpList from '@/pages/help/PublicHelpList';
 import HelpView from '@/pages/help/HelpView';
 import HelpEditor from '@/pages/help/HelpEditor';
 import NotFound from '@/pages/NotFound';
@@ -49,8 +49,15 @@ export const AppRoutes = () => {
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           {/* <Route path="/seguridad/usuarios" element={<PermissionGuard requireAny={['usuarios.ver_detalle', 'usuarios.manage']}><UsuariosList /></PermissionGuard>} /> */}
-          <Route path="/seguridad/roles" element={<PermissionGuard require="usuarios.ver_detalle"><RolesList /></PermissionGuard>} />
-          <Route path="/seguridad/permisos" element={<PermisosList /> } />
+          <Route
+            path="/seguridad/roles"
+            element={
+              <PermissionGuard require="usuarios.ver_detalle">
+                <RolesList />
+              </PermissionGuard>
+            }
+          />
+          <Route path="/seguridad/permisos" element={<PermisosList />} />
           <Route path="/catalogos/empresas" element={<EmpresasList />} />
           <Route path="/catalogos/sucursales" element={<SucursalesList />} />
           <Route path="/catalogos/gastos" element={<GastosList />} />
@@ -77,7 +84,7 @@ export const AppRoutes = () => {
           <Route path="/demo-components" element={<DemoComponents />} />
         </Route>
       </Route>
-
+      <Route path="/ayuda" element={<PublicHelpList />} />
       <Route path="/bloqueado" element={<BlockedPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

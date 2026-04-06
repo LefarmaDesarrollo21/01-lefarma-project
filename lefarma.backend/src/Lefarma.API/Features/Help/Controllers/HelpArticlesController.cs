@@ -121,6 +121,33 @@ public class HelpArticlesController : ControllerBase
     }
 
     /// <summary>
+    /// Obtiene artículos de ayuda para usuarios sin autenticación (público)
+    /// </summary>
+    /// <param name="modulo">Nombre del módulo (opcional)</param>
+    /// <param name="ct">Token de cancelación</param>
+    /// <returns>Lista de artículos de ayuda para usuarios</returns>
+    [HttpGet("public")]
+    [AllowAnonymous]
+    [SwaggerOperation(Summary = "Obtener artículos públicos para usuarios", Description = "Retorna artículos de ayuda públicos con tipo 'usuario' o 'ambos', sin requerir autenticación")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<HelpArticleDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetPublic(
+        [SwaggerParameter(Description = "Nombre del módulo para filtrar (ej: Catalogos, Auth, Notificaciones)")] string? modulo,
+        CancellationToken ct)
+    {
+        var result = await _helpArticleService.GetForUserAsync(modulo, ct);
+
+        return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<HelpArticleDto>>
+        {
+            Success = true,
+            Message = modulo != null
+                ? $"Artículos de ayuda públicos del módulo {modulo} obtenidos exitosamente."
+                : "Artículos de ayuda públicos obtenidos exitosamente.",
+            Data = data
+        }));
+    }
+
+    /// <summary>
     /// Obtiene artículos de ayuda para usuarios (tipo 'usuario' o 'ambos')
     /// </summary>
     /// <param name="modulo">Nombre del módulo (opcional)</param>
