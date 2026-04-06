@@ -8,9 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Profile;
-
-// @lat: [[backend#Features]]
-
 /// <summary>
 /// Controller para operaciones del usuario autenticado sobre su propio perfil
 /// </summary>
@@ -89,7 +86,7 @@ public class ProfileController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     [RequestSizeLimit(5_000_000)]
     public async Task<IActionResult> UploadSignature(
-        IFormFile file,
+        [FromForm] IFormFile file,
         CancellationToken cancellationToken = default)
     {
         var userId = GetAuthenticatedUserId();

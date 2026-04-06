@@ -11,9 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace Lefarma.API.Features.Profile;
-
-// @lat: [[backend#Features]]
-
 /// <summary>
 /// Implementación del servicio de perfil de usuario
 /// </summary>
@@ -52,9 +49,7 @@ public class ProfileService : BaseService, IProfileService
                 return CommonErrors.NotFound("Usuario", userId.ToString());
             }
 
-            // Obtener detalles del usuario
-            var detalle = await _appContext.UsuariosDetalle
-                .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
+            var detalle = await EnsureUsuarioDetalleAsync(userId, cancellationToken);
 
             // Obtener roles activos del usuario
             var roles = await _asokamContext.UsuariosRoles
@@ -147,27 +142,13 @@ public class ProfileService : BaseService, IProfileService
                 return CommonErrors.NotFound("Usuario", userId.ToString());
             }
 
-            // Actualizar datos básicos del usuario
             if (!string.IsNullOrWhiteSpace(request.NombreCompleto))
                 usuario.NombreCompleto = request.NombreCompleto;
 
             if (!string.IsNullOrWhiteSpace(request.Correo))
                 usuario.Correo = request.Correo;
 
-            // Actualizar o crear detalles del usuario
-            var detalle = await _appContext.UsuariosDetalle
-                .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
-
-            if (detalle == null)
-            {
-                // Si no existe detalle, no se puede actualizar (debería existir)
-                EnrichWideEvent(action: "UpdateProfile", entityId: userId, additionalContext: new Dictionary<string, object>
-                {
-                    ["detalleNotFound"] = true
-                });
-                await _asokamContext.SaveChangesAsync(cancellationToken);
-                return await GetProfileAsync(userId, cancellationToken);
-            }
+            var detalle = await EnsureUsuarioDetalleAsync(userId, cancellationToken);
 
             // Actualizar campos de detalle (solo los que vienen en el request)
             if (request.IdCentroCosto.HasValue)
@@ -268,14 +249,7 @@ public class ProfileService : BaseService, IProfileService
             if (file.Length > 2 * 1024 * 1024)
                 return Error.Validation("Firma.FileTooLarge", "El archivo no puede ex exceder 2 MB");
 
-            var detalle = await _appContext.UsuariosDetalle
-                .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
-
-            if (detalle == null)
-            {
-                EnrichWideEvent(action: "UploadSignature", entityId: userId, notFound: true);
-                return CommonErrors.NotFound("UsuarioDetalle", userId.ToString());
-            }
+            var detalle = await EnsureUsuarioDetalleAsync(userId, cancellationToken);
 
             if (!string.IsNullOrEmpty(detalle.FirmaPath))
             {
@@ -336,5 +310,33 @@ public class ProfileService : BaseService, IProfileService
             EnrichWideEvent(action: "DeleteSignature", entityId: userId, exception: ex);
             return CommonErrors.DatabaseError("eliminar la firma digital");
         }
+    }
+
+    private async Task<Domain.Entities.Catalogos.UsuarioDetalle> EnsureUsuarioDetalleAsync(int userId, CancellationToken cancellationToken)
+    {
+        var detalle = await _appContext.UsuariosDetalle
+            .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
+
+        if (detalle != null)
+            return detalle;
+
+        var defaultEmpresa = await _appContext.Empresas.FirstOrDefaultAsync(cancellationToken);
+        var defaultSucursal = defaultEmpresa != null
+            ? await _appContext.Sucursales.FirstOrDefaultAsync(s => s.IdEmpresa == defaultEmpresa.IdEmpresa, cancellationToken)
+            : null;
+
+        detalle = new Domain.Entities.Catalogos.UsuarioDetalle
+        {
+            IdUsuario = userId,
+            IdEmpresa = defaultEmpresa?.IdEmpresa ?? 1,
+            IdSucursal = defaultSucursal?.IdSucursal ?? 1,
+            FechaCreacion = DateTime.UtcNow,
+            FechaModificacion = DateTime.UtcNow
+        };
+
+        _appContext.UsuariosDetalle.Add(detalle);
+        await _appContext.SaveChangesAsync(cancellationToken);
+
+        return detalle;
     }
 }
