@@ -9,12 +9,14 @@ import {
   Search,
   Loader2,
   RefreshCcw,
+  Check,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { Badge } from '@/components/ui/badge';
-import { API } from '@/services/api';
+import { API, proveedorApi } from '@/services/api';
 import { ApiResponse } from '@/types/api.types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -62,6 +64,7 @@ interface Proveedor {
   usoCfdi?: string;
   fechaRegistro: string;
   fechaModificacion?: string;
+  autorizadoPorCxP?: boolean | null;
 }
 
 interface RegimenFiscal {
@@ -85,6 +88,8 @@ export default function ProveedoresList() {
   const [isEditing, setIsEditing] = useState(false);
   const [proveedorId, setProveedorId] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [rejectModal, setRejectModal] = useState<{ open: boolean; proveedorId: number | null }>({ open: false, proveedorId: null });
+  const [rejectMotivo, setRejectMotivo] = useState('');
 
   const form = useForm<ProveedorFormValues>({
     resolver: zodResolver(proveedorSchema),
@@ -209,6 +214,30 @@ export default function ProveedoresList() {
     }
   };
 
+  const handleAutorizar = async (id: number) => {
+    if (!confirm('¿Está seguro de autorizar este proveedor?')) return;
+    try {
+      await proveedorApi.autorizar(id);
+      toast.success('Proveedor autorizado');
+      await fetchProveedores();
+    } catch (error: any) {
+      toast.error(error?.message ?? 'Error al autorizar proveedor');
+    }
+  };
+
+  const handleRechazar = async () => {
+    if (!rejectModal.proveedorId) return;
+    try {
+      await proveedorApi.rechazar(rejectModal.proveedorId, rejectMotivo);
+      toast.success('Proveedor rechazado');
+      setRejectModal({ open: false, proveedorId: null });
+      setRejectMotivo('');
+      await fetchProveedores();
+    } catch (error: any) {
+      toast.error(error?.message ?? 'Error al rechazar proveedor');
+    }
+  };
+
 
   const filteredProveedores = useMemo(() => {
     return proveedores.filter((p) =>
@@ -257,12 +286,46 @@ export default function ProveedoresList() {
       ),
     },
     {
+      id: 'autorizadoPorCxP',
+      header: 'Estado CxP',
+      cell: ({ row }) => {
+        const autorizado = row.original.autorizadoPorCxP === true;
+        return (
+          <Badge variant={autorizado ? 'default' : 'outline'} className={autorizado ? 'bg-green-100 text-green-800 border-green-300' : 'bg-yellow-100 text-yellow-800 border-yellow-300'}>
+            {autorizado ? 'Autorizado' : 'Pendiente'}
+          </Badge>
+        );
+      },
+    },
+    {
       id: 'actions',
       header: '',
       cell: ({ row }) => {
         const proveedor = row.original;
         return (
           <div className="flex items-center gap-2">
+            {proveedor.autorizadoPorCxP !== true && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1.5 text-green-600 border-green-600 hover:bg-green-50"
+                  onClick={() => handleAutorizar(proveedor.idProveedor)}
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  Autorizar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1.5 text-red-600 border-red-600 hover:bg-red-50"
+                  onClick={() => setRejectModal({ open: true, proveedorId: proveedor.idProveedor })}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Rechazar
+                </Button>
+              </>
+            )}
             <Button
               size="sm"
               variant="outline"
