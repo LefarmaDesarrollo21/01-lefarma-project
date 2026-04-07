@@ -19,8 +19,12 @@ namespace Lefarma.API.Features.Config.Workflows
 
         [HttpGet]
         [SwaggerOperation(Summary = "Obtener todos los workflows")]
-        public async Task<IActionResult> GetAll(WorkflowRequest query)
+        public async Task<IActionResult> GetAll(WorkflowRequest? query)
         {
+            if(query == null)
+            {
+                query = new WorkflowRequest();
+            }
             var result = await _service.GetAllAsync(query);
             return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<WorkflowResponse>>
             { Success = true, Message = "Workflows obtenidos exitosamente.", Data = data }));
