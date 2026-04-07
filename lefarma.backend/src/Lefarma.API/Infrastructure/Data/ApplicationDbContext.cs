@@ -45,6 +45,7 @@ public class ApplicationDbContext : DbContext
 
         // DbSets - Catalogos Nuevos (Sistema CxP)
         public DbSet<Proveedor> Proveedores { get; set; }
+        public DbSet<ProveedorDetalle> ProveedoresDetalle { get; set; }
         public DbSet<CentroCosto> CentrosCosto { get; set; }
         public DbSet<CuentaContable> CuentasContables { get; set; }
         public DbSet<EstatusOrden> EstatusOrden { get; set; }
