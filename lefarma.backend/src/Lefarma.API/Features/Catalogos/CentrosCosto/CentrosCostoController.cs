@@ -24,8 +24,12 @@ public class CentrosCostoController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todos los centros de costo", Description = "Retorna la lista completa de centros de costo con filtros opcionales")]
-    public async Task<IActionResult> GetAll(CentroCostoRequest query)
+    public async Task<IActionResult> GetAll(CentroCostoRequest? query)
     {
+        if (query == null)
+        {
+            query = new CentroCostoRequest();
+        }
         var result = await _centroCostoService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<CentroCostoResponse>>

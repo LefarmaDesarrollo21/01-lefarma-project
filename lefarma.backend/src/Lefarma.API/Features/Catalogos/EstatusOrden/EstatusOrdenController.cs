@@ -24,8 +24,12 @@ public class EstatusOrdenController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todos los estatus de orden", Description = "Retorna la lista completa de estatus de orden (READ-ONLY)")]
-    public async Task<IActionResult> GetAll(EstatusOrdenRequest query)
+    public async Task<IActionResult> GetAll(EstatusOrdenRequest? query)
     {
+        if (query == null)
+        {
+            query = new EstatusOrdenRequest();
+        }
         var result = await _estatusOrdenService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<EstatusOrdenResponse>>

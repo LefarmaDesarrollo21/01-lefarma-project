@@ -24,8 +24,12 @@ public class CuentasContablesController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todas las cuentas contables", Description = "Retorna el catálogo contable con filtros opcionales")]
-    public async Task<IActionResult> GetAll(CuentaContableRequest query)
+    public async Task<IActionResult> GetAll(CuentaContableRequest? query)
     {
+        if (query == null)
+        {
+            query = new CuentaContableRequest();
+        }
         var result = await _cuentaContableService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<CuentaContableResponse>>
