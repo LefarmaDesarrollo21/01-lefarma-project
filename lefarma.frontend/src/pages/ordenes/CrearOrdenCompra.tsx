@@ -31,11 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -112,55 +108,57 @@ const partidaSchema = z.object({
   deducible: z.boolean(),
 });
 
-const ordenCompraSchema = z.object({
-  idEmpresa: z.number().positive('Seleccione una empresa'),
-  idSucursal: z.number().positive('Seleccione una sucursal'),
-  idArea: z.number().positive('Seleccione un área'),
-  idTipoGasto: z.number().positive('Seleccione un tipo de gasto'),
-  idFormaPago: z.number().positive('Seleccione una forma de pago'),
-  fechaLimitePago: z.string().min(1, 'La fecha es requerida'),
-  sinDatosFiscales: z.boolean(),
-  razonSocialProveedor: z.string().min(1, 'La razón social es requerida').max(255),
-  rfcProveedor: z.string(),
-  codigoPostalProveedor: z.string(),
-  idRegimenFiscal: z.number(),
-  usoCFDI: z.string().optional(),
-  personaContacto: z.string(),
-  notaFormaPago: z.string(),
-  notasGenerales: z.string(),
-  partidas: z.array(partidaSchema).min(1, 'Debe incluir al menos una partida'),
-}).superRefine((data, ctx) => {
-  if (!data.sinDatosFiscales) {
-    if (!data.rfcProveedor || data.rfcProveedor.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'El RFC es requerido',
-        path: ['rfcProveedor'],
-      });
+const ordenCompraSchema = z
+  .object({
+    idEmpresa: z.number().positive('Seleccione una empresa'),
+    idSucursal: z.number().positive('Seleccione una sucursal'),
+    idArea: z.number().positive('Seleccione un área'),
+    idTipoGasto: z.number().positive('Seleccione un tipo de gasto'),
+    idFormaPago: z.number().positive('Seleccione una forma de pago'),
+    fechaLimitePago: z.string().min(1, 'La fecha es requerida'),
+    sinDatosFiscales: z.boolean(),
+    razonSocialProveedor: z.string().min(1, 'La razón social es requerida').max(255),
+    rfcProveedor: z.string(),
+    codigoPostalProveedor: z.string(),
+    idRegimenFiscal: z.number(),
+    usoCFDI: z.string().optional(),
+    personaContacto: z.string(),
+    notaFormaPago: z.string(),
+    notasGenerales: z.string(),
+    partidas: z.array(partidaSchema).min(1, 'Debe incluir al menos una partida'),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.sinDatosFiscales) {
+      if (!data.rfcProveedor || data.rfcProveedor.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'El RFC es requerido',
+          path: ['rfcProveedor'],
+        });
+      }
+      if (!data.codigoPostalProveedor || data.codigoPostalProveedor.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'El código postal es requerido',
+          path: ['codigoPostalProveedor'],
+        });
+      }
+      if (!data.idRegimenFiscal || data.idRegimenFiscal === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'El régimen fiscal es requerido',
+          path: ['idRegimenFiscal'],
+        });
+      }
+      if (!data.usoCFDI || data.usoCFDI.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'El uso del CFDI es requerido',
+          path: ['usoCFDI'],
+        });
+      }
     }
-    if (!data.codigoPostalProveedor || data.codigoPostalProveedor.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'El código postal es requerido',
-        path: ['codigoPostalProveedor'],
-      });
-    }
-    if (!data.idRegimenFiscal || data.idRegimenFiscal === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'El régimen fiscal es requerido',
-        path: ['idRegimenFiscal'],
-      });
-    }
-    if (!data.usoCFDI || data.usoCFDI.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'El uso del CFDI es requerido',
-        path: ['usoCFDI'],
-      });
-    }
-  }
-});
+  });
 
 type FormValues = z.infer<typeof ordenCompraSchema>;
 type PartidaFormValues = z.infer<typeof partidaSchema>;
@@ -306,7 +304,12 @@ function UnidadMedidaSelector({
       const medida = medidas.find((m) => m.idMedida === medidaId);
       if (!grupos[medidaId]) {
         grupos[medidaId] = {
-          medida: medida || { idMedida: medidaId, nombre: 'Sin categoría', activo: true, fechaCreacion: '' },
+          medida: medida || {
+            idMedida: medidaId,
+            nombre: 'Sin categoría',
+            activo: true,
+            fechaCreacion: '',
+          },
           unidades: [],
         };
       }
@@ -477,9 +480,10 @@ export default function CrearOrdenCompra() {
       subtotal += base;
       totalIva += base * ((p.porcentajeIva || 0) / 100);
       totalRetenciones += p.totalRetenciones || 0;
-      const otrosImpuestosValor = p.tipoOtrosImpuestos === 'PERCENTAGE'
-        ? base * ((p.otrosImpuestos || 0) / 100)
-        : (p.otrosImpuestos || 0);
+      const otrosImpuestosValor =
+        p.tipoOtrosImpuestos === 'PERCENTAGE'
+          ? base * ((p.otrosImpuestos || 0) / 100)
+          : p.otrosImpuestos || 0;
       totalOtrosImpuestos += otrosImpuestosValor;
       totalDescuentos += p.descuento || 0;
     }
@@ -492,17 +496,17 @@ export default function CrearOrdenCompra() {
 
     // Catálogos esenciales - Empresas, Sucursales, Áreas
     Promise.all([
-      authService.getEmpresas().catch(err => {
+      authService.getEmpresas().catch((err) => {
         console.error('[fetchCatalogs] Error al cargar Empresas:', err);
         toast.error('Error al cargar empresas');
         return [];
       }),
-      authService.getSucursales().catch(err => {
+      authService.getSucursales().catch((err) => {
         console.error('[fetchCatalogs] Error al cargar Sucursales:', err);
         toast.error('Error al cargar sucursales');
         return [];
       }),
-      authService.getAreas().catch(err => {
+      authService.getAreas().catch((err) => {
         console.error('[fetchCatalogs] Error al cargar Áreas:', err);
         toast.error('Error al cargar áreas');
         return [];
@@ -516,63 +520,69 @@ export default function CrearOrdenCompra() {
 
     // Catálogos secundarios - cada uno independiente
     API.get<ApiResponse<Gasto[]>>('/catalogos/Gastos')
-      .then(res => {
+      .then((res) => {
         if (res.data.success) setTiposGasto(res.data.data || []);
       })
-      .catch(err => {
+      .catch((err) => {
         console.warn('[fetchCatalogs] Error al cargar Gastos:', err);
         errors.push('Tipos de Gasto');
       });
 
     API.get<ApiResponse<FormaPago[]>>('/catalogos/FormasPago')
-      .then(res => {
+      .then((res) => {
         if (res.data.success) setFormasPago(res.data.data || []);
       })
-      .catch(err => {
+      .catch((err) => {
         console.warn('[fetchCatalogs] Error al cargar FormasPago:', err);
         errors.push('Formas de Pago');
       });
 
     API.get<ApiResponse<UnidadMedida[]>>('/catalogos/UnidadesMedida')
-      .then(res => {
+      .then((res) => {
         if (res.data.success) setUnidadesMedida(res.data.data || []);
       })
-      .catch(err => {
+      .catch((err) => {
         console.warn('[fetchCatalogs] Error al cargar UnidadesMedida:', err);
         errors.push('Unidades de Medida');
       });
 
     API.get<ApiResponse<Medida[]>>('/catalogos/Medidas')
-      .then(res => {
+      .then((res) => {
         if (res.data.success) setMedidas(res.data.data || []);
       })
-      .catch(err => {
+      .catch((err) => {
         console.warn('[fetchCatalogs] Error al cargar Medidas:', err);
         errors.push('Medidas');
       });
 
     API.get<ApiResponse<RegimenFiscalItem[]>>('/catalogos/RegimenesFiscales')
-      .then(res => {
+      .then((res) => {
         if (res.data.success) setRegimenesFiscales(res.data.data || []);
       })
-      .catch(err => {
+      .catch((err) => {
         console.warn('[fetchCatalogs] Error al cargar RegimenesFiscales:', err);
         errors.push('Regímenes Fiscales');
       });
 
     API.get<ApiResponse<TipoImpuesto[]>>('/catalogos/TiposImpuesto')
-      .then(res => {
+      .then((res) => {
         if (res.data.success) {
           const tipos = res.data.data || [];
           setTiposImpuesto(tipos);
           const iva16 = tipos.find((t) => t.clave === 'T16');
           if (iva16) {
             setDefaultTipoImpuestoId(iva16.idTipoImpuesto);
-            form.setValue('partidas', [{ ...emptyPartida, idTipoImpuesto: iva16.idTipoImpuesto, porcentajeIva: Number((iva16.tasa * 100).toFixed(2)) }]);
+            form.setValue('partidas', [
+              {
+                ...emptyPartida,
+                idTipoImpuesto: iva16.idTipoImpuesto,
+                porcentajeIva: Number((iva16.tasa * 100).toFixed(2)),
+              },
+            ]);
           }
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.warn('[fetchCatalogs] Error al cargar TiposImpuesto:', err);
         errors.push('Tipos de Impuesto');
       });
@@ -590,11 +600,11 @@ export default function CrearOrdenCompra() {
 
     setBuscandoProveedor(true);
     try {
-      const params = tipo === 'razonSocial' 
-        ? { razonSocial: termino }
-        : { rfc: termino };
-      
-      const response = await API.get<ApiResponse<Proveedor[]>>('/catalogos/Proveedores', { params });
+      const params = tipo === 'razonSocial' ? { razonSocial: termino } : { rfc: termino };
+
+      const response = await API.get<ApiResponse<Proveedor[]>>('/catalogos/Proveedores', {
+        params,
+      });
       if (response.data.success) {
         setProveedores(response.data.data || []);
       }
@@ -623,16 +633,16 @@ export default function CrearOrdenCompra() {
 
     try {
       const response = await API.get<ApiResponse<Proveedor[]>>('/catalogos/Proveedores', {
-        params: { rfc: rfc }
+        params: { rfc: rfc },
       });
-      
+
       if (response.data.success && response.data.data && response.data.data.length > 0) {
         const proveedor = response.data.data[0];
         if (proveedor.razonSocial === form.getValues('razonSocialProveedor')) {
           return true;
         }
       }
-      
+
       setProveedorNoExiste(true);
       return false;
     } catch (err) {
@@ -664,7 +674,7 @@ export default function CrearOrdenCompra() {
           return;
         }
       }
-      
+
       const proveedorExiste = await validarProveedorExistente();
       if (!proveedorExiste) {
         setValuesPendientes(values);
@@ -672,7 +682,7 @@ export default function CrearOrdenCompra() {
         setIsSaving(false);
         return;
       }
-      
+
       await guardarOrden(values);
     } catch (error) {
       const apiError = error as { errors?: Array<{ description: string }>; message?: string };
@@ -688,7 +698,7 @@ export default function CrearOrdenCompra() {
       setIsSaving(false);
     }
   };
-  
+
   const guardarOrden = async (values: FormValues) => {
     setIsSaving(true);
     try {
@@ -722,7 +732,7 @@ export default function CrearOrdenCompra() {
       setIsSaving(false);
     }
   };
-  
+
   const confirmarGuardarProveedorNuevo = () => {
     setMostrarDialogoProveedor(false);
     if (valuesPendientes) {
@@ -949,10 +959,7 @@ export default function CrearOrdenCompra() {
                         Nota de Forma de Pago
                       </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Instrucciones especiales de pago" 
-                          {...field} 
-                        />
+                        <Input placeholder="Instrucciones especiales de pago" {...field} />
                       </FormControl>
                       <FormDescription className="text-xs">
                         Instrucciones específicas sobre cómo realizar el pago al proveedor
@@ -1067,15 +1074,18 @@ export default function CrearOrdenCompra() {
                       return (
                         <FormItem className="flex flex-col">
                           <FormLabel>Razón Social *</FormLabel>
-                          <Popover open={open} onOpenChange={(isOpen) => {
-                            setOpen(isOpen);
-                            if (isOpen) {
-                              setBusqueda('');
-                              setBuscado(false);
-                              setSelectedIndex(0);
-                              setProveedores([]);
-                            }
-                          }}>
+                          <Popover
+                            open={open}
+                            onOpenChange={(isOpen) => {
+                              setOpen(isOpen);
+                              if (isOpen) {
+                                setBusqueda('');
+                                setBuscado(false);
+                                setSelectedIndex(0);
+                                setProveedores([]);
+                              }
+                            }}
+                          >
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button
@@ -1085,7 +1095,7 @@ export default function CrearOrdenCompra() {
                                   className="w-full justify-between border-slate-200 bg-white hover:bg-slate-50"
                                 >
                                   <span className="truncate">
-                                    {field.value || "Buscar proveedor por razón social..."}
+                                    {field.value || 'Buscar proveedor por razón social...'}
                                   </span>
                                   <Search className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
                                 </Button>
@@ -1147,11 +1157,11 @@ export default function CrearOrdenCompra() {
                                             setSelectedIndex(0);
                                           }}
                                           className={cn(
-                                            "flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm",
-                                            selectedIndex === 0 && "bg-slate-100"
+                                            'flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm',
+                                            selectedIndex === 0 && 'bg-slate-100'
                                           )}
                                         >
-                                          <span className="font-medium text-primary transition-colors hover:text-primary/80">
+                                          <span className="hover:text-primary/80 font-medium text-primary transition-colors">
                                             + Usar "{busqueda}"
                                           </span>
                                           <span className="text-xs text-muted-foreground">
@@ -1172,11 +1182,13 @@ export default function CrearOrdenCompra() {
                                               setSelectedIndex(0);
                                             }}
                                             className={cn(
-                                              "flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm",
-                                              index + 1 === selectedIndex && "bg-slate-100"
+                                              'flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm',
+                                              index + 1 === selectedIndex && 'bg-slate-100'
                                             )}
                                           >
-                                            <span className="font-medium">{proveedor.razonSocial}</span>
+                                            <span className="font-medium">
+                                              {proveedor.razonSocial}
+                                            </span>
                                             <span className="text-xs text-muted-foreground">
                                               RFC: {proveedor.rfc || 'N/A'}
                                             </span>
@@ -1222,11 +1234,13 @@ export default function CrearOrdenCompra() {
                         const handleKeyDownRfc = (e: React.KeyboardEvent) => {
                           if (e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const totalOptions = proveedores.length + (busquedaRfc.length > 0 ? 1 : 0);
+                            const totalOptions =
+                              proveedores.length + (busquedaRfc.length > 0 ? 1 : 0);
                             setSelectedIndexRfc((prev) => (prev + 1) % totalOptions);
                           } else if (e.key === 'ArrowUp') {
                             e.preventDefault();
-                            const totalOptions = proveedores.length + (busquedaRfc.length > 0 ? 1 : 0);
+                            const totalOptions =
+                              proveedores.length + (busquedaRfc.length > 0 ? 1 : 0);
                             setSelectedIndexRfc((prev) => (prev - 1 + totalOptions) % totalOptions);
                           } else if (e.key === 'Enter') {
                             e.preventDefault();
@@ -1252,15 +1266,18 @@ export default function CrearOrdenCompra() {
                         return (
                           <FormItem className="flex flex-col">
                             <FormLabel>RFC *</FormLabel>
-                            <Popover open={open} onOpenChange={(isOpen) => {
-                              setOpen(isOpen);
-                              if (isOpen) {
-                                setBusquedaRfc('');
-                                setBuscadoRfc(false);
-                                setSelectedIndexRfc(0);
-                                setProveedores([]);
-                              }
-                            }}>
+                            <Popover
+                              open={open}
+                              onOpenChange={(isOpen) => {
+                                setOpen(isOpen);
+                                if (isOpen) {
+                                  setBusquedaRfc('');
+                                  setBuscadoRfc(false);
+                                  setSelectedIndexRfc(0);
+                                  setProveedores([]);
+                                }
+                              }}
+                            >
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
@@ -1270,14 +1287,17 @@ export default function CrearOrdenCompra() {
                                     className="w-full justify-between border-slate-200 bg-white hover:bg-slate-50"
                                   >
                                     <span className="truncate font-mono">
-                                      {field.value || "Buscar por RFC..."}
+                                      {field.value || 'Buscar por RFC...'}
                                     </span>
                                     <Search className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-[400px] p-0" align="start">
-                                <Command shouldFilter={false} className="rounded-lg border shadow-md">
+                                <Command
+                                  shouldFilter={false}
+                                  className="rounded-lg border shadow-md"
+                                >
                                   <div className="flex items-center border-b bg-slate-50 px-3 py-2">
                                     <Search className="mr-2 h-4 w-4 text-slate-400" />
                                     <CommandInput
@@ -1321,29 +1341,29 @@ export default function CrearOrdenCompra() {
                                       </CommandGroup>
                                     ) : proveedores.length > 0 ? (
                                       <>
-                                      <CommandGroup heading="Ocupar:">
-                                        <CommandItem
-                                          value="__nuevo__"
-                                          onSelect={() => {
-                                            field.onChange(busquedaRfc.toUpperCase());
-                                            setOpen(false);
-                                            setBusquedaRfc('');
-                                            setBuscadoRfc(false);
-                                            setSelectedIndexRfc(0);
-                                          }}
-                                          className={cn(
-                                            "flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm",
-                                            selectedIndexRfc === 0 && "bg-slate-100"
-                                          )}
-                                        >
-                                          <span className="font-mono font-medium text-primary transition-colors hover:text-primary/80">
-                                            + Usar "{busquedaRfc.toUpperCase()}"
-                                          </span>
-                                          <span className="text-xs text-muted-foreground">
-                                            Crear como proveedor nuevo
-                                          </span>
-                                        </CommandItem>
-                                      </CommandGroup>
+                                        <CommandGroup heading="Ocupar:">
+                                          <CommandItem
+                                            value="__nuevo__"
+                                            onSelect={() => {
+                                              field.onChange(busquedaRfc.toUpperCase());
+                                              setOpen(false);
+                                              setBusquedaRfc('');
+                                              setBuscadoRfc(false);
+                                              setSelectedIndexRfc(0);
+                                            }}
+                                            className={cn(
+                                              'flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm',
+                                              selectedIndexRfc === 0 && 'bg-slate-100'
+                                            )}
+                                          >
+                                            <span className="hover:text-primary/80 font-mono font-medium text-primary transition-colors">
+                                              + Usar "{busquedaRfc.toUpperCase()}"
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">
+                                              Crear como proveedor nuevo
+                                            </span>
+                                          </CommandItem>
+                                        </CommandGroup>
                                         <CommandGroup heading="Proveedores encontrados">
                                           {proveedores.map((proveedor, index) => (
                                             <CommandItem
@@ -1357,11 +1377,13 @@ export default function CrearOrdenCompra() {
                                                 setSelectedIndexRfc(0);
                                               }}
                                               className={cn(
-                                                "flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm",
-                                                index + 1 === selectedIndexRfc && "bg-slate-100"
+                                                'flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm',
+                                                index + 1 === selectedIndexRfc && 'bg-slate-100'
                                               )}
                                             >
-                                              <span className="font-mono font-medium">{proveedor.rfc}</span>
+                                              <span className="font-mono font-medium">
+                                                {proveedor.rfc}
+                                              </span>
                                               <span className="text-xs text-muted-foreground">
                                                 {proveedor.razonSocial}
                                               </span>
@@ -1374,9 +1396,9 @@ export default function CrearOrdenCompra() {
                                 </Command>
                               </PopoverContent>
                             </Popover>
-                            <FormDescription className="text-xs">
+                            {/* <FormDescription className="text-xs">
                               12 caracteres para personas morales, 13 para físicas
-                            </FormDescription>
+                            </FormDescription> */}
                             <FormMessage />
                           </FormItem>
                         );
@@ -1511,9 +1533,10 @@ export default function CrearOrdenCompra() {
                 const lineBase =
                   (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
                 const lineIva = lineBase * ((p?.porcentajeIva || 0) / 100);
-                const otrosImpuestosValor = p?.tipoOtrosImpuestos === 'PERCENTAGE'
-                  ? lineBase * ((p?.otrosImpuestos || 0) / 100)
-                  : (p?.otrosImpuestos || 0);
+                const otrosImpuestosValor =
+                  p?.tipoOtrosImpuestos === 'PERCENTAGE'
+                    ? lineBase * ((p?.otrosImpuestos || 0) / 100)
+                    : p?.otrosImpuestos || 0;
                 const lineTotal =
                   lineBase + lineIva - (p?.totalRetenciones || 0) + otrosImpuestosValor;
                 return (
@@ -1566,7 +1589,7 @@ export default function CrearOrdenCompra() {
                               </span>
                             </span>
                           )}
-                          <span className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-sm font-bold text-primary ring-1 ring-primary/20">
+                          <span className="bg-primary/10 ring-primary/20 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-bold text-primary ring-1">
                             Total {fmt(lineTotal)}
                           </span>
                           <Button
@@ -1666,7 +1689,9 @@ export default function CrearOrdenCompra() {
                           control={form.control}
                           name={`partidas.${index}.idTipoImpuesto`}
                           render={({ field }) => {
-                            const selectedTipo = tiposImpuesto.find((t) => t.idTipoImpuesto === field.value);
+                            const selectedTipo = tiposImpuesto.find(
+                              (t) => t.idTipoImpuesto === field.value
+                            );
                             return (
                               <FormItem className="col-span-1 md:col-span-2">
                                 <FormLabel>Impuesto</FormLabel>
@@ -1689,7 +1714,10 @@ export default function CrearOrdenCompra() {
                                   </FormControl>
                                   <SelectContent>
                                     {tiposImpuesto.map((ti) => (
-                                      <SelectItem key={ti.idTipoImpuesto} value={String(ti.idTipoImpuesto)}>
+                                      <SelectItem
+                                        key={ti.idTipoImpuesto}
+                                        value={String(ti.idTipoImpuesto)}
+                                      >
                                         {ti.nombre} ({(ti.tasa * 100).toFixed(0)}%)
                                       </SelectItem>
                                     ))}
@@ -1739,7 +1767,9 @@ export default function CrearOrdenCompra() {
                                     </FormControl>
                                     <Select
                                       value={tipoField.value}
-                                      onValueChange={(val) => tipoField.onChange(val as 'MXN' | 'PERCENTAGE')}
+                                      onValueChange={(val) =>
+                                        tipoField.onChange(val as 'MXN' | 'PERCENTAGE')
+                                      }
                                     >
                                       <SelectTrigger className="w-20 rounded-l-none border-l-0 bg-muted px-2 focus:ring-0 focus:ring-offset-0">
                                         <SelectValue />
@@ -1786,11 +1816,11 @@ export default function CrearOrdenCompra() {
                 {watchedPartidas?.map((p, idx) => {
                   const base = (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
                   const iva = base * ((p?.porcentajeIva || 0) / 100);
-                  const otrosImpuestosValor = p?.tipoOtrosImpuestos === 'PERCENTAGE'
-                    ? base * ((p?.otrosImpuestos || 0) / 100)
-                    : (p?.otrosImpuestos || 0);
-                  const partTotal =
-                    base + iva - (p?.totalRetenciones || 0) + otrosImpuestosValor;
+                  const otrosImpuestosValor =
+                    p?.tipoOtrosImpuestos === 'PERCENTAGE'
+                      ? base * ((p?.otrosImpuestos || 0) / 100)
+                      : p?.otrosImpuestos || 0;
+                  const partTotal = base + iva - (p?.totalRetenciones || 0) + otrosImpuestosValor;
                   const pDesc = p?.descripcion?.slice(0, 25) || `Partida ${idx + 1}`;
                   return (
                     <div key={idx} className="rounded-md border bg-card p-2 shadow-sm">
@@ -1908,16 +1938,19 @@ export default function CrearOrdenCompra() {
           </div>
         </form>
       </Form>
-      
+
       <Dialog open={mostrarDialogoProveedor} onOpenChange={setMostrarDialogoProveedor}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Proveedor no registrado</DialogTitle>
             <DialogDescription>
-              El proveedor con RFC <strong>{form.getValues('rfcProveedor')}</strong> no existe en el catálogo.
-              <br /><br />
+              El proveedor con RFC <strong>{form.getValues('rfcProveedor')}</strong> no existe en el
+              catálogo.
+              <br />
+              <br />
               Será enviado primero para su autorización antes de procesar la orden de compra.
-              <br /><br />
+              <br />
+              <br />
               ¿Desea continuar?
             </DialogDescription>
           </DialogHeader>
@@ -1925,9 +1958,7 @@ export default function CrearOrdenCompra() {
             <Button variant="outline" onClick={() => setMostrarDialogoProveedor(false)}>
               Cancelar
             </Button>
-            <Button onClick={confirmarGuardarProveedorNuevo}>
-              Sí, continuar
-            </Button>
+            <Button onClick={confirmarGuardarProveedorNuevo}>Sí, continuar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -51,6 +51,19 @@ const proveedorSchema = z.object({
   usoCfdi: z.string().optional(),
 });
 
+interface ProveedorMetadata {
+  id_persona_subio?: number;
+  [key: string]: unknown;
+}
+
+interface ProveedorDetalle {
+  personaContactoNombre?: string;
+  contactoTelefono?: string;
+  contactoEmail?: string;
+  comentario?: string;
+  metadata?: ProveedorMetadata;
+}
+
 interface Proveedor {
   idProveedor: number;
   razonSocial: string;
@@ -63,12 +76,7 @@ interface Proveedor {
   fechaModificacion?: string;
   estatus: number;
   cambioEstatusPor?: number;
-  detalle?: {
-    personaContactoNombre?: string;
-    contactoTelefono?: string;
-    contactoEmail?: string;
-    comentario?: string;
-  };
+  detalle?: ProveedorDetalle;
 }
 
 const ESTATUS = {
