@@ -328,8 +328,9 @@ export default function CuentasContablesList() {
               onRefresh={fetchCuentas}
               filterConfig={{
                 tableId: 'cuentas-contables',
-                searchableColumns: ['codigo', 'nombre'],
-                defaultSearchColumns: ['codigo'],
+                searchableColumns: ['cuenta', 'descripcion'],
+                defaultSearchColumns: ['cuenta'],
+                defaultVisibleColumns: ['cuenta', 'descripcion', 'centroCostoNombre', 'activo', 'actions'],
               }}
             />
             {loading && (
