@@ -129,6 +129,37 @@ const ordenCompraSchema = z.object({
   notaFormaPago: z.string(),
   notasGenerales: z.string(),
   partidas: z.array(partidaSchema).min(1, 'Debe incluir al menos una partida'),
+}).superRefine((data, ctx) => {
+  if (!data.sinDatosFiscales) {
+    if (!data.rfcProveedor || data.rfcProveedor.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El RFC es requerido',
+        path: ['rfcProveedor'],
+      });
+    }
+    if (!data.codigoPostalProveedor || data.codigoPostalProveedor.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El código postal es requerido',
+        path: ['codigoPostalProveedor'],
+      });
+    }
+    if (!data.idRegimenFiscal || data.idRegimenFiscal === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El régimen fiscal es requerido',
+        path: ['idRegimenFiscal'],
+      });
+    }
+    if (!data.usoCFDI || data.usoCFDI.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El uso del CFDI es requerido',
+        path: ['usoCFDI'],
+      });
+    }
+  }
 });
 
 type FormValues = z.infer<typeof ordenCompraSchema>;
