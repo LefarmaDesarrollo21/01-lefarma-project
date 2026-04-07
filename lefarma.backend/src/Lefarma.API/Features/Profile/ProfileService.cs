@@ -1,13 +1,16 @@
 using ErrorOr;
+using Lefarma.API.Features.Archivos.Settings;
 using Lefarma.API.Features.Profile.DTOs;
 using Lefarma.API.Infrastructure.Data;
 using Lefarma.API.Shared.Errors;
 using Lefarma.API.Shared.Logging;
 using Lefarma.API.Shared.Services;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Lefarma.API.Features.Profile;
-
 /// <summary>
 /// Implementación del servicio de perfil de usuario
 /// </summary>
@@ -15,16 +18,22 @@ public class ProfileService : BaseService, IProfileService
 {
     private readonly AsokamDbContext _asokamContext;
     private readonly ApplicationDbContext _appContext;
+    private readonly IOptions<ArchivosSettings> _archivosSettings;
+    private readonly IWebHostEnvironment _env;
     protected override string EntityName => "Profile";
 
     public ProfileService(
         AsokamDbContext asokamContext,
         ApplicationDbContext appContext,
+        IOptions<ArchivosSettings> archivosSettings,
+        IWebHostEnvironment env,
         IWideEventAccessor wideEventAccessor)
         : base(wideEventAccessor)
     {
         _asokamContext = asokamContext;
         _appContext = appContext;
+        _archivosSettings = archivosSettings;
+        _env = env;
     }
 
     public async Task<ErrorOr<ProfileResponse>> GetProfileAsync(int userId, CancellationToken cancellationToken = default)
@@ -40,9 +49,7 @@ public class ProfileService : BaseService, IProfileService
                 return CommonErrors.NotFound("Usuario", userId.ToString());
             }
 
-            // Obtener detalles del usuario
-            var detalle = await _appContext.UsuariosDetalle
-                .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
+            var detalle = await EnsureUsuarioDetalleAsync(userId, cancellationToken);
 
             // Obtener roles activos del usuario
             var roles = await _asokamContext.UsuariosRoles
@@ -90,7 +97,7 @@ public class ProfileService : BaseService, IProfileService
                     IdCentroCosto = detalle.IdCentroCosto,
                     Puesto = detalle.Puesto,
                     NumeroEmpleado = detalle.NumeroEmpleado,
-                    FirmaDigital = detalle.FirmaDigital,
+                    FirmaPath = detalle.FirmaPath,
                     TelefonoOficina = detalle.TelefonoOficina,
                     Extension = detalle.Extension,
                     Celular = detalle.Celular,
@@ -135,27 +142,13 @@ public class ProfileService : BaseService, IProfileService
                 return CommonErrors.NotFound("Usuario", userId.ToString());
             }
 
-            // Actualizar datos básicos del usuario
             if (!string.IsNullOrWhiteSpace(request.NombreCompleto))
                 usuario.NombreCompleto = request.NombreCompleto;
 
             if (!string.IsNullOrWhiteSpace(request.Correo))
                 usuario.Correo = request.Correo;
 
-            // Actualizar o crear detalles del usuario
-            var detalle = await _appContext.UsuariosDetalle
-                .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
-
-            if (detalle == null)
-            {
-                // Si no existe detalle, no se puede actualizar (debería existir)
-                EnrichWideEvent(action: "UpdateProfile", entityId: userId, additionalContext: new Dictionary<string, object>
-                {
-                    ["detalleNotFound"] = true
-                });
-                await _asokamContext.SaveChangesAsync(cancellationToken);
-                return await GetProfileAsync(userId, cancellationToken);
-            }
+            var detalle = await EnsureUsuarioDetalleAsync(userId, cancellationToken);
 
             // Actualizar campos de detalle (solo los que vienen en el request)
             if (request.IdCentroCosto.HasValue)
@@ -167,8 +160,9 @@ public class ProfileService : BaseService, IProfileService
             if (!string.IsNullOrWhiteSpace(request.NumeroEmpleado))
                 detalle.NumeroEmpleado = request.NumeroEmpleado;
 
-            if (!string.IsNullOrWhiteSpace(request.FirmaDigital))
-                detalle.FirmaDigital = request.FirmaDigital;
+            if (!string.IsNullOrWhiteSpace(request.FirmaPath))
+                detalle.FirmaPath = request.FirmaPath;
+
 
             if (!string.IsNullOrWhiteSpace(request.TelefonoOficina))
                 detalle.TelefonoOficina = request.TelefonoOficina;
@@ -242,5 +236,107 @@ public class ProfileService : BaseService, IProfileService
             EnrichWideEvent(action: "UpdateProfile", entityId: userId, exception: ex);
             return CommonErrors.DatabaseError("actualizar el perfil");
         }
+    }
+
+    public async Task<ErrorOr<string>> UploadSignatureAsync(int userId, IFormFile file, string fileName, string contentType, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+            if (extension != ".png" && extension != ".jpg" && extension != ".jpeg")
+                return Error.Validation("Firma.InvalidExtension", "Solo se permiten archivos PNG, JPG o JPEG");
+
+            if (file.Length > 2 * 1024 * 1024)
+                return Error.Validation("Firma.FileTooLarge", "El archivo no puede ex exceder 2 MB");
+
+            var detalle = await EnsureUsuarioDetalleAsync(userId, cancellationToken);
+
+            if (!string.IsNullOrEmpty(detalle.FirmaPath))
+            {
+                var oldPhysicalPath = Path.Combine(_env.WebRootPath, detalle.FirmaPath.TrimStart('/'));
+                if (File.Exists(oldPhysicalPath))
+                    File.Delete(oldPhysicalPath);
+            }
+
+            var firmasFolder = "firmas_usuarios";
+            var directoryPath = Path.Combine(_archivosSettings.Value.BasePath, firmasFolder);
+            Directory.CreateDirectory(directoryPath);
+
+            var newFileName = $"{userId}{extension}";
+            var fullPath = Path.Combine(directoryPath, newFileName);
+            await using (var stream = new FileStream(fullPath, FileMode.Create, FileAccess.Write))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var relativePath = $"{firmasFolder}/{newFileName}";
+            detalle.FirmaPath = relativePath;
+            detalle.FechaModificacion = DateTime.UtcNow;
+            await _appContext.SaveChangesAsync(cancellationToken);
+
+            EnrichWideEvent(action: "UploadSignature", entityId: userId, nombre: newFileName);
+            return relativePath;
+        }
+        catch (Exception ex)
+        {
+            EnrichWideEvent(action: "UploadSignature", entityId: userId, exception: ex);
+            return CommonErrors.DatabaseError("subir la firma digital");
+        }
+    }
+
+    public async Task<ErrorOr<string>> DeleteSignatureAsync(int userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var detalle = await _appContext.UsuariosDetalle
+                .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
+
+            if (detalle == null || string.IsNullOrEmpty(detalle.FirmaPath))
+                return Error.NotFound("Profile.FirmaNotFound", "No hay firma digital para eliminar");
+
+            var oldPhysicalPath = Path.Combine(_env.WebRootPath, detalle.FirmaPath.TrimStart('/'));
+            if (File.Exists(oldPhysicalPath))
+                File.Delete(oldPhysicalPath);
+
+            detalle.FirmaPath = null;
+            detalle.FechaModificacion = DateTime.UtcNow;
+            await _appContext.SaveChangesAsync(cancellationToken);
+
+            EnrichWideEvent(action: "DeleteSignature", entityId: userId);
+            return "Firma eliminada";
+        }
+        catch (Exception ex)
+        {
+            EnrichWideEvent(action: "DeleteSignature", entityId: userId, exception: ex);
+            return CommonErrors.DatabaseError("eliminar la firma digital");
+        }
+    }
+
+    private async Task<Domain.Entities.Catalogos.UsuarioDetalle> EnsureUsuarioDetalleAsync(int userId, CancellationToken cancellationToken)
+    {
+        var detalle = await _appContext.UsuariosDetalle
+            .FirstOrDefaultAsync(ud => ud.IdUsuario == userId, cancellationToken);
+
+        if (detalle != null)
+            return detalle;
+
+        var defaultEmpresa = await _appContext.Empresas.FirstOrDefaultAsync(cancellationToken);
+        var defaultSucursal = defaultEmpresa != null
+            ? await _appContext.Sucursales.FirstOrDefaultAsync(s => s.IdEmpresa == defaultEmpresa.IdEmpresa, cancellationToken)
+            : null;
+
+        detalle = new Domain.Entities.Catalogos.UsuarioDetalle
+        {
+            IdUsuario = userId,
+            IdEmpresa = defaultEmpresa?.IdEmpresa ?? 1,
+            IdSucursal = defaultSucursal?.IdSucursal ?? 1,
+            FechaCreacion = DateTime.UtcNow,
+            FechaModificacion = DateTime.UtcNow
+        };
+
+        _appContext.UsuariosDetalle.Add(detalle);
+        await _appContext.SaveChangesAsync(cancellationToken);
+
+        return detalle;
     }
 }

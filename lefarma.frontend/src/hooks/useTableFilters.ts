@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+﻿import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type {
   ColumnFilter,
@@ -14,15 +14,18 @@ import {
   createDefaultConfig,
 } from '@/lib/tableConfigStorage';
 
+
 export function useTableFilters<TData>({
   tableId,
   allColumns,
   defaultSearchColumns = [],
+  defaultVisibleColumns,
   columnFilterConfigs: initialColumnFilterConfigs = {},
 }: {
   tableId: string;
   allColumns: ColumnDef<TData>[];
   defaultSearchColumns?: string[];
+  defaultVisibleColumns?: string[];
   columnFilterConfigs?: Record<string, ColumnFilterConfig>;
 }): UseTableFiltersReturn {
   // Extract column IDs from column definitions
@@ -37,7 +40,9 @@ export function useTableFilters<TData>({
   // State
   const [activeFilters, setActiveFilters] = useState<ColumnFilter[]>([]);
   const [searchColumnIds, setSearchColumnIds] = useState<string[]>(defaultSearchColumns);
-  const [visibleColumnIds, setVisibleColumnIds] = useState<string[]>(allColumnIds); // Initialize with ALL columns
+  const [visibleColumnIds, setVisibleColumnIds] = useState<string[]>(
+    defaultVisibleColumns ?? allColumnIds
+  );
   const [columnFilterConfigs, setColumnFilterConfigs] = useState<Record<string, ColumnFilterConfig>>(initialColumnFilterConfigs);
 
   // Track initialization to prevent auto-save race condition
@@ -94,15 +99,14 @@ export function useTableFilters<TData>({
   }, []);
 
   const resetToDefaults = useCallback(() => {
-    const defaults = createDefaultConfig(tableId, allColumnIds, defaultSearchColumns);
+    const defaults = createDefaultConfig(tableId, allColumnIds, defaultSearchColumns, defaultVisibleColumns);
     setActiveFilters([]);
     setSearchColumnIds(defaults.searchColumns);
-    setVisibleColumnIds(defaults.visibleColumns); // This is allColumnIds
+    setVisibleColumnIds(defaults.visibleColumns);
     setColumnFilterConfigs({});
 
-    // Save the default config immediately so it persists
     saveConfigToStorage(defaults);
-  }, [tableId, allColumnIds, defaultSearchColumns, saveConfigToStorage]);
+  }, [tableId, allColumnIds, defaultSearchColumns, defaultVisibleColumns, saveConfigToStorage]);
 
   const setColumnFilterConfig = useCallback((columnId: string, config: ColumnFilterConfig) => {
     setColumnFilterConfigs(prev => ({
@@ -157,13 +161,12 @@ export function useTableFilters<TData>({
         : currentAllColumnIds;
       setVisibleColumnIds(savedVisible);
     } else {
-      // Create default config on first visit - ALL columns visible
-      const defaults = createDefaultConfig(tableId, currentAllColumnIds, defaultSearchColumns);
+      const defaults = createDefaultConfig(tableId, currentAllColumnIds, defaultSearchColumns, defaultVisibleColumns);
       setSearchColumnIds(defaults.searchColumns);
       setVisibleColumnIds(defaults.visibleColumns);
       saveConfigToStorage(defaults);
     }
-  }, [tableId, defaultSearchColumns, saveConfigToStorage]);
+  }, [tableId, defaultSearchColumns, defaultVisibleColumns, saveConfigToStorage]);
 
   // Auto-save when state changes (only after initialization, not during load)
   useEffect(() => {

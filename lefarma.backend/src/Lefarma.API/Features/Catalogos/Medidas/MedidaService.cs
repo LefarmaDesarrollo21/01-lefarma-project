@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace Lefarma.API.Features.Catalogos.Medidas
 {
-    public class MedidaService : BaseService, IMedidaService
+public class MedidaService : BaseService, IMedidaService
     {
         private readonly IMedidaRepository _medidaRepository;
         private readonly IUnidadMedidaRepository _unidadMedidaRepository;

@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace Lefarma.API.Features.Auth.DTOs;
-
 /// <summary>
 /// Request for login step one - find user domains
 /// </summary>

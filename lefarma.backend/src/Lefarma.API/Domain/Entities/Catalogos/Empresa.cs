@@ -1,10 +1,9 @@
-﻿using Lefarma.API.Shared.Extensions;
+using Lefarma.API.Shared.Extensions;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Lefarma.API.Domain.Entities.Catalogos
-{
-    public class Empresa
+namespace Lefarma.API.Domain.Entities.Catalogos {
+public class Empresa
     {
         public int IdEmpresa { get; set; }
         public string Nombre { get; set; } = null!;

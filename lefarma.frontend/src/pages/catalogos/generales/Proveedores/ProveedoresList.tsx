@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
+import { resetConfig } from '@/lib/tableConfigStorage';
 import {
   Building,
   Plus,
@@ -9,14 +10,14 @@ import {
   Search,
   Loader2,
   RefreshCcw,
-  CheckCircle,
-  XCircle,
+  Check,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { Badge } from '@/components/ui/badge';
-import { API } from '@/services/api';
+import { API, proveedorApi } from '@/services/api';
 import { ApiResponse } from '@/types/api.types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,9 +29,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -38,15 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -58,11 +48,7 @@ const proveedorSchema = z.object({
   rfc: z.string().optional(),
   codigoPostal: z.string().optional(),
   regimenFiscalId: z.number().optional(),
-  personaContacto: z.string().optional(),
-  notaFormaPago: z.string().optional(),
-  notasGenerales: z.string().optional(),
-  sinDatosFiscales: z.boolean(),
-  autorizadoPorCxP: z.boolean(),
+  usoCfdi: z.string().optional(),
 });
 
 interface Proveedor {
@@ -72,14 +58,37 @@ interface Proveedor {
   codigoPostal?: string;
   regimenFiscalId?: number;
   regimenFiscalDescripcion?: string;
-  personaContacto?: string;
-  notaFormaPago?: string;
-  notasGenerales?: string;
-  sinDatosFiscales: boolean;
-  autorizadoPorCxP: boolean;
+  usoCfdi?: string;
   fechaRegistro: string;
   fechaModificacion?: string;
+  estatus: number;
+  cambioEstatusPor?: number;
+  detalle?: {
+    personaContactoNombre?: string;
+    contactoTelefono?: string;
+    contactoEmail?: string;
+    comentario?: string;
+  };
 }
+
+const ESTATUS = {
+  NUEVO: 1,
+  APROBADO: 2,
+  RECHAZADO: 3,
+} as const;
+
+const getEstatusLabel = (estatus: number) => {
+  switch (estatus) {
+    case ESTATUS.NUEVO:
+      return 'Nuevo';
+    case ESTATUS.APROBADO:
+      return 'Aprobado';
+    case ESTATUS.RECHAZADO:
+      return 'Rechazado';
+    default:
+      return 'Desconocido';
+  }
+};
 
 interface RegimenFiscal {
   idRegimenFiscal: number;
@@ -102,10 +111,8 @@ export default function ProveedoresList() {
   const [isEditing, setIsEditing] = useState(false);
   const [proveedorId, setProveedorId] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
-  const [rechazarDialogOpen, setRechazarDialogOpen] = useState(false);
-  const [rechazarProveedorId, setRechazarProveedorId] = useState<number>(0);
-  const [rechazarMotivo, setRechazarMotivo] = useState('');
-  const [isRechazando, setIsRechazando] = useState(false);
+  const [rejectModal, setRejectModal] = useState<{ open: boolean; proveedorId: number | null }>({ open: false, proveedorId: null });
+  const [rejectMotivo, setRejectMotivo] = useState('');
 
   const form = useForm<ProveedorFormValues>({
     resolver: zodResolver(proveedorSchema),
@@ -114,11 +121,7 @@ export default function ProveedoresList() {
       rfc: '',
       codigoPostal: '',
       regimenFiscalId: undefined,
-      personaContacto: '',
-      notaFormaPago: '',
-      notasGenerales: '',
-      sinDatosFiscales: false,
-      autorizadoPorCxP: false,
+      usoCfdi: '',
     },
   });
 
@@ -156,6 +159,8 @@ export default function ProveedoresList() {
   useEffect(() => {
     fetchProveedores();
     fetchRegimenesFiscales();
+    // Reset table config to show all columns including new ones (Contacto, Comentario, Estatus)
+    resetConfig('proveedores');
   }, []);
 
   const handleNuevoProveedor = () => {
@@ -165,11 +170,7 @@ export default function ProveedoresList() {
       rfc: '',
       codigoPostal: '',
       regimenFiscalId: undefined,
-      personaContacto: '',
-      notaFormaPago: '',
-      notasGenerales: '',
-      sinDatosFiscales: false,
-      autorizadoPorCxP: false,
+      usoCfdi: '',
     });
     setIsEditing(false);
     setModalOpen(true);
@@ -184,11 +185,7 @@ export default function ProveedoresList() {
         rfc: proveedor.rfc || '',
         codigoPostal: proveedor.codigoPostal || '',
         regimenFiscalId: proveedor.regimenFiscalId,
-        personaContacto: proveedor.personaContacto || '',
-        notaFormaPago: proveedor.notaFormaPago || '',
-        notasGenerales: proveedor.notasGenerales || '',
-        sinDatosFiscales: proveedor.sinDatosFiscales,
-        autorizadoPorCxP: proveedor.autorizadoPorCxP,
+        usoCfdi: proveedor.usoCfdi || '',
       });
       setIsEditing(true);
       setModalOpen(true);
@@ -236,53 +233,30 @@ export default function ProveedoresList() {
     }
   };
 
-  const handleAutorizarProveedor = async (id: number) => {
+  const handleAutorizar = async (id: number) => {
+    if (!confirm('¿Está seguro de autorizar este proveedor?')) return;
     try {
-      const response = await API.post<ApiResponse<void>>(
-        `/catalogos/proveedores/${id}/autorizar`,
-      );
-      if (response.data.success) {
-        toast.success('Proveedor autorizado correctamente');
-        fetchProveedores();
-      } else {
-        toast.error(response.data.message ?? 'Error al autorizar el proveedor');
-      }
+      await proveedorApi.autorizar(id);
+      toast.success('Proveedor autorizado');
+      await fetchProveedores();
     } catch (error: any) {
-      toast.error(error?.message ?? 'Error al autorizar el proveedor');
+      toast.error(error?.message ?? 'Error al autorizar proveedor');
     }
   };
 
-  const handleOpenRechazarDialog = (id: number) => {
-    setRechazarProveedorId(id);
-    setRechazarMotivo('');
-    setRechazarDialogOpen(true);
+  const handleRechazar = async () => {
+    if (!rejectModal.proveedorId) return;
+    try {
+      await proveedorApi.rechazar(rejectModal.proveedorId, rejectMotivo);
+      toast.success('Proveedor rechazado');
+      setRejectModal({ open: false, proveedorId: null });
+      setRejectMotivo('');
+      await fetchProveedores();
+    } catch (error: any) {
+      toast.error(error?.message ?? 'Error al rechazar proveedor');
+    }
   };
 
-  const handleConfirmarRechazo = async () => {
-    if (!rechazarMotivo.trim()) {
-      toast.error('El motivo de rechazo es obligatorio');
-      return;
-    }
-    setIsRechazando(true);
-    try {
-      const response = await API.post<ApiResponse<void>>(
-        `/catalogos/proveedores/${rechazarProveedorId}/rechazar`,
-        { motivo: rechazarMotivo.trim() },
-      );
-      if (response.data.success) {
-        toast.success('Proveedor rechazado correctamente');
-        setRechazarDialogOpen(false);
-        setRechazarMotivo('');
-        fetchProveedores();
-      } else {
-        toast.error(response.data.message ?? 'Error al rechazar el proveedor');
-      }
-    } catch (error: any) {
-      toast.error(error?.message ?? 'Error al rechazar el proveedor');
-    } finally {
-      setIsRechazando(false);
-    }
-  };
 
   const filteredProveedores = useMemo(() => {
     return proveedores.filter((p) =>
@@ -331,32 +305,73 @@ export default function ProveedoresList() {
       ),
     },
     {
-      accessorKey: 'sinDatosFiscales',
-      header: 'Sin Datos Fiscales',
-      cell: ({ row }) => (
-        <Badge
-          variant={row.original.sinDatosFiscales ? 'default' : 'secondary'}
-          className={row.original.sinDatosFiscales ? 'bg-orange-500 hover:bg-orange-600' : ''}
-        >
-          {row.original.sinDatosFiscales ? 'Sí' : 'No'}
-        </Badge>
-      ),
+      id: 'detalle',
+      header: 'Contacto',
+      cell: ({ row }) => {
+        const detalle = row.original.detalle;
+        if (!detalle?.personaContactoNombre && !detalle?.contactoTelefono && !detalle?.contactoEmail) {
+          return <span className="text-xs text-muted-foreground">—</span>;
+        }
+        return (
+          <div className="flex flex-col gap-0.5">
+            {detalle?.personaContactoNombre && (
+              <span className="text-xs font-medium">{detalle.personaContactoNombre}</span>
+            )}
+            {detalle?.contactoTelefono && (
+              <span className="text-xs text-muted-foreground">{detalle.contactoTelefono}</span>
+            )}
+            {detalle?.contactoEmail && (
+              <span className="text-xs text-muted-foreground truncate max-w-[150px]" title={detalle.contactoEmail}>
+                {detalle.contactoEmail}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
-      accessorKey: 'autorizadoPorCxP',
-      header: 'Autorizado CxP',
-      cell: ({ row }) => (
-        <Badge
-          variant={row.original.autorizadoPorCxP ? 'default' : 'secondary'}
-          className={
-            row.original.autorizadoPorCxP
-              ? 'bg-green-600 hover:bg-green-700 text-white'
-              : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-          }
-        >
-          {row.original.autorizadoPorCxP ? 'Autorizado' : 'Pendiente'}
-        </Badge>
-      ),
+      id: 'estatus',
+      header: 'Estatus',
+      cell: ({ row }) => {
+        const estatus = row.original.estatus;
+        const isAprobado = estatus === ESTATUS.APROBADO;
+        const isRechazado = estatus === ESTATUS.RECHAZADO;
+        const isNuevo = estatus === ESTATUS.NUEVO;
+
+        const badgeClass = isAprobado
+          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50'
+          : isRechazado
+          ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50'
+          : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
+
+        return (
+          <Badge
+            variant="outline"
+            className={`${badgeClass} border font-medium text-xs px-2 py-0.5 w-fit`}
+          >
+            {getEstatusLabel(estatus)}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: 'comentario',
+      header: 'Comentario',
+      cell: ({ row }) => {
+        const comentario = row.original.detalle?.comentario;
+        if (!comentario) {
+          return <span className="text-xs text-muted-foreground">—</span>;
+        }
+        const isRechazado = row.original.estatus === ESTATUS.RECHAZADO;
+        return (
+          <div className={`flex items-start gap-1.5 rounded-md px-2 py-1.5 border ${isRechazado ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-100'}`}>
+            {isRechazado && <X className="h-3 w-3 text-red-400 mt-0.5 shrink-0" />}
+            <span className={`text-xs leading-relaxed ${isRechazado ? 'text-red-600' : 'text-gray-600'}`}>
+              {comentario}
+            </span>
+          </div>
+        );
+      },
     },
     {
       id: 'actions',
@@ -365,24 +380,24 @@ export default function ProveedoresList() {
         const proveedor = row.original;
         return (
           <div className="flex items-center gap-2">
-            {!proveedor.autorizadoPorCxP && (
+            {proveedor.estatus === ESTATUS.NUEVO && (
               <>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 gap-1.5 border-green-600 text-green-600 hover:bg-green-50"
-                  onClick={() => handleAutorizarProveedor(proveedor.idProveedor)}
+                  className="h-8 gap-1.5 text-green-600 border-green-600 hover:bg-green-50"
+                  onClick={() => handleAutorizar(proveedor.idProveedor)}
                 >
-                  <CheckCircle className="h-3.5 w-3.5" />
+                  <Check className="h-3.5 w-3.5" />
                   Autorizar
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 gap-1.5 border-red-600 text-red-600 hover:bg-red-50"
-                  onClick={() => handleOpenRechazarDialog(proveedor.idProveedor)}
+                  className="h-8 gap-1.5 text-red-600 border-red-600 hover:bg-red-50"
+                  onClick={() => setRejectModal({ open: true, proveedorId: proveedor.idProveedor })}
                 >
-                  <XCircle className="h-3.5 w-3.5" />
+                  <X className="h-3.5 w-3.5" />
                   Rechazar
                 </Button>
               </>
@@ -446,10 +461,11 @@ export default function ProveedoresList() {
               title="Proveedores"
               showRowCount
               showRefreshButton
+              showColumnToggle
               onRefresh={fetchProveedores}
               filterConfig={{
                 tableId: 'proveedores',
-                searchableColumns: ['razonSocial', 'rfc', 'personaContacto'],
+                searchableColumns: ['razonSocial', 'rfc'],
                 defaultSearchColumns: ['razonSocial'],
               }}
             />
@@ -559,74 +575,31 @@ export default function ProveedoresList() {
 
               <FormField
                 control={form.control}
-                name="personaContacto"
+                name="usoCfdi"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Persona de Contacto</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre del contacto" {...field} />
-                    </FormControl>
+                    <FormLabel>Uso del CFDI</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona uso del CFDI..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="G01">G01 - Adquisición de mercancías</SelectItem>
+                        <SelectItem value="G02">G02 - Devoluciones, descuentos o bonificaciones</SelectItem>
+                        <SelectItem value="G03">G03 - Gastos en general</SelectItem>
+                        <SelectItem value="I01">I01 - Construcciones</SelectItem>
+                        <SelectItem value="I02">I02 - Mobiliario y equipo de oficina</SelectItem>
+                        <SelectItem value="I03">I03 - Equipo de transporte</SelectItem>
+                        <SelectItem value="I04">I04 - Equipo de cómputo</SelectItem>
+                        <SelectItem value="D01">D01 - Honorarios médicos</SelectItem>
+                        <SelectItem value="D02">D02 - Gastos médicos por incapacidad</SelectItem>
+                        <SelectItem value="S01">S01 - Sin efectos fiscales</SelectItem>
+                        <SelectItem value="P01">P01 - Por definir</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="notaFormaPago"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>Nota Forma de Pago</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Instrucciones de pago" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="notasGenerales"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>Notas Generales</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Notas adicionales" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="sinDatosFiscales"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Sin Datos Fiscales</FormLabel>
-                      <FormDescription>Marcar si el proveedor no tiene datos fiscales completos.</FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="autorizadoPorCxP"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Autorizado por CxP</FormLabel>
-                      <FormDescription>El proveedor está autorizado por Cuentas por Pagar.</FormDescription>
-                    </div>
                   </FormItem>
                 )}
               />
@@ -635,48 +608,54 @@ export default function ProveedoresList() {
         </Form>
       </Modal>
 
-      <Dialog open={rechazarDialogOpen} onOpenChange={setRechazarDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rechazar Proveedor</DialogTitle>
-            <DialogDescription>
-              Indica el motivo del rechazo. Este dato será registrado para referencia.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2">
-            <label htmlFor="motivo-rechazo" className="text-sm font-medium">
-              Motivo del rechazo *
-            </label>
-            <Textarea
-              id="motivo-rechazo"
-              placeholder="Describe el motivo del rechazo..."
-              className="mt-2"
-              value={rechazarMotivo}
-              onChange={(e) => setRechazarMotivo(e.target.value)}
-              rows={3}
-            />
-          </div>
-          <DialogFooter>
+      <Modal
+        id="modal-rechazar"
+        open={rejectModal.open}
+        setOpen={(open) => {
+          if (!open) {
+            setRejectModal({ open: false, proveedorId: null });
+            setRejectMotivo('');
+          }
+        }}
+        title="Rechazar Proveedor"
+        size="md"
+        footer={
+          <div className="flex gap-2 justify-end pt-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setRechazarDialogOpen(false)}
-              disabled={isRechazando}
+              onClick={() => {
+                setRejectModal({ open: false, proveedorId: null });
+                setRejectMotivo('');
+              }}
             >
               Cancelar
             </Button>
             <Button
               type="button"
               variant="destructive"
-              disabled={isRechazando || !rechazarMotivo.trim()}
-              onClick={handleConfirmarRechazo}
+              onClick={handleRechazar}
             >
-              {isRechazando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirmar Rechazo
+              Rechazar Proveedor
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            ¿Está seguro de rechazar este proveedor? Esta acción no se puede deshacer.
+          </p>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Motivo del rechazo</label>
+            <textarea
+              className="w-full min-h-[100px] px-3 py-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Ingrese el motivo del rechazo (opcional)"
+              value={rejectMotivo}
+              onChange={(e) => setRejectMotivo(e.target.value)}
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

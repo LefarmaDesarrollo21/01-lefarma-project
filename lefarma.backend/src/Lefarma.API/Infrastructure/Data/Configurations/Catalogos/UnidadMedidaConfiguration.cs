@@ -1,10 +1,9 @@
-﻿using Lefarma.API.Domain.Entities.Catalogos;
+using Lefarma.API.Domain.Entities.Catalogos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
-    public class UnidadMedidaConfiguration : IEntityTypeConfiguration<UnidadMedida>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+public class UnidadMedidaConfiguration : IEntityTypeConfiguration<UnidadMedida>
     {
         public void Configure(EntityTypeBuilder<UnidadMedida> builder)
         {

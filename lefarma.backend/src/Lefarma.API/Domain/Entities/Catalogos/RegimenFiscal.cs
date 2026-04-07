@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Lefarma.API.Domain.Entities.Catalogos
-{
-    public class RegimenFiscal
+namespace Lefarma.API.Domain.Entities.Catalogos {
+public class RegimenFiscal
     {
         public int IdRegimenFiscal { get; set; }
         public string Clave { get; set; } = null!;

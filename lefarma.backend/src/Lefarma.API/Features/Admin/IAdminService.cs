@@ -1,8 +1,7 @@
-﻿using ErrorOr;
+using ErrorOr;
 using Lefarma.API.Features.Admin.DTOs;
 
 namespace Lefarma.API.Features.Admin;
-
 public interface IAdminService
 {
     // Usuarios

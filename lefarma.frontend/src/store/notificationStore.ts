@@ -1,7 +1,8 @@
-/**
+﻿/**
  * Zustand Store para el manejo de notificaciones
  * Maneja el estado de notificaciones del usuario y la conexión SSE
  */
+
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';

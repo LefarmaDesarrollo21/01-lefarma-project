@@ -1,5 +1,4 @@
 namespace Lefarma.API.Features.Archivos.DTOs;
-
 public record ArchivoListItemResponse(
     int Id,
     string NombreOriginal,

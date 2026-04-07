@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Catalogos.FormasPago
 {
-    public class FormaPagoService : BaseService, IFormaPagoService
+public class FormaPagoService : BaseService, IFormaPagoService
     {
         private readonly IFormaPagoRepository _formaPagoRepository;
         private readonly ILogger<FormaPagoService> _logger;
@@ -40,8 +40,8 @@ namespace Lefarma.API.Features.Catalogos.FormasPago
                 }
 
                 var response = result
-                    .Where(e => !string.IsNullOrWhiteSpace(e.Nombre))
-                    .Select(e => e.ToResponse())
+                    .Where(e => e != null && e.Nombre != null && !string.IsNullOrWhiteSpace(e.Nombre))
+                    .Select(e => e!.ToResponse())
                     .OrderBy(e => e.Nombre)
                     .ToList();
 

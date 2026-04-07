@@ -1,8 +1,9 @@
-import type { SseEventType, SseConnectionState, SseEvent } from '@/types/sse.types';
+﻿import type { SseEventType, SseConnectionState, SseEvent } from '@/types/sse.types';
+
 
 const SSE_URL = import.meta.env.VITE_API_URL 
   ? `${import.meta.env.VITE_API_URL}/auth/sse`
-  : 'http://localhost:5000/api/auth/sse';
+  : 'http://localhost:5174/api/auth/sse';
 
 const MAX_RECONNECT_DELAY = 30000;
 const BASE_RECONNECT_DELAY = 1000;

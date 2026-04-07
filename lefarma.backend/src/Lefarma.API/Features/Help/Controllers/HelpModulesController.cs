@@ -7,7 +7,6 @@ using Lefarma.API.Shared.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Help.Controllers;
-
 [ApiController]
 [Route("api/help/modules")]
 [Authorize]
@@ -53,7 +52,7 @@ public class HelpModulesController : ControllerBase
     [SwaggerOperation(Summary = "Crear módulo de ayuda")]
     [ProducesResponseType(typeof(ApiResponse<HelpModuleDto>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(
-        [FromBody] CreateHelpModuleRequest request,
+         CreateHelpModuleRequest request,
         CancellationToken ct)
     {
         var result = await _service.CreateAsync(request, ct);
@@ -73,7 +72,7 @@ public class HelpModulesController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<HelpModuleDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(
         int id,
-        [FromBody] UpdateHelpModuleRequest request,
+         UpdateHelpModuleRequest request,
         CancellationToken ct)
     {
         if (id != request.Id)

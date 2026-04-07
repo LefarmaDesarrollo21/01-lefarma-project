@@ -3,7 +3,7 @@ using Lefarma.API.Features.Catalogos.Medidas.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.Medidas
 {
-    public class CreateMedidaValidator : AbstractValidator<CreateMedidaRequest>
+public class CreateMedidaValidator : AbstractValidator<CreateMedidaRequest>
     {
         public CreateMedidaValidator()
         {

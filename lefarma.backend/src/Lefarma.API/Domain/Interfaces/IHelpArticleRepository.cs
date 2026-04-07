@@ -1,7 +1,6 @@
 using Lefarma.API.Domain.Entities.Help;
 
 namespace Lefarma.API.Domain.Interfaces;
-
 /// <summary>
 /// Repositorio para operaciones de artículos de ayuda.
 /// </summary>

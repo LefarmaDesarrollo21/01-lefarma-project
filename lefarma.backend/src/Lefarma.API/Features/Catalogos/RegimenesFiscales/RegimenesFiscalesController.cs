@@ -9,11 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Catalogos;
-
 [Route("api/catalogos/[controller]")]
 [ApiController]
 [EndpointGroupName("Catalogos")]
-[HasPermission(Permissions.Catalogos.View)]
+// [HasPermission(Permissions.Catalogos.View)]
 public class RegimenesFiscalesController : ControllerBase
 {
     private readonly IRegimenFiscalService _regimenFiscalService;
@@ -25,8 +24,12 @@ public class RegimenesFiscalesController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todos los regímenes fiscales", Description = "Retorna el catálogo SAT de regímenes fiscales")]
-    public async Task<IActionResult> GetAll([FromQuery] RegimenFiscalRequest query)
+    public async Task<IActionResult> GetAll(RegimenFiscalRequest? query)
     {
+        if (query == null)
+        {
+            query = new RegimenFiscalRequest();
+        }
         var result = await _regimenFiscalService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<RegimenFiscalResponse>>
@@ -40,7 +43,7 @@ public class RegimenesFiscalesController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener régimen fiscal por ID", Description = "Retorna un régimen fiscal específico por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único del régimen fiscal", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único del régimen fiscal", Required = true)] int id)
     {
         var result = await _regimenFiscalService.GetByIdAsync(id);
 
@@ -56,7 +59,7 @@ public class RegimenesFiscalesController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nuevo régimen fiscal", Description = "Crea un régimen fiscal con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos del régimen fiscal a crear", Required = true)] CreateRegimenFiscalRequest request)
+        [SwaggerRequestBody(Description = "Datos del régimen fiscal a crear", Required = true)] CreateRegimenFiscalRequest request)
     {
         var result = await _regimenFiscalService.CreateAsync(request);
 
@@ -75,8 +78,8 @@ public class RegimenesFiscalesController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar régimen fiscal", Description = "Actualiza los datos de un régimen fiscal existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador del régimen fiscal a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados del régimen fiscal", Required = true)] UpdateRegimenFiscalRequest request)
+        [SwaggerParameter(Description = "Identificador del régimen fiscal a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados del régimen fiscal", Required = true)] UpdateRegimenFiscalRequest request)
     {
         var result = await _regimenFiscalService.UpdateAsync(id, request);
 
@@ -92,7 +95,7 @@ public class RegimenesFiscalesController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Eliminar régimen fiscal", Description = "Elimina un régimen fiscal por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador del régimen fiscal a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador del régimen fiscal a eliminar", Required = true)] int id)
     {
         var result = await _regimenFiscalService.DeleteAsync(id);
 

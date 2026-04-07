@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Help;
-
 public class HelpImage
 {
     public int Id { get; set; }

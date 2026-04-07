@@ -1,4 +1,4 @@
-﻿using Lefarma.API.Features.OrdenesCompra.Firmas.DTOs;
+using Lefarma.API.Features.OrdenesCompra.Firmas.DTOs;
 using Lefarma.API.Shared.Authorization;
 using Lefarma.API.Shared.Constants;
 using Lefarma.API.Shared.Extensions;
@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace Lefarma.API.Features.OrdenesCompra.Firmas
 {
-    [Route("api/ordenes")]
+[Route("api/ordenes")]
     [ApiController]
     [EndpointGroupName("OrdenesCompra")]
     //[HasPermission(Permissions.OrdenesCompra.Approve)]
@@ -23,19 +23,19 @@ namespace Lefarma.API.Features.OrdenesCompra.Firmas
 
         [HttpPost("{id}/firmar")]
         [SwaggerOperation(
-            Summary = "Ejecutar acción de firma sobre una orden",
-            Description = "Endpoint genérico. DatosAdicionales varía por paso: " +
+            Summary = "Ejecutar acci�n de firma sobre una orden",
+            Description = "Endpoint gen�rico. DatosAdicionales var�a por paso: " +
                           "Firma3 requiere CentroCosto y CuentaContable. " +
                           "Firma4 acepta RequiereComprobacionPago y RequiereComprobacionGasto.")]
-        public async Task<IActionResult> Firmar(int id, [FromBody] FirmarRequest request)
+        public async Task<IActionResult> Firmar(int id,  FirmarRequest request)
         {
             var result = await _service.FirmarAsync(id, request, GetUserId());
             return result.ToActionResult(this, data => Ok(new ApiResponse<FirmarResponse>
-            { Success = true, Message = data.Mensaje, Data = data }));
+            { Success = true, Message = data?.Mensaje ?? string.Empty, Data = data }));
         }
 
         [HttpGet("{id}/acciones")]
-        [SwaggerOperation(Summary = "Obtener acciones disponibles para una orden según su estado actual")]
+        [SwaggerOperation(Summary = "Obtener acciones disponibles para una orden seg�n su estado actual")]
         public async Task<IActionResult> GetAcciones(int id)
         {
             var result = await _service.GetAccionesAsync(id, GetUserId());

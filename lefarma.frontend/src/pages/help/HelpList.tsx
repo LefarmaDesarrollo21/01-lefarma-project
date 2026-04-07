@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+﻿import { useEffect, useState, useMemo } from 'react';
 import { FilePenLine, Save, FileText, Menu } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { HelpSidebar } from '@/components/help/HelpSidebar';
@@ -18,6 +18,7 @@ import TinyMceViewer from '@/components/help/TinyMceViewer';
 import { useHelpStore } from '@/store/helpStore';
 import { helpService } from '@/services/helpService';
 import type { HelpArticle } from '@/types/help.types';
+
 
 export default function HelpList() {
   usePageTitle('Ayuda', 'Centro de ayuda y soporte');
@@ -120,7 +121,6 @@ export default function HelpList() {
     if (!selectedArticle) return;
     setIsSaving(true);
     try {
-      const { helpService } = await import('@/services/helpService');
       await helpService.update({
         id: selectedArticle.id,
         titulo: selectedArticle.titulo,

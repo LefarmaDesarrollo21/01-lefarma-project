@@ -1,7 +1,8 @@
-/**
+﻿/**
  * AutoVerify - Componente de verificación automática del sistema
  * Se activa con ?autotest=true en la URL
  */
+
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';

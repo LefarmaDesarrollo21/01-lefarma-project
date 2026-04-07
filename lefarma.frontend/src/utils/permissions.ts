@@ -1,4 +1,4 @@
-import type { UserInfo, PermissionInfo } from '@/types/auth.types';
+﻿import type { UserInfo, PermissionInfo } from '@/types/auth.types';
 
 const USER_KEY = 'user';
 

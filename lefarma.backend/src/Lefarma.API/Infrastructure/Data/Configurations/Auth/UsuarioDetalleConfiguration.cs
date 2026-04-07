@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Lefarma.API.Infrastructure.Data.Configurations.Auth;
-
 public class UsuarioDetalleConfiguration : IEntityTypeConfiguration<UsuarioDetalle>
 {
     public void Configure(EntityTypeBuilder<UsuarioDetalle> builder)
@@ -38,9 +37,9 @@ public class UsuarioDetalleConfiguration : IEntityTypeConfiguration<UsuarioDetal
             .HasColumnName("numero_empleado")
             .HasMaxLength(50);
 
-        builder.Property(ud => ud.FirmaDigital)
-            .HasColumnName("firma_digital")
-            .HasColumnType("NVARCHAR(MAX)");
+        builder.Property(ud => ud.FirmaPath)
+            .HasColumnName("firma_path")
+            .HasMaxLength(500);
 
         // Contacto
         builder.Property(ud => ud.TelefonoOficina)

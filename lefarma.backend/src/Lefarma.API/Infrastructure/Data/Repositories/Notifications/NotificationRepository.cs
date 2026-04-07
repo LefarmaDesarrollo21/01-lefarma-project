@@ -4,7 +4,6 @@ using Lefarma.API.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Infrastructure.Data.Repositories.Notifications;
-
 /// <summary>
 /// Repository implementation for notification data access.
 /// Manages persistence of notifications and user notification relationships.

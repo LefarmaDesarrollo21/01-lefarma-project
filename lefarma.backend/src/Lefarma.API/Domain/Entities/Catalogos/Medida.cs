@@ -1,6 +1,5 @@
-namespace Lefarma.API.Domain.Entities.Catalogos
-{
-    public class Medida
+namespace Lefarma.API.Domain.Entities.Catalogos {
+public class Medida
     {
         public int IdMedida { get; set; }
         public string Nombre { get; set; } = null!;

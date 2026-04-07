@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+﻿import { NavLink } from 'react-router-dom';
 import type { ElementType } from 'react';
 import {
   LayoutDashboard,
@@ -23,7 +23,9 @@ import {
   HelpCircle,
   GitBranch,
   ShoppingCart,
+  Receipt,
 } from 'lucide-react';
+
 import {
   Sidebar,
   SidebarContent,
@@ -50,6 +52,7 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import type { PermissionCheckOptions } from '@/utils/permissions';
 import { checkPermission } from '@/utils/permissions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface MenuItemBase {
   title: string;
@@ -69,7 +72,6 @@ interface CollapsibleMenuItem extends MenuItemBase {
 type SidebarMenuItem = MenuItem | CollapsibleMenuItem;
 
 function hasPermission(permission?: PermissionCheckOptions): boolean {
-  console.log('Checking permission for:', permission);
   if (!permission) return true;
   return checkPermission(permission);
 }
@@ -85,7 +87,7 @@ const menuItems: SidebarMenuItem[] = [
     icon: Shield,
     isCollapsible: true,
     items: [
-      { title: 'Usuarios', icon: User, path: '/seguridad/usuarios', permission: { requireAny: ['usuarios.ver_detalle', 'usuarios.manage'] } },
+      // { title: 'Usuarios', icon: User, path: '/seguridad/usuarios', permission: { requireAny: ['usuarios.ver_detalle', 'usuarios.manage'] } },
       { title: 'Roles', icon: Users, path: '/seguridad/roles', permission: { require: 'usuarios.ver_detalle' } },
       { title: 'Permisos', icon: Key, path: '/seguridad/permisos' },
     ],
@@ -101,6 +103,7 @@ const menuItems: SidebarMenuItem[] = [
       { title: 'Gastos', icon: Wallet, path: '/catalogos/gastos' },
       { title: 'Medidas', icon: Ruler, path: '/catalogos/medidas' },
       { title: 'Formas de Pago', icon: CreditCard, path: '/catalogos/formas-pago' },
+      { title: 'Tipos de Impuesto', icon: Receipt, path: '/catalogos/tipos-impuesto' },
       { title: 'Centros de Costo', icon: MapPin, path: '/catalogos/centros-costo' },
       { title: 'Cuentas Contables', icon: FileText, path: '/catalogos/cuentas-contables' },
       { title: 'Estatus de Orden', icon: List, path: '/catalogos/estatus-orden' },
@@ -140,7 +143,7 @@ const menuItems: SidebarMenuItem[] = [
 ];
 
 export function AppSidebar() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, hasFirma } = useAuthStore();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
@@ -280,9 +283,26 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="sm" asChild tooltip="Perfil">
-              <NavLink to="/perfil">
-                <User className="h-4 w-4" />
+            <SidebarMenuButton size="sm" asChild tooltip="Configuración">
+              <NavLink to="/configuracion">
+                <span className="relative">
+                  <User className="h-4 w-4" />
+                  {hasFirma === false && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="text-xs">
+                          <p>Falta subir firma digital</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </span>
                 <span>{user?.nombre || 'Usuario'}</span>
               </NavLink>
             </SidebarMenuButton>

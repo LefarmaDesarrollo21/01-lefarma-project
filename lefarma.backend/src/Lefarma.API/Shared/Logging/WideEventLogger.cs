@@ -1,7 +1,6 @@
 using Serilog;
 
 namespace Lefarma.API.Shared.Logging;
-
 /// <summary>
 /// Helper for creating and emitting Wide Events.
 /// </summary>

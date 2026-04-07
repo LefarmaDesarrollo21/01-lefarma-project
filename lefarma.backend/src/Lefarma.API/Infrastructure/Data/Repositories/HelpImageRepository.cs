@@ -3,7 +3,6 @@ using Lefarma.API.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Infrastructure.Data.Repositories;
-
 /// <summary>
 /// Repositorio para operaciones de imágenes de ayuda.
 /// </summary>

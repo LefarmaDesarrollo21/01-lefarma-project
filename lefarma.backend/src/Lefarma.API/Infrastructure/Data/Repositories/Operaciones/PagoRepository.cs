@@ -2,9 +2,8 @@ using Lefarma.API.Domain.Entities.Operaciones;
 using Lefarma.API.Domain.Interfaces.Operaciones;
 using Microsoft.EntityFrameworkCore;
 
-namespace Lefarma.API.Infrastructure.Data.Repositories.Operaciones
-{
-    public class PagoRepository : BaseRepository<Pago>, IPagoRepository
+namespace Lefarma.API.Infrastructure.Data.Repositories.Operaciones {
+public class PagoRepository : BaseRepository<Pago>, IPagoRepository
     {
         private readonly ApplicationDbContext _context;
 

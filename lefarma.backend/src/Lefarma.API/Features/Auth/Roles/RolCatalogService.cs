@@ -3,7 +3,6 @@ using Lefarma.API.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Features.Auth.Roles;
-
 /// <summary>
 /// Service for Rol catalog operations
 /// </summary>

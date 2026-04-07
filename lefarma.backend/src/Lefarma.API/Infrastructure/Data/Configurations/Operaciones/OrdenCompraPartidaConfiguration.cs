@@ -1,10 +1,9 @@
-﻿using Lefarma.API.Domain.Entities.Operaciones;
+using Lefarma.API.Domain.Entities.Operaciones;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Operaciones
-{
-    public class OrdenCompraPartidaConfiguration : IEntityTypeConfiguration<OrdenCompraPartida>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Operaciones {
+public class OrdenCompraPartidaConfiguration : IEntityTypeConfiguration<OrdenCompraPartida>
     {
         public void Configure(EntityTypeBuilder<OrdenCompraPartida> builder)
         {

@@ -3,9 +3,8 @@ using Lefarma.API.Domain.Interfaces.Catalogos;
 using Lefarma.API.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Lefarma.API.Infrastructure.Data.Repositories.Catalogos
-{
-    public class UnidadMedidaRepository : BaseRepository<UnidadMedida>, IUnidadMedidaRepository
+namespace Lefarma.API.Infrastructure.Data.Repositories.Catalogos {
+public class UnidadMedidaRepository : BaseRepository<UnidadMedida>, IUnidadMedidaRepository
     {
         private readonly ApplicationDbContext _context;
 

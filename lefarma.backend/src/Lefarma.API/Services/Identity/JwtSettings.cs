@@ -1,5 +1,4 @@
 namespace Lefarma.API.Services.Identity;
-
 /// <summary>
 /// Configuration options for JWT token generation and validation.
 /// </summary>

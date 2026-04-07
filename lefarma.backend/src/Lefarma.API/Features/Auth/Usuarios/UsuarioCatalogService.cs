@@ -3,7 +3,6 @@ using Lefarma.API.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Features.Auth.Usuarios;
-
 /// <summary>
 /// Service for Usuario catalog operations
 /// </summary>
@@ -30,7 +29,7 @@ public class UsuarioCatalogService : IUsuarioCatalogService
                 .Select(u => new UsuarioCatalogDto
                 {
                     IdUsuario = u.IdUsuario,
-                    NombreCompleto = u.NombreCompleto,
+                    NombreCompleto = u.NombreCompleto ?? string.Empty,
                     Correo = u.Correo ?? string.Empty
                 })
                 .ToListAsync(ct);

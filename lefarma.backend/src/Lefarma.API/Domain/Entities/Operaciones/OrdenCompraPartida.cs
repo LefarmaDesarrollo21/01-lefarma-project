@@ -1,6 +1,5 @@
-﻿namespace Lefarma.API.Domain.Entities.Operaciones
-{
-    public class OrdenCompraPartida
+namespace Lefarma.API.Domain.Entities.Operaciones {
+public class OrdenCompraPartida
     {
         public int IdPartida { get; set; }
         public int IdOrden { get; set; }

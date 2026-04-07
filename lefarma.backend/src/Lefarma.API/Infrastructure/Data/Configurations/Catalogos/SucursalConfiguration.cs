@@ -1,10 +1,9 @@
-﻿using Lefarma.API.Domain.Entities.Catalogos;
+using Lefarma.API.Domain.Entities.Catalogos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
-    public class SucursalConfiguration : IEntityTypeConfiguration<Sucursal>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+public class SucursalConfiguration : IEntityTypeConfiguration<Sucursal>
     {
         public void Configure(EntityTypeBuilder<Sucursal> builder)
         {

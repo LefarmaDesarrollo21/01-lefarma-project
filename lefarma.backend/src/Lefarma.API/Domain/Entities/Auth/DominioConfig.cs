@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Auth;
-
 public class DominioConfig
 {
     public int Id { get; set; }

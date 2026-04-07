@@ -9,11 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Catalogos;
-
 [Route("api/catalogos/[controller]")]
 [ApiController]
 [EndpointGroupName("Catalogos")]
-[HasPermission(Permissions.Catalogos.View)]
+// [HasPermission(Permissions.Catalogos.View)]
 public class UnidadesMedidaController : ControllerBase
 {
     private readonly IUnidadMedidaService _service;
@@ -25,8 +24,12 @@ public class UnidadesMedidaController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todas las unidades de medida", Description = "Retorna la lista completa de unidades de medida con filtros opcionales")]
-    public async Task<IActionResult> GetAll([FromQuery] UnidadMedidaRequest query)
+    public async Task<IActionResult> GetAll(UnidadMedidaRequest? query)
     {
+        if (query == null)
+        {
+            query = new UnidadMedidaRequest();
+        }
         var result = await _service.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<UnidadMedidaResponse>>
@@ -40,7 +43,7 @@ public class UnidadesMedidaController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener unidad de medida por ID", Description = "Retorna una unidad de medida específica por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único de la unidad de medida", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único de la unidad de medida", Required = true)] int id)
     {
         var result = await _service.GetByIdAsync(id);
 
@@ -56,7 +59,7 @@ public class UnidadesMedidaController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nueva unidad de medida", Description = "Crea una unidad de medida con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos de la unidad de medida a crear", Required = true)] CreateUnidadMedidaRequest request)
+        [SwaggerRequestBody(Description = "Datos de la unidad de medida a crear", Required = true)] CreateUnidadMedidaRequest request)
     {
         var result = await _service.CreateAsync(request);
 
@@ -75,8 +78,8 @@ public class UnidadesMedidaController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar unidad de medida", Description = "Actualiza los datos de una unidad de medida existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la unidad de medida a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados de la unidad de medida", Required = true)] UpdateUnidadMedidaRequest request)
+        [SwaggerParameter(Description = "Identificador de la unidad de medida a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados de la unidad de medida", Required = true)] UpdateUnidadMedidaRequest request)
     {
         var result = await _service.UpdateAsync(id, request);
 
@@ -92,7 +95,7 @@ public class UnidadesMedidaController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Eliminar unidad de medida", Description = "Elimina una unidad de medida por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la unidad de medida a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador de la unidad de medida a eliminar", Required = true)] int id)
     {
         var result = await _service.DeleteAsync(id);
 

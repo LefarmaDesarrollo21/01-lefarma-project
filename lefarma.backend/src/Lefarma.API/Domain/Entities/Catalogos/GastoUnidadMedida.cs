@@ -1,6 +1,5 @@
-namespace Lefarma.API.Domain.Entities.Catalogos
-{
-    public class GastoUnidadMedida
+namespace Lefarma.API.Domain.Entities.Catalogos {
+public class GastoUnidadMedida
     {
         public int IdGasto { get; set; }
         public int IdUnidadMedida { get; set; }

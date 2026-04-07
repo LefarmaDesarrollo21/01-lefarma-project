@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Lefarma.API.Services.Identity;
-
 /// <summary>
 /// Service for LDAP/Active Directory authentication and user management.
 /// Uses System.DirectoryServices.Protocols for cross-platform LDAP support.

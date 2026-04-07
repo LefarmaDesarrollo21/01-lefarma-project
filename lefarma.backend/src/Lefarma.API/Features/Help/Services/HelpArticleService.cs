@@ -6,7 +6,6 @@ using Lefarma.API.Shared.Errors;
 using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Help.Services;
-
 /// <summary>
 /// Servicio de artículos de ayuda
 /// </summary>

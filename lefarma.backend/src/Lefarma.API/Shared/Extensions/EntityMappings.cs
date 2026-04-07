@@ -12,7 +12,7 @@ using Lefarma.API.Features.Catalogos.MediosPago.DTOs;
 
 namespace Lefarma.API.Shared.Extensions
 {
-    /// <summary>
+/// <summary>
     /// Métodos de extensión para mapeo de entidades a DTOs de respuesta.
     /// </summary>
     public static class EntityMappings
@@ -163,7 +163,7 @@ namespace Lefarma.API.Shared.Extensions
             IdCentroCosto = entity.IdCentroCosto,
             Puesto = entity.Puesto,
             NumeroEmpleado = entity.NumeroEmpleado,
-            FirmaDigital = entity.FirmaDigital,
+            FirmaPath = entity.FirmaPath,
             TelefonoOficina = entity.TelefonoOficina,
             Extension = entity.Extension,
             Celular = entity.Celular,

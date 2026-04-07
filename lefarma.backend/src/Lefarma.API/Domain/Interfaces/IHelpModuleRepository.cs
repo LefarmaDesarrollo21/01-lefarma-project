@@ -1,7 +1,6 @@
 using Lefarma.API.Domain.Entities.Help;
 
 namespace Lefarma.API.Domain.Interfaces;
-
 public interface IHelpModuleRepository
 {
     Task<IEnumerable<HelpModule>> GetAllAsync(CancellationToken ct);

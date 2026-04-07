@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Catalogos;
-
 [Route("api/catalogos/[controller]")]
 [ApiController]
 [EndpointGroupName("Catalogos")]
@@ -25,8 +24,12 @@ public class CuentasContablesController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todas las cuentas contables", Description = "Retorna el catálogo contable con filtros opcionales")]
-    public async Task<IActionResult> GetAll([FromQuery] CuentaContableRequest query)
+    public async Task<IActionResult> GetAll(CuentaContableRequest? query)
     {
+        if (query == null)
+        {
+            query = new CuentaContableRequest();
+        }
         var result = await _cuentaContableService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<CuentaContableResponse>>
@@ -40,7 +43,7 @@ public class CuentasContablesController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener cuenta contable por ID", Description = "Retorna una cuenta contable específica por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único de la cuenta contable", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único de la cuenta contable", Required = true)] int id)
     {
         var result = await _cuentaContableService.GetByIdAsync(id);
 
@@ -56,7 +59,7 @@ public class CuentasContablesController : ControllerBase
     //[HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nueva cuenta contable", Description = "Crea una cuenta contable con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos de la cuenta contable a crear", Required = true)] CreateCuentaContableRequest request)
+        [SwaggerRequestBody(Description = "Datos de la cuenta contable a crear", Required = true)] CreateCuentaContableRequest request)
     {
         var result = await _cuentaContableService.CreateAsync(request);
 
@@ -75,8 +78,8 @@ public class CuentasContablesController : ControllerBase
     //[HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar cuenta contable", Description = "Actualiza los datos de una cuenta contable existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la cuenta contable a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados de la cuenta contable", Required = true)] UpdateCuentaContableRequest request)
+        [SwaggerParameter(Description = "Identificador de la cuenta contable a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados de la cuenta contable", Required = true)] UpdateCuentaContableRequest request)
     {
         var result = await _cuentaContableService.UpdateAsync(id, request);
 
@@ -92,7 +95,7 @@ public class CuentasContablesController : ControllerBase
     //[HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Eliminar cuenta contable", Description = "Elimina una cuenta contable por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador de la cuenta contable a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador de la cuenta contable a eliminar", Required = true)] int id)
     {
         var result = await _cuentaContableService.DeleteAsync(id);
 

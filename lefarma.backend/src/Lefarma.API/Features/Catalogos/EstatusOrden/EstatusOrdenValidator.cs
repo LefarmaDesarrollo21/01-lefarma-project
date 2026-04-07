@@ -3,7 +3,7 @@ using Lefarma.API.Features.Catalogos.EstatusOrden.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.EstatusOrden
 {
-    public class EstatusOrdenRequestValidator : AbstractValidator<EstatusOrdenRequest>
+public class EstatusOrdenRequestValidator : AbstractValidator<EstatusOrdenRequest>
     {
         public EstatusOrdenRequestValidator()
         {

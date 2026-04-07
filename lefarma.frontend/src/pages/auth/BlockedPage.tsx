@@ -1,6 +1,7 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShieldAlert, ArrowLeft, LayoutDashboard } from 'lucide-react';
+
 
 export default function BlockedPage() {
   const navigate = useNavigate();

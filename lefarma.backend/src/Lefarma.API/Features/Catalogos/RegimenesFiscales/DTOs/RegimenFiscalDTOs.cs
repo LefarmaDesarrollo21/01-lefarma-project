@@ -1,6 +1,6 @@
 namespace Lefarma.API.Features.Catalogos.RegimenesFiscales.DTOs
 {
-    public class RegimenFiscalResponse
+public class RegimenFiscalResponse
     {
         public int IdRegimenFiscal { get; set; }
         public string Clave { get; set; } = string.Empty;

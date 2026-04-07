@@ -1,6 +1,6 @@
 namespace Lefarma.API.Features.Catalogos.EstatusOrden.DTOs
 {
-    public class EstatusOrdenResponse
+public class EstatusOrdenResponse
     {
         public int IdEstatusOrden { get; set; }
         public string Nombre { get; set; } = string.Empty;

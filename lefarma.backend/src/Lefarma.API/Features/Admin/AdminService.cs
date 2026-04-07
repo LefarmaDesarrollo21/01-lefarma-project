@@ -10,7 +10,6 @@ using Lefarma.API.Shared.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Admin;
-
 public class AdminService : BaseService, IAdminService
 {
     private readonly IAdminRepository _repository;
@@ -180,7 +179,7 @@ public class AdminService : BaseService, IAdminService
                     detalle.IdCentroCosto = request.Detalle.IdCentroCosto;
                     detalle.Puesto = request.Detalle.Puesto;
                     detalle.NumeroEmpleado = request.Detalle.NumeroEmpleado;
-                    detalle.FirmaDigital = request.Detalle.FirmaDigital;
+                    detalle.FirmaPath = request.Detalle.FirmaPath;
                     detalle.TelefonoOficina = request.Detalle.TelefonoOficina;
                     detalle.Extension = request.Detalle.Extension;
                     detalle.Celular = request.Detalle.Celular;
@@ -213,7 +212,7 @@ public class AdminService : BaseService, IAdminService
                     detalle.IdCentroCosto = request.Detalle.IdCentroCosto;
                     detalle.Puesto = request.Detalle.Puesto;
                     detalle.NumeroEmpleado = request.Detalle.NumeroEmpleado;
-                    detalle.FirmaDigital = request.Detalle.FirmaDigital;
+                    detalle.FirmaPath = request.Detalle.FirmaPath;
                     detalle.TelefonoOficina = request.Detalle.TelefonoOficina;
                     detalle.Extension = request.Detalle.Extension;
                     detalle.Celular = request.Detalle.Celular;

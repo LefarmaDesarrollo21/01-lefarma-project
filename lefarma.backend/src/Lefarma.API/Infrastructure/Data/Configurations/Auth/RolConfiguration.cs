@@ -2,9 +2,8 @@ using Lefarma.API.Domain.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Auth
-{
-    public class RolConfiguration : IEntityTypeConfiguration<Rol>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Auth {
+public class RolConfiguration : IEntityTypeConfiguration<Rol>
     {
         public void Configure(EntityTypeBuilder<Rol> builder)
         {

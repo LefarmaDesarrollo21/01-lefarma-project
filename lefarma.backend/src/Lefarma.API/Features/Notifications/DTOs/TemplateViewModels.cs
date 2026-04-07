@@ -1,5 +1,4 @@
 namespace Lefarma.API.Features.Notifications.DTOs;
-
 /// <summary>
 /// View model for notification templates (Razor)
 /// </summary>

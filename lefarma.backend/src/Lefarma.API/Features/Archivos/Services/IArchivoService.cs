@@ -2,7 +2,6 @@ using ErrorOr;
 using Lefarma.API.Features.Archivos.DTOs;
 
 namespace Lefarma.API.Features.Archivos.Services;
-
 public interface IArchivoService
 {
     Task<ErrorOr<ArchivoResponse>> SubirAsync(

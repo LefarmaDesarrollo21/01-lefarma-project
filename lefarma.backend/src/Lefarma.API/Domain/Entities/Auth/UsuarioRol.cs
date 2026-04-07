@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Auth;
-
 public class UsuarioRol
 {
     public int IdUsuarioRol { get; set; }

@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Interfaces;
-
 /// <summary>
 /// Service contract for rendering notification templates.
 /// Templates support variable substitution for personalized content.

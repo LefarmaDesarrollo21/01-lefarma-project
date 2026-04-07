@@ -1,6 +1,5 @@
-﻿namespace Lefarma.API.Domain.Entities.Operaciones
-{
-    public enum EstadoOC
+namespace Lefarma.API.Domain.Entities.Operaciones {
+public enum EstadoOC
     {
         Creada = 1,
         EnRevisionF2 = 2,

@@ -1,4 +1,4 @@
-import { API } from './api';
+﻿import { API } from './api';
 import type { 
   Archivo, 
   ArchivoListItem, 
@@ -6,6 +6,7 @@ import type {
   SubirArchivoParams,
   ReemplazarArchivoParams 
 } from '@/types/archivo.types';
+
 
 const BASE_URL = '/archivos';
 

@@ -1,7 +1,6 @@
 using ErrorOr;
 
 namespace Lefarma.API.Shared.Errors;
-
 public static partial class Errors
 {
     public static class Archivo

@@ -2,9 +2,8 @@ using Lefarma.API.Domain.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Auth
-{
-    public class SesionConfiguration : IEntityTypeConfiguration<Sesion>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Auth {
+public class SesionConfiguration : IEntityTypeConfiguration<Sesion>
     {
         public void Configure(EntityTypeBuilder<Sesion> builder)
         {

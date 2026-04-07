@@ -7,7 +7,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.SystemConfig
 {
-    [Route("api/sistema/[controller]")]
+[Route("api/sistema/[controller]")]
     [ApiController]
     [EndpointGroupName("Sistema")]
     public class ConfigController : ControllerBase

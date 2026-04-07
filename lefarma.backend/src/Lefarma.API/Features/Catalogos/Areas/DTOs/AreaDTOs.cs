@@ -1,6 +1,6 @@
 namespace Lefarma.API.Features.Catalogos.Areas.DTOs
 {
-    public class AreaResponse
+public class AreaResponse
     {
         public int IdArea { get; set; }
         public int IdEmpresa { get; set; }

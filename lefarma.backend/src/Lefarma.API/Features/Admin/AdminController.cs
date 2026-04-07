@@ -1,4 +1,4 @@
-﻿using Lefarma.API.Features.Admin.DTOs;
+using Lefarma.API.Features.Admin.DTOs;
 using Lefarma.API.Shared.Extensions;
 using Lefarma.API.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Admin;
-
 [Route("api/[controller]")]
 [ApiController]
 [EndpointGroupName("Admin")]
@@ -47,7 +46,7 @@ public class AdminController : ControllerBase
 
     //[HttpPost("usuarios")]
     //[SwaggerOperation(Summary = "Crear usuario")]
-    //public async Task<IActionResult> CreateUsuario([FromBody] CreateUsuarioRequest request)
+    //public async Task<IActionResult> CreateUsuario(CreateUsuarioRequest request)
     //{
     //    var result = await _adminService.CreateUsuarioAsync(request);
     //    return result.ToActionResult(this, data => CreatedAtAction(
@@ -62,7 +61,7 @@ public class AdminController : ControllerBase
 
     [HttpPut("usuarios/{id}")]
     [SwaggerOperation(Summary = "Actualizar usuario")]
-    public async Task<IActionResult> UpdateUsuario(int id, [FromBody] UpdateUsuarioRequest request)
+    public async Task<IActionResult> UpdateUsuario(int id, UpdateUsuarioRequest request)
     {
         var result = await _adminService.UpdateUsuarioAsync(id, request);
         return result.ToActionResult(this, data => Ok(new ApiResponse<UsuarioResponse>
@@ -114,7 +113,7 @@ public class AdminController : ControllerBase
 
     [HttpPost("roles")]
     [SwaggerOperation(Summary = "Crear rol")]
-    public async Task<IActionResult> CreateRol([FromBody] CreateRolRequest request)
+    public async Task<IActionResult> CreateRol(CreateRolRequest request)
     {
         var result = await _adminService.CreateRolAsync(request);
         return result.ToActionResult(this, data => CreatedAtAction(
@@ -129,7 +128,7 @@ public class AdminController : ControllerBase
 
     [HttpPut("roles/{id}")]
     [SwaggerOperation(Summary = "Actualizar rol")]
-    public async Task<IActionResult> UpdateRol(int id, [FromBody] UpdateRolRequest request)
+    public async Task<IActionResult> UpdateRol(int id, UpdateRolRequest request)
     {
         var result = await _adminService.UpdateRolAsync(id, request);
         return result.ToActionResult(this, data => Ok(new ApiResponse<RolResponse>
@@ -141,7 +140,7 @@ public class AdminController : ControllerBase
 
     [HttpPut("roles/{id}/usuarios")]
     [SwaggerOperation(Summary = "Actualizar usuarios de un rol")]
-    public async Task<IActionResult> UpdateRolUsuarios(int id, [FromBody] AsignarUsuariosRequest request)
+    public async Task<IActionResult> UpdateRolUsuarios(int id, AsignarUsuariosRequest request)
     {
         var result = await _adminService.UpdateRolUsuariosAsync(id, request);
         return result.ToActionResult(this, data => Ok(new ApiResponse<bool>
@@ -193,7 +192,7 @@ public class AdminController : ControllerBase
 
     [HttpPost("permisos")]
     [SwaggerOperation(Summary = "Crear permiso")]
-    public async Task<IActionResult> CreatePermiso([FromBody] CreatePermisoRequest request)
+    public async Task<IActionResult> CreatePermiso(CreatePermisoRequest request)
     {
         var result = await _adminService.CreatePermisoAsync(request);
         return result.ToActionResult(this, data => CreatedAtAction(
@@ -208,7 +207,7 @@ public class AdminController : ControllerBase
 
     [HttpPut("permisos/{id}")]
     [SwaggerOperation(Summary = "Actualizar permiso")]
-    public async Task<IActionResult> UpdatePermiso(int id, [FromBody] UpdatePermisoRequest request)
+    public async Task<IActionResult> UpdatePermiso(int id, UpdatePermisoRequest request)
     {
         var result = await _adminService.UpdatePermisoAsync(id, request);
         return result.ToActionResult(this, data => Ok(new ApiResponse<PermisoResponse>
@@ -244,7 +243,7 @@ public class AdminController : ControllerBase
 
     [HttpPut("permisos/{id}/roles")]
     [SwaggerOperation(Summary = "Actualizar roles de un permiso")]
-    public async Task<IActionResult> UpdatePermisoRoles(int id, [FromBody] AsignarRolesAPermisoRequest request)
+    public async Task<IActionResult> UpdatePermisoRoles(int id, AsignarRolesAPermisoRequest request)
     {
         var result = await _adminService.UpdatePermisoRolesAsync(id, request);
         return result.ToActionResult(this, data => Ok(new ApiResponse<bool>
@@ -256,7 +255,7 @@ public class AdminController : ControllerBase
 
     [HttpPut("permisos/{id}/usuarios")]
     [SwaggerOperation(Summary = "Actualizar usuarios de un permiso")]
-    public async Task<IActionResult> UpdatePermisoUsuarios(int id, [FromBody] AsignarUsuariosAPermisoRequest request)
+    public async Task<IActionResult> UpdatePermisoUsuarios(int id, AsignarUsuariosAPermisoRequest request)
     {
         var result = await _adminService.UpdatePermisoUsuariosAsync(id, request);
         return result.ToActionResult(this, data => Ok(new ApiResponse<bool>
@@ -272,7 +271,7 @@ public class AdminController : ControllerBase
 
     //[HttpPost("usuarios/{usuarioId}/roles")]
     //[SwaggerOperation(Summary = "Asignar roles a usuario")]
-    //public async Task<IActionResult> AsignarRolesAUsuario(int usuarioId, [FromBody] AsignarRolesRequest request)
+    //public async Task<IActionResult> AsignarRolesAUsuario(int usuarioId, AsignarRolesRequest request)
     //{
     //    var result = await _adminService.AsignarRolesAUsuarioAsync(usuarioId, request.RolesIds);
     //    return result.ToActionResult(this, data => Ok(new ApiResponse<bool>
@@ -284,7 +283,7 @@ public class AdminController : ControllerBase
 
     //[HttpPost("roles/{rolId}/permisos")]
     //[SwaggerOperation(Summary = "Asignar permisos a rol")]
-    //public async Task<IActionResult> AsignarPermisosARol(int rolId, [FromBody] AsignarPermisosRequest request)
+    //public async Task<IActionResult> AsignarPermisosARol(int rolId, AsignarPermisosRequest request)
     //{
     //    var result = await _adminService.AsignarPermisosARolAsync(rolId, request.PermisosIds);
     //    return result.ToActionResult(this, data => Ok(new ApiResponse<bool>

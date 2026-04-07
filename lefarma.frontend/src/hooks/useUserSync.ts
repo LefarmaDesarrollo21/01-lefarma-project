@@ -1,7 +1,8 @@
-import { useEffect, useRef, useCallback } from 'react';
+﻿import { useEffect, useRef, useCallback } from 'react';
 import { sseService } from '@/services/sseService';
 import { useAuthStore } from '@/store/authStore';
 import type { SseUserUpdatedEvent, SseConnectionState } from '@/types/sse.types';
+
 
 export interface UseUserSyncOptions {
   onUserUpdate?: (event: SseUserUpdatedEvent) => void;

@@ -1,7 +1,6 @@
 using Lefarma.API.Domain.Entities.Notifications;
 
 namespace Lefarma.API.Domain.Interfaces;
-
 /// <summary>
 /// Repository interface for notification data access.
 /// Manages persistence of notifications and user notification relationships.

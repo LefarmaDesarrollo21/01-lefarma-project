@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Lefarma.API.Infrastructure.Data.Configurations.Help;
-
 public class HelpArticleConfiguration : IEntityTypeConfiguration<HelpArticle>
 {
     public void Configure(EntityTypeBuilder<HelpArticle> builder)

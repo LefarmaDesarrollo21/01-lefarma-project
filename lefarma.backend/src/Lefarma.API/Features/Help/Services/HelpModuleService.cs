@@ -6,7 +6,6 @@ using Lefarma.API.Shared.Errors;
 using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Help.Services;
-
 public interface IHelpModuleService
 {
     Task<ErrorOr<IEnumerable<HelpModuleDto>>> GetAllAsync(CancellationToken ct);

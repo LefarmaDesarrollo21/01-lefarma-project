@@ -2,9 +2,8 @@ using Lefarma.API.Domain.Entities.Catalogos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
-    public class MedidaConfiguration : IEntityTypeConfiguration<Medida>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+public class MedidaConfiguration : IEntityTypeConfiguration<Medida>
     {
         public void Configure(EntityTypeBuilder<Medida> builder)
         {

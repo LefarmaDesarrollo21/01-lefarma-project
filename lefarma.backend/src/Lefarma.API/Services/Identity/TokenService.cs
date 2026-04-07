@@ -12,7 +12,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Lefarma.API.Services.Identity;
-
 /// <summary>
 /// Service for JWT token generation, validation, and refresh token management.
 /// </summary>

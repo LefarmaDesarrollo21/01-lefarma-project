@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace Lefarma.API.Features.Catalogos.Gastos
 {
-    public class GastoService : BaseService, IGastoService
+public class GastoService : BaseService, IGastoService
     {
         private readonly IGastoRepository _gastoRepository;
         private readonly ILogger<GastoService> _logger;
@@ -113,7 +113,7 @@ namespace Lefarma.API.Features.Catalogos.Gastos
                 if (existeConcepto)
                 {
                     EnrichWideEvent(action: "Create", nombre: request.Concepto, duplicate: true);
-                    return CommonErrors.AlreadyExists("gasto", "concepto", request.Concepto);
+                    return CommonErrors.AlreadyExists("gasto", "concepto", request.Concepto!);
                 }
 
                 var gasto = new Gasto
@@ -171,7 +171,7 @@ namespace Lefarma.API.Features.Catalogos.Gastos
                 if (existeConcepto)
                 {
                     EnrichWideEvent(action: "Update", entityId: id, nombre: request.Concepto, duplicate: true);
-                    return CommonErrors.AlreadyExists("gasto", "concepto", request.Concepto);
+                    return CommonErrors.AlreadyExists("gasto", "concepto", request.Concepto!);
                 }
 
                 gasto.Nombre = request.Nombre;

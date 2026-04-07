@@ -1,6 +1,8 @@
-import { usePageTitle } from '@/hooks/usePageTitle';
+﻿import { usePageTitle } from '@/hooks/usePageTitle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, Shield, Package, BarChart3, TrendingUp } from 'lucide-react';
+// import { PermissionGuard } from '@/components/permissions/PermissionGuard';
+
 
 export default function Dashboard() {
   usePageTitle('Dashboard', 'Panel de control');
@@ -75,6 +77,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
         <Card>
+          {/* <PermissionGuard require="actividad.ver"> */}
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
@@ -82,6 +85,7 @@ export default function Dashboard() {
             </CardTitle>
             <CardDescription>Últimas acciones en el sistema</CardDescription>
           </CardHeader>
+            {/* </PermissionGuard> */}
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">

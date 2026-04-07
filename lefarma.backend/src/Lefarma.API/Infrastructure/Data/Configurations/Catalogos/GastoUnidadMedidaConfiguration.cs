@@ -2,9 +2,8 @@ using Lefarma.API.Domain.Entities.Catalogos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
-    public class GastoUnidadMedidaConfiguration : IEntityTypeConfiguration<GastoUnidadMedida>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+public class GastoUnidadMedidaConfiguration : IEntityTypeConfiguration<GastoUnidadMedida>
     {
         public void Configure(EntityTypeBuilder<GastoUnidadMedida> builder)
         {

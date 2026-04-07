@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Lefarma.API.Infrastructure.Data.Configurations.Logging;
-
 public class ErrorLogConfiguration : IEntityTypeConfiguration<ErrorLog>
 {
     public void Configure(EntityTypeBuilder<ErrorLog> builder)

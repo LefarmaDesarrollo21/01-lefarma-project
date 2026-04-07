@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Auth;
-
 public class Permiso
 {
     public int IdPermiso { get; set; }

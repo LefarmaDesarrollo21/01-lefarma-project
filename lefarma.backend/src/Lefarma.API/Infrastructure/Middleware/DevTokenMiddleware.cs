@@ -6,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Infrastructure.Middleware;
-
 public sealed class DevTokenMiddleware
 {
     private const string DevTokenHeader = "X-Dev-Token";

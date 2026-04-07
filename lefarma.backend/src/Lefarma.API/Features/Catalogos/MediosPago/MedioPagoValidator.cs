@@ -3,7 +3,7 @@ using Lefarma.API.Features.Catalogos.MediosPago.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.MediosPago
 {
-    public class CreateMedioPagoRequestValidator : AbstractValidator<CreateMedioPagoRequest>
+public class CreateMedioPagoRequestValidator : AbstractValidator<CreateMedioPagoRequest>
     {
         public CreateMedioPagoRequestValidator()
         {

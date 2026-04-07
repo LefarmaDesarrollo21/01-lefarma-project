@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Auth.Usuarios;
-
 /// <summary>
 /// Controller for Usuario catalog operations
 /// </summary>

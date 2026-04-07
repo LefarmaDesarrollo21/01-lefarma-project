@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Lefarma.API.Features.OrdenesCompra.Firmas.Handlers
 {
-    public class ComprobacionHandler : IStepHandler
+public class ComprobacionHandler : IStepHandler
     {
         public string HandlerKey => "ComprobacionHandler";
         public Task<string?> ValidarAsync(OrdenCompra orden, Dictionary<string, object>? datos)

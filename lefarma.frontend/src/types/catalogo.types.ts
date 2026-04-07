@@ -1,4 +1,5 @@
-// ─── Empresa ─────────────────────────────────────────────────────────────────
+﻿// ─── Empresa ─────────────────────────────────────────────────────────────────
+
 
 export interface Empresa {
   idEmpresa: number;
@@ -98,6 +99,19 @@ export interface Medida {
   fechaCreacion: string;
   fechaModificacion?: string;
   unidadesMedida?: UnidadMedida[];
+}
+
+// ─── Tipo de Impuesto ─────────────────────────────────────────────────────────
+
+export interface TipoImpuesto {
+  idTipoImpuesto: number;
+  nombre: string;
+  clave: string;
+  tasa: number;
+  descripcion?: string;
+  activo: boolean;
+  fechaCreacion: string;
+  fechaModificacion?: string;
 }
 
 // ─── Gasto ────────────────────────────────────────────────────────────────────

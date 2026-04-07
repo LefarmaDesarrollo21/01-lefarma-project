@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Lefarma.API.Infrastructure.Data.Configurations.Archivos;
-
 public class ArchivoConfiguration : IEntityTypeConfiguration<Archivo>
 {
     public void Configure(EntityTypeBuilder<Archivo> builder)

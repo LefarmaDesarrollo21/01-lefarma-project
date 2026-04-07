@@ -1,3 +1,4 @@
+﻿
 export interface Archivo {
   id: number;
   entidadTipo: string;

@@ -1,7 +1,6 @@
 using Lefarma.API.Features.Auth.Usuarios.DTOs;
 
 namespace Lefarma.API.Features.Auth.Usuarios;
-
 /// <summary>
 /// Service interface for Usuario catalog operations
 /// </summary>

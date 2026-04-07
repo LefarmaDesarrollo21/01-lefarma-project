@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Logging;
-
 /// <summary>
 /// Registro de errores en base de datos para análisis y debugging
 /// </summary>

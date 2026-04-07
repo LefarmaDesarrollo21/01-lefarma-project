@@ -11,7 +11,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Catalogos
 {
-    [Route("api/catalogos/[controller]")]
+[Route("api/catalogos/[controller]")]
     [ApiController]
     [EndpointGroupName("Catalogos")]
 //    [HasPermission(Permissions.Catalogos.View)]
@@ -41,7 +41,7 @@ namespace Lefarma.API.Features.Catalogos
         [HttpGet("{id}")]
         [SwaggerOperation(Summary = "Obtener forma de pago por ID", Description = "Retorna una forma de pago específica por su identificador")]
         public async Task<IActionResult> GetById(
-            [FromRoute][SwaggerParameter(Description = "Identificador único de la forma de pago", Required = true)] int id)
+            [SwaggerParameter(Description = "Identificador único de la forma de pago", Required = true)] int id)
         {
             var result = await _formaPagoService.GetByIdAsync(id);
 
@@ -57,7 +57,7 @@ namespace Lefarma.API.Features.Catalogos
     //    [HasPermission(Permissions.Catalogos.Manage)]
         [SwaggerOperation(Summary = "Crear nueva forma de pago", Description = "Crea una forma de pago con los datos proporcionados")]
         public async Task<IActionResult> Create(
-            [FromBody][SwaggerRequestBody(Description = "Datos de la forma de pago a crear", Required = true)] CreateFormaPagoRequest request)
+            [SwaggerRequestBody(Description = "Datos de la forma de pago a crear", Required = true)] CreateFormaPagoRequest request)
         {
             var result = await _formaPagoService.CreateAsync(request);
 
@@ -76,8 +76,8 @@ namespace Lefarma.API.Features.Catalogos
     //    [HasPermission(Permissions.Catalogos.Manage)]
         [SwaggerOperation(Summary = "Actualizar forma de pago", Description = "Actualiza los datos de una forma de pago existente")]
         public async Task<IActionResult> Update(
-            [FromRoute][SwaggerParameter(Description = "Identificador de la forma de pago a actualizar", Required = true)] int id,
-            [FromBody][SwaggerRequestBody(Description = "Datos actualizados de la forma de pago", Required = true)] UpdateFormaPagoRequest request)
+            [SwaggerParameter(Description = "Identificador de la forma de pago a actualizar", Required = true)] int id,
+            [SwaggerRequestBody(Description = "Datos actualizados de la forma de pago", Required = true)] UpdateFormaPagoRequest request)
         {
             var result = await _formaPagoService.UpdateAsync(id, request);
 
@@ -93,7 +93,7 @@ namespace Lefarma.API.Features.Catalogos
     //    [HasPermission(Permissions.Catalogos.Manage)]
         [SwaggerOperation(Summary = "Eliminar forma de pago", Description = "Elimina una forma de pago por su identificador")]
         public async Task<IActionResult> Delete(
-            [FromRoute][SwaggerParameter(Description = "Identificador de la forma de pago a eliminar", Required = true)] int id)
+            [SwaggerParameter(Description = "Identificador de la forma de pago a eliminar", Required = true)] int id)
         {
             var result = await _formaPagoService.DeleteAsync(id);
 

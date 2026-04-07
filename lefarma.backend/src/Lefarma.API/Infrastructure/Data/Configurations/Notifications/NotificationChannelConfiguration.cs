@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Lefarma.API.Infrastructure.Data.Configurations.Notifications;
-
 public class NotificationChannelConfiguration : IEntityTypeConfiguration<NotificationChannel>
 {
     public void Configure(EntityTypeBuilder<NotificationChannel> builder)

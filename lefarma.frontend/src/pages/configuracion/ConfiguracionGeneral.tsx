@@ -1,65 +1,86 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, User, Server } from 'lucide-react';
+﻿import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { User, Palette, Server, type LucideIcon } from 'lucide-react';
 import { UIConfig } from './UIConfig';
 import { PerfilConfig } from './PerfilConfig';
 import { SistemaConfig } from './SistemaConfig';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { cn } from '@/lib/utils';
+
+
+interface TabItem {
+  value: string;
+  label: string;
+  icon: LucideIcon;
+  description: string;
+}
+
+const tabs: TabItem[] = [
+  {
+    value: 'perfil',
+    label: 'Mi Perfil',
+    icon: User,
+    description: 'Actualiza tu información personal y configura tus preferencias de notificación',
+  },
+  {
+    value: 'ui',
+    label: 'Interfaz',
+    icon: Palette,
+    description: 'Personaliza el tema visual de la aplicación',
+  },
+  {
+    value: 'sistema',
+    label: 'Sistema',
+    icon: Server,
+    description: 'Información técnica y variables de entorno globales',
+  },
+];
 
 export default function ConfiguracionGeneral() {
   usePageTitle('Configuración', 'Personaliza tu experiencia y configura el sistema');
+  const [activeTab, setActiveTab] = useState('perfil');
+
+  const activeItem = tabs.find((t) => t.value === activeTab)!;
 
   return (
-    <div className="space-y-6">
-      {/* Tabs */}
-      <Tabs defaultValue="ui" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
-          <TabsTrigger value="ui" className="gap-2">
-            <Palette className="h-4 w-4" />
-            <span className="hidden sm:inline">Interfaz</span>
-          </TabsTrigger>
-          <TabsTrigger value="perfil" className="gap-2">
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Mi Perfil</span>
-          </TabsTrigger>
-          <TabsTrigger value="sistema" className="gap-2">
-            <Server className="h-4 w-4" />
-            <span className="hidden sm:inline">Sistema</span>
-          </TabsTrigger>
-        </TabsList>
+    <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+      {/* Sidebar */}
+      <Card className="h-fit">
+        <CardContent className="p-2">
+          <nav className="flex flex-col gap-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => setActiveTab(tab.value)}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+        </CardContent>
+      </Card>
 
-        {/* UI Tab */}
-        <TabsContent value="ui" className="space-y-6">
-          <div className="border-l-4 border-primary pl-4 py-2">
-            <h2 className="text-xl font-semibold">Apariencia</h2>
-            <p className="text-muted-foreground text-sm">
-              Personaliza el tema visual de la aplicación
-            </p>
+      {/* Content */}
+      <Card>
+        <CardContent className="p-6">
+          <div>
+            {activeTab === 'perfil' && <PerfilConfig />}
+            {activeTab === 'ui' && <UIConfig />}
+            {activeTab === 'sistema' && <SistemaConfig />}
           </div>
-          <UIConfig />
-        </TabsContent>
-
-        {/* Perfil Tab */}
-        <TabsContent value="perfil" className="space-y-6">
-          <div className="border-l-4 border-primary pl-4 py-2">
-            <h2 className="text-xl font-semibold">Mi Perfil</h2>
-            <p className="text-muted-foreground text-sm">
-              Actualiza tu información personal y configura tus preferencias de notificación
-            </p>
-          </div>
-          <PerfilConfig />
-        </TabsContent>
-
-        {/* Sistema Tab */}
-        <TabsContent value="sistema" className="space-y-6">
-          <div className="border-l-4 border-primary pl-4 py-2">
-            <h2 className="text-xl font-semibold">Configuración del Sistema</h2>
-            <p className="text-muted-foreground text-sm">
-              Información técnica y variables de entorno globales
-            </p>
-          </div>
-          <SistemaConfig />
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }

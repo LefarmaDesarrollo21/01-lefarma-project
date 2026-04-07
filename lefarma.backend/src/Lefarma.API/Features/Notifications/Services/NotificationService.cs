@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lefarma.API.Features.Notifications.Services;
-
 /// <summary>
 /// Main service for orchestrating multi-channel notifications.
 /// Coordinates template rendering, channel delivery, and persistence.
@@ -446,7 +445,7 @@ public class NotificationService : INotificationService
                 .Distinct()
                 .ToListAsync(ct);
 
-            emails.AddRange(users);
+            emails.AddRange(users!);
             _logger.LogDebug("Resolved {UserCount} users to {EmailCount} emails", userIds.Count, users.Count);
         }
 

@@ -12,7 +12,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Auth;
-
 /// <summary>
 /// Service for authentication operations including two-step login flow.
 /// </summary>

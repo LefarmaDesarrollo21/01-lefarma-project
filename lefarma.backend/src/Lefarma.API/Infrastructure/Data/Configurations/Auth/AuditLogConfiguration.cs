@@ -2,9 +2,8 @@ using Lefarma.API.Domain.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Auth
-{
-    public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Auth {
+public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
     {
         public void Configure(EntityTypeBuilder<AuditLog> builder)
         {

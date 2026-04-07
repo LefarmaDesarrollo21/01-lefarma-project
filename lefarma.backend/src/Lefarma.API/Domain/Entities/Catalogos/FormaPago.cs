@@ -1,6 +1,5 @@
-namespace Lefarma.API.Domain.Entities.Catalogos
-{
-    public class FormaPago
+namespace Lefarma.API.Domain.Entities.Catalogos {
+public class FormaPago
     {
         public int IdFormaPago { get; set; }
         public string Nombre { get; set; } = null!;

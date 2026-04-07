@@ -2,9 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Lefarma.API.Domain.Entities.Catalogos;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
-    public class BancoConfiguration : IEntityTypeConfiguration<Banco>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+public class BancoConfiguration : IEntityTypeConfiguration<Banco>
     {
         public void Configure(EntityTypeBuilder<Banco> builder)
         {

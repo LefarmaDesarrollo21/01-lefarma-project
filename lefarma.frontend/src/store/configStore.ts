@@ -1,12 +1,13 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ConfigState, UIConfig, PerfilConfig, SistemaInfo, ConfiguracionGlobal } from '@/types/config.types';
 import type { UIPresetId, VisualPreferences, ComponentPreferences } from '@/types/config.types';
 import { UI_PRESETS } from '@/constants/uiPresets';
 import { useAuthStore } from './authStore';
 
+
 const DEFAULT_UI_CONFIG: UIConfig = {
-  tema: 'system',
+  tema: 'light',
   presetId: 'estandar', // NEW
   visual: { // NEW
     densidad: 'comodo',
@@ -243,7 +244,7 @@ export const useConfigStore = create<ConfigState>()(
         const defaultPreset = UI_PRESETS.estandar;
         set({
           ui: {
-            tema: 'system',
+            tema: 'light',
             presetId: 'estandar',
             visual: defaultPreset.config.visual,
             componentes: defaultPreset.config.componentes,

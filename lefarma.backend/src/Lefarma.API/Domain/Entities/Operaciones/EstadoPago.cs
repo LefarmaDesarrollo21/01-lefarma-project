@@ -1,6 +1,5 @@
-namespace Lefarma.API.Domain.Entities.Operaciones
-{
-    public enum EstadoPago
+namespace Lefarma.API.Domain.Entities.Operaciones {
+public enum EstadoPago
     {
         Pendiente = 0,
         Aplicado = 1,

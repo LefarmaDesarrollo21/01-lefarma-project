@@ -1,10 +1,9 @@
-﻿using Lefarma.API.Domain.Entities.Catalogos;
+using Lefarma.API.Domain.Entities.Catalogos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
-    public class EmpresaConfiguration : IEntityTypeConfiguration<Empresa>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+public class EmpresaConfiguration : IEntityTypeConfiguration<Empresa>
     {
         public void Configure(EntityTypeBuilder<Empresa> builder)
         {

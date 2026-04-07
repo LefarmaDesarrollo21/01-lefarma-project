@@ -1,7 +1,8 @@
-/**
+﻿/**
  * Hook personalizado para la conexión SSE de notificaciones
  * Maneja la recepción de notificaciones en tiempo real
  */
+
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useNotificationStore } from '@/store/notificationStore';
@@ -9,7 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 import type { SseEvent, UserNotification } from '@/types/notification.types';
 
 const SSE_NOTIFICATIONS_URL = (() => {
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5174/api';
   // Remover barra final si existe para evitar doble slash
   const cleanUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   // Agregar /api si no está presente

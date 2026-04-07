@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace Lefarma.API.Features.Archivos.DTOs;
-
 public record SubirArchivoRequest
 {
     [Required]

@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Notifications;
-
 public class NotificationChannel
 {
     public int Id { get; set; }

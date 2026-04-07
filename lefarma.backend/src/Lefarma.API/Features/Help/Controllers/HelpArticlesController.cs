@@ -7,13 +7,12 @@ using Lefarma.API.Shared.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Help.Controllers;
-
 /// <summary>
 /// Controlador API para gestionar artículos de ayuda
 /// </summary>
 [ApiController]
 [Route("api/help/articles")]
-[Authorize]
+// [Authorize]
 public class HelpArticlesController : ControllerBase
 {
     private readonly IHelpArticleService _helpArticleService;
@@ -58,7 +57,7 @@ public class HelpArticlesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único del artículo de ayuda", Required = true)] int id,
+        [SwaggerParameter(Description = "Identificador único del artículo de ayuda", Required = true)] int id,
         CancellationToken ct)
     {
         var result = await _helpArticleService.GetByIdAsync(id, ct);
@@ -83,7 +82,7 @@ public class HelpArticlesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetByModule(
-        [FromRoute][SwaggerParameter(Description = "Nombre del módulo (ej: Catalogos, Auth, Notificaciones)", Required = true)] string modulo,
+        [SwaggerParameter(Description = "Nombre del módulo (ej: Catalogos, Auth, Notificaciones)", Required = true)] string modulo,
         CancellationToken ct)
     {
         var result = await _helpArticleService.GetByModuleAsync(modulo, ct);
@@ -108,7 +107,7 @@ public class HelpArticlesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetByType(
-        [FromRoute][SwaggerParameter(Description = "Tipo de artículo (usuario, desarrollador, ambos)", Required = true)] string tipo,
+        [SwaggerParameter(Description = "Tipo de artículo (usuario, desarrollador, ambos)", Required = true)] string tipo,
         CancellationToken ct)
     {
         var result = await _helpArticleService.GetByTypeAsync(tipo, ct);
@@ -117,6 +116,33 @@ public class HelpArticlesController : ControllerBase
         {
             Success = true,
             Message = $"Artículos de ayuda tipo {tipo} obtenidos exitosamente.",
+            Data = data
+        }));
+    }
+
+    /// <summary>
+    /// Obtiene artículos de ayuda para usuarios sin autenticación (público)
+    /// </summary>
+    /// <param name="modulo">Nombre del módulo (opcional)</param>
+    /// <param name="ct">Token de cancelación</param>
+    /// <returns>Lista de artículos de ayuda para usuarios</returns>
+    [HttpGet("public")]
+    [AllowAnonymous]
+    [SwaggerOperation(Summary = "Obtener artículos públicos para usuarios", Description = "Retorna artículos de ayuda públicos con tipo 'usuario' o 'ambos', sin requerir autenticación")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<HelpArticleDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetPublic(
+        [SwaggerParameter(Description = "Nombre del módulo para filtrar (ej: Catalogos, Auth, Notificaciones)")] string? modulo,
+        CancellationToken ct)
+    {
+        var result = await _helpArticleService.GetForUserAsync(modulo, ct);
+
+        return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<HelpArticleDto>>
+        {
+            Success = true,
+            Message = modulo != null
+                ? $"Artículos de ayuda públicos del módulo {modulo} obtenidos exitosamente."
+                : "Artículos de ayuda públicos obtenidos exitosamente.",
             Data = data
         }));
     }
@@ -133,7 +159,7 @@ public class HelpArticlesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetForUser(
-        [FromQuery][SwaggerParameter(Description = "Nombre del módulo para filtrar (ej: Catalogos, Auth, Notificaciones)")] string? modulo,
+        [SwaggerParameter(Description = "Nombre del módulo para filtrar (ej: Catalogos, Auth, Notificaciones)")] string? modulo,
         CancellationToken ct)
     {
         var result = await _helpArticleService.GetForUserAsync(modulo, ct);
@@ -162,7 +188,7 @@ public class HelpArticlesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos del artículo de ayuda a crear", Required = true)] CreateHelpArticleRequest request,
+        [SwaggerRequestBody(Description = "Datos del artículo de ayuda a crear", Required = true)] CreateHelpArticleRequest request,
         CancellationToken ct)
     {
         var username = User.Identity?.Name ?? "unknown";
@@ -195,8 +221,8 @@ public class HelpArticlesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador del artículo a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados del artículo de ayuda", Required = true)] UpdateHelpArticleRequest request,
+        [SwaggerParameter(Description = "Identificador del artículo a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados del artículo de ayuda", Required = true)] UpdateHelpArticleRequest request,
         CancellationToken ct)
     {
         if (id != request.Id)
@@ -234,7 +260,7 @@ public class HelpArticlesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador del artículo a eliminar", Required = true)] int id,
+        [SwaggerParameter(Description = "Identificador del artículo a eliminar", Required = true)] int id,
         CancellationToken ct)
     {
         var result = await _helpArticleService.DeleteAsync(id, ct);

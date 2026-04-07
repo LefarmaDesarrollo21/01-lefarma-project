@@ -1,3 +1,4 @@
+﻿
 interface HtmlViewerProps {
   contenido: string;
   className?: string;

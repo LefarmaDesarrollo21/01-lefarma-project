@@ -1,5 +1,4 @@
 namespace Lefarma.API.Services.Identity;
-
 /// <summary>
 /// Configuration options for LDAP/Active Directory connections.
 /// </summary>

@@ -1,5 +1,4 @@
 namespace Lefarma.API.Features.Auth.Usuarios.DTOs;
-
 /// <summary>
 /// DTO for Usuario catalog (simplified for dropdown/selection)
 /// </summary>

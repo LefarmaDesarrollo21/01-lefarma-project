@@ -6,7 +6,6 @@ using Lefarma.API.Features.Notifications.DTOs;
 using Lefarma.API.Features.Auth;
 
 namespace Lefarma.API.Features.Notifications.Controllers;
-
 /// <summary>
 /// API controller for managing notifications.
 /// Provides endpoints for sending, retrieving, and managing notifications across multiple channels.
@@ -41,7 +40,7 @@ public class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SendNotificationResponse>> Send(
-        [FromBody] SendNotificationRequest request,
+         SendNotificationRequest request,
         CancellationToken ct)
     {
         try
@@ -86,7 +85,7 @@ public class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SendNotificationResponse>> SendBulk(
-        [FromBody] BulkNotificationRequest request,
+         BulkNotificationRequest request,
         CancellationToken ct)
     {
         try
@@ -133,7 +132,7 @@ public class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status501NotImplemented)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SendNotificationResponse>> SendByRole(
-        [FromBody] RoleNotificationRequest request,
+         RoleNotificationRequest request,
         CancellationToken ct)
     {
         try
@@ -184,8 +183,8 @@ public class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<List<NotificationDto>>> GetUserNotifications(
-        [FromRoute] int userId,
-        [FromQuery] bool unreadOnly = false,
+         int userId,
+        bool unreadOnly = false,
         CancellationToken ct = default)
     {
         try
@@ -228,8 +227,8 @@ public class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> MarkAsRead(
-        [FromRoute] int notificationId,
-        [FromBody] MarkReadRequest request,
+         int notificationId,
+         MarkReadRequest request,
         CancellationToken ct)
     {
         try
@@ -278,7 +277,7 @@ public class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> MarkAllAsRead(
-        [FromRoute] int userId,
+         int userId,
         CancellationToken ct)
     {
         try
@@ -318,7 +317,7 @@ public class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SendNotificationResponse>> Test(
-        [FromBody] TestNotificationRequest request,
+         TestNotificationRequest request,
         CancellationToken ct)
     {
         try

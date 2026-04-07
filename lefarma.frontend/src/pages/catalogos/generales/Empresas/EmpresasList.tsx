@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import { Building2, Plus, Pencil, Trash2, Search, Phone, Mail, Loader2, MapPin, Globe, RefreshCcw, Store } from 'lucide-react';
@@ -106,12 +106,12 @@ export default function EmpresasList() {
       if (response.data.success) {
         setEmpresas(response.data.data || []);
       }
-    } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'Empresas.NotFound');
-      if (isNotFound) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; statusCode?: number };
+      if (err.statusCode === 404) {
         setEmpresas([]);
       } else {
-        toast.error(error?.message ?? 'Error al cargar las empresas');
+        toast.error(err.message ?? 'Error al cargar las empresas');
       }
     } finally {
       setLoading(false);

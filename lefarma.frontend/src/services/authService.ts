@@ -1,4 +1,4 @@
-import { API } from './api';
+﻿import { API } from './api';
 import {
   LoginStepOneRequest,
   LoginStepOneResponse,
@@ -9,13 +9,16 @@ import {
   Empresa,
   Sucursal,
 } from '@/types/auth.types';
+import type { Area } from '@/types/catalogo.types';
 import { ApiResponse } from '@/types/api.types';
+
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
 const EMPRESA_KEY = 'empresa';
 const SUCURSAL_KEY = 'sucursal';
+const AREA_KEY = 'area';
 
 export const authService = {
   loginStepOne: async (username: string): Promise<LoginStepOneResponse> => {
@@ -126,13 +129,40 @@ export const authService = {
   },
 
   getEmpresas: async (): Promise<Empresa[]> => {
+    try{
     const response = await API.get<ApiResponse<Empresa[]>>('/catalogos/empresas');
     return response.data.data;
+    console.log('Empresas obtenidas:', response.data.data);
+    }
+    catch(error){
+      console.error('Error al obtener empresas:', error);
+      throw error;
+    }
+   
   },
 
   getSucursales: async (): Promise<Sucursal[]> => {
     const response = await API.get<ApiResponse<Sucursal[]>>('/catalogos/sucursales');
     return response.data.data;
+  },
+
+  getAreas: async (): Promise<Area[]> => {
+    const response = await API.get<ApiResponse<Area[]>>('/catalogos/Areas');
+    return response.data.data;
+  },
+
+  setArea: (area: Area) => {
+    localStorage.setItem(AREA_KEY, JSON.stringify(area));
+  },
+
+  getArea: (): Area | null => {
+    const areaStr = localStorage.getItem(AREA_KEY);
+    if (!areaStr) return null;
+    try {
+      return JSON.parse(areaStr) as Area;
+    } catch {
+      return null;
+    }
   },
 };
 

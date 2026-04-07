@@ -1,5 +1,4 @@
 namespace Lefarma.API.Features.Archivos.DTOs;
-
 public record ListarArchivosQuery
 {
     public string? EntidadTipo { get; init; }

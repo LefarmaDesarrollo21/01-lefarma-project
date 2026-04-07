@@ -1,4 +1,6 @@
-// Tipos de notificación
+﻿// Tipos de notificación
+
+
 export type TipoNotificacion = 'in-app' | 'email' | 'telegram' | 'whatsapp';
 
 // Preset identifier type

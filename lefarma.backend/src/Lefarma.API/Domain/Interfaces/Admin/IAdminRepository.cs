@@ -1,8 +1,7 @@
-﻿using Lefarma.API.Domain.Entities.Auth;
+using Lefarma.API.Domain.Entities.Auth;
 using Lefarma.API.Domain.Entities.Catalogos;
 
 namespace Lefarma.API.Domain.Interfaces.Admin;
-
 /// <summary>
 /// Repositorio para operaciones de administración de usuarios, roles y permisos.
 /// </summary>

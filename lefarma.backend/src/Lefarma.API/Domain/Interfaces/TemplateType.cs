@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Interfaces;
-
 /// <summary>
 /// Defines the supported template types for notification rendering.
 /// Each type corresponds to a specific format optimized for different notification channels.

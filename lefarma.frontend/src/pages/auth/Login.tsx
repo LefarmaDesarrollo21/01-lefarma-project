@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect } from 'react';
+﻿import { useState, FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Lock, User, AlertCircle, ArrowLeft, CheckCircle, Building2, Building } from 'lucide-react';
+import { Lock, User, AlertCircle, ArrowLeft, CheckCircle, Building2, Building, MapPin } from 'lucide-react';
 import logoEstatico from '@/assets/logo.png';
+
 
 const DOMAIN_NAMES: Record<string, string> = {
   'LEFARMA-HN': 'LeFarma Honduras',
@@ -40,6 +41,7 @@ export default function Login() {
     isAuthenticated,
     empresas,
     sucursales,
+    areas,
     loginStepOne,
     loginStepTwo,
     loginStepThree,
@@ -51,14 +53,18 @@ export default function Login() {
   const [selectedDomain, setSelectedDomain] = useState('');
   const [selectedEmpresa, setSelectedEmpresa] = useState('');
   const [selectedSucursal, setSelectedSucursal] = useState('');
+  const [selectedArea, setSelectedArea] = useState('');
   const [error, setError] = useState('');
 
-  // Sucursales filtradas por empresa
   const sucursalesFiltradas = sucursales.filter((s) => {
-    // Filtrar solo sucursales válidas con ID y que coincidan con la empresa seleccionada
     if (!s.idSucursal || s.idSucursal === undefined) return false;
     if (!s.idEmpresa || s.idEmpresa === undefined) return false;
     return String(s.idEmpresa) === String(selectedEmpresa);
+  });
+
+  const areasFiltradas = areas.filter((a) => {
+    if (!a.idArea) return false;
+    return String(a.idEmpresa) === String(selectedEmpresa);
   });
 
   useEffect(() => {
@@ -79,10 +85,8 @@ export default function Login() {
     }
   }, [pendingUsername]);
 
-  // Auto-seleccionar si solo hay una opción
   useEffect(() => {
     if (loginStep === 3) {
-      // Filtrar empresas válidas (con id)
       const empresasValidas = empresas.filter((e) => e.idEmpresa && e.idEmpresa !== undefined);
       if (empresasValidas.length === 1) {
         setSelectedEmpresa(String(empresasValidas[0].idEmpresa));
@@ -90,7 +94,6 @@ export default function Login() {
     }
   }, [loginStep, empresas]);
 
-  // Auto-seleccionar sucursal si solo hay una después de filtrar
   useEffect(() => {
     if (selectedEmpresa && sucursalesFiltradas.length === 1) {
       const sucursal = sucursalesFiltradas[0];
@@ -101,6 +104,14 @@ export default function Login() {
       setSelectedSucursal('');
     }
   }, [selectedEmpresa, sucursalesFiltradas]);
+
+  useEffect(() => {
+    if (selectedEmpresa && areasFiltradas.length === 1) {
+      setSelectedArea(String(areasFiltradas[0].idArea));
+    } else if (!selectedEmpresa) {
+      setSelectedArea('');
+    }
+  }, [selectedEmpresa, areasFiltradas]);
 
   const handleStepOne = async (e: FormEvent) => {
     e.preventDefault();
@@ -140,7 +151,6 @@ export default function Login() {
 
     try {
       await loginStepTwo(password, domain);
-      // Pasamos al paso 3 automáticamente
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Credenciales incorrectas';
@@ -162,8 +172,13 @@ export default function Login() {
       return;
     }
 
+    if (areasFiltradas.length > 0 && !selectedArea) {
+      setError('Por favor selecciona un área');
+      return;
+    }
+
     try {
-      await loginStepThree(selectedEmpresa, selectedSucursal);
+      await loginStepThree(selectedEmpresa, selectedSucursal, selectedArea);
       navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       const message =
@@ -174,13 +189,13 @@ export default function Login() {
 
   const handleBack = () => {
     if (loginStep === 3) {
-      // Si estamos en paso 3, volver al paso 1 (reset completo)
       resetLoginFlow();
       setUsername('');
       setPassword('');
       setSelectedDomain('');
       setSelectedEmpresa('');
       setSelectedSucursal('');
+      setSelectedArea('');
     } else {
       resetLoginFlow();
     }
@@ -284,7 +299,7 @@ export default function Login() {
           <CardDescription>
             {loginStep === 1 && 'Ingresa tu nombre de usuario'}
             {loginStep === 2 && 'Completa tu autenticación'}
-            {loginStep === 3 && 'Selecciona tu ubicación de trabajo'}
+            {loginStep === 3 && 'Selecciona la ubicación desde la cual generarás órdenes de compra'}
           </CardDescription>
         </CardHeader>
 
@@ -419,7 +434,7 @@ export default function Login() {
             </form>
           )}
 
-          {/* PASO 3: Empresa y Sucursal */}
+          {/* PASO 3: Empresa, Sucursal y Área */}
           {loginStep === 3 && (
             <form onSubmit={handleStepThree} className="space-y-4">
               {error && (
@@ -435,12 +450,12 @@ export default function Login() {
                     Bienvenido, {displayName}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Selecciona tu ubicación de trabajo
+                    Selecciona la ubicación desde la cual generarás órdenes de compra
                   </p>
                 </div>
               )}
 
-              {/* Selección de Empresa */}
+              {/* Empresa */}
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
@@ -448,7 +463,11 @@ export default function Login() {
                 </label>
                 <Select
                   value={selectedEmpresa}
-                  onValueChange={setSelectedEmpresa}
+                  onValueChange={(val) => {
+                    setSelectedEmpresa(val);
+                    setSelectedSucursal('');
+                    setSelectedArea('');
+                  }}
                   disabled={isLoading}
                 >
                   <SelectTrigger>
@@ -467,7 +486,7 @@ export default function Login() {
                 </Select>
               </div>
 
-              {/* Selección de Sucursal */}
+              {/* Sucursal */}
               {selectedEmpresa && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
@@ -507,10 +526,49 @@ export default function Login() {
                 </div>
               )}
 
+              {/* Área */}
+              {selectedEmpresa && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Área
+                  </label>
+                  {areasFiltradas.length > 0 ? (
+                    <Select
+                      value={selectedArea}
+                      onValueChange={setSelectedArea}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un área" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {areasFiltradas.map((area) => (
+                          <SelectItem
+                            key={area.idArea}
+                            value={String(area.idArea)}
+                          >
+                            {area.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">
+                      No hay áreas disponibles para esta empresa.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <Button
                 type="submit"
                 className="w-full"
-                disabled={!selectedEmpresa || !selectedSucursal || isLoading}
+                disabled={
+                  !selectedEmpresa ||
+                  !selectedSucursal ||
+                  (areasFiltradas.length > 0 && !selectedArea) ||
+                  isLoading
+                }
               >
                 {isLoading ? 'Procesando...' : 'Iniciar Sesión'}
               </Button>

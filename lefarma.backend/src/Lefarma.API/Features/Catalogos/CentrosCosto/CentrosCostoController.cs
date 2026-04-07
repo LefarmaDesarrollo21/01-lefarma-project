@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Catalogos;
-
 [Route("api/catalogos/[controller]")]
 [ApiController]
 [EndpointGroupName("Catalogos")]
@@ -25,8 +24,12 @@ public class CentrosCostoController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todos los centros de costo", Description = "Retorna la lista completa de centros de costo con filtros opcionales")]
-    public async Task<IActionResult> GetAll([FromQuery] CentroCostoRequest query)
+    public async Task<IActionResult> GetAll(CentroCostoRequest? query)
     {
+        if (query == null)
+        {
+            query = new CentroCostoRequest();
+        }
         var result = await _centroCostoService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<CentroCostoResponse>>
@@ -40,7 +43,7 @@ public class CentrosCostoController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener centro de costo por ID", Description = "Retorna un centro de costo específico por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único del centro de costo", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único del centro de costo", Required = true)] int id)
     {
         var result = await _centroCostoService.GetByIdAsync(id);
 
@@ -56,7 +59,7 @@ public class CentrosCostoController : ControllerBase
     //[HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nuevo centro de costo", Description = "Crea un centro de costo con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos del centro de costo a crear", Required = true)] CreateCentroCostoRequest request)
+        [SwaggerRequestBody(Description = "Datos del centro de costo a crear", Required = true)] CreateCentroCostoRequest request)
     {
         var result = await _centroCostoService.CreateAsync(request);
 
@@ -75,8 +78,8 @@ public class CentrosCostoController : ControllerBase
     //[HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar centro de costo", Description = "Actualiza los datos de un centro de costo existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador del centro de costo a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados del centro de costo", Required = true)] UpdateCentroCostoRequest request)
+        [SwaggerParameter(Description = "Identificador del centro de costo a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados del centro de costo", Required = true)] UpdateCentroCostoRequest request)
     {
         var result = await _centroCostoService.UpdateAsync(id, request);
 
@@ -92,7 +95,7 @@ public class CentrosCostoController : ControllerBase
     //[HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Eliminar centro de costo", Description = "Elimina un centro de costo por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador del centro de costo a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador del centro de costo a eliminar", Required = true)] int id)
     {
         var result = await _centroCostoService.DeleteAsync(id);
 

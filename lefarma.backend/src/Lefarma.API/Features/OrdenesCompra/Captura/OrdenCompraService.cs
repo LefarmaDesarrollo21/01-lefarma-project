@@ -1,4 +1,4 @@
-﻿using ErrorOr;
+using ErrorOr;
 using Lefarma.API.Domain.Entities.Operaciones;
 using Lefarma.API.Domain.Entities.Config;
 using Lefarma.API.Domain.Interfaces.Operaciones;
@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Features.OrdenesCompra.Captura
 {
-    public class OrdenCompraService : BaseService, IOrdenCompraService
+public class OrdenCompraService : BaseService, IOrdenCompraService
     {
         private readonly IOrdenCompraRepository _repo;
         private readonly IWorkflowRepository _workflowRepo;
@@ -64,7 +64,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
             catch (Exception ex)
             {
                 EnrichWideEvent("GetAll", exception: ex);
-                return CommonErrors.DatabaseError("obtener las órdenes de compra");
+                return CommonErrors.DatabaseError("obtener las �rdenes de compra");
             }
         }
 
@@ -129,7 +129,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
                     .FirstOrDefault();
 
                 if (accionInicial is null)
-                    return CommonErrors.Conflict("Workflow", "El paso inicial no tiene acciones configuradas para registrar bitácora.");
+                    return CommonErrors.Conflict("Workflow", "El paso inicial no tiene acciones configuradas para registrar bit�cora.");
 
                 var orden = new OrdenCompra
                 {
@@ -175,7 +175,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
                 {
                     IdOrden = result.IdOrden,
                     IdWorkflow = workflow.IdWorkflow,
-                    IdPaso = pasoInicio.IdPaso,
+                    IdPaso = pasoInicio!.IdPaso,
                     IdAccion = accionInicial.IdAccion,
                     IdUsuario = idUsuario,
                     Comentario = "Orden de compra creada",
@@ -214,7 +214,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
                 }
 
                 if (orden.Estado != EstadoOC.Creada)
-                    return CommonErrors.Conflict("OrdenCompra", "Solo se pueden eliminar órdenes en estado Creada.");
+                    return CommonErrors.Conflict("OrdenCompra", "Solo se pueden eliminar �rdenes en estado Creada.");
 
                 var eliminado = await _repo.DeleteAsync(orden);
                 if (!eliminado)
@@ -255,7 +255,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
             NotaFormaPago = o.NotaFormaPago,
             NotasGenerales = o.NotasGenerales,
             IdCentroCosto = o.IdCentroCosto,
-            CuentaContable = o.CuentaContable,
+            IdCuentaContable = o.IdCuentaContable,
             RequiereComprobacionPago = o.RequiereComprobacionPago,
             RequiereComprobacionGasto = o.RequiereComprobacionGasto,
             FechaSolicitud = o.FechaSolicitud,

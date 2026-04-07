@@ -2,7 +2,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lefarma.API.Services.Identity;
-
 /// <summary>
 /// Extension methods for configuring Identity services.
 /// </summary>

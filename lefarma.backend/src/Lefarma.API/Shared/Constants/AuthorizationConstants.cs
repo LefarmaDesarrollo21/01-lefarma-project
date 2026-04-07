@@ -1,5 +1,4 @@
 namespace Lefarma.API.Shared.Constants;
-
 /// <summary>
 /// Defines the system roles based on Section 17 of the specification.
 /// </summary>

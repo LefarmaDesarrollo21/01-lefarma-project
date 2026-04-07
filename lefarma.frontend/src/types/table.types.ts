@@ -1,4 +1,5 @@
-import type { ColumnDef } from '@tanstack/react-table';
+﻿import type { ColumnDef } from '@tanstack/react-table';
+
 
 /**
  * Supported filter types based on column data type
@@ -59,6 +60,7 @@ export interface FilterConfig<TData> {
   tableId: string;
   searchableColumns: string[]; // All columns that CAN be searched
   defaultSearchColumns?: string[]; // Default columns to search (subset of searchableColumns)
+  defaultVisibleColumns?: string[]; // Default visible columns (subset of all columns)
   columnFilterConfigs?: Record<string, ColumnFilterConfig>;
   onColumnFilterChange?: (columnId: string, config: ColumnFilterConfig) => void;
 }

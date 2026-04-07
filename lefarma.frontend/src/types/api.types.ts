@@ -1,4 +1,5 @@
-// Tipos para respuestas de la API
+﻿// Tipos para respuestas de la API
+
 
 export interface ApiResponse<T> {
   data: T;

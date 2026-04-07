@@ -1,6 +1,7 @@
-import { Navigate, Outlet } from 'react-router-dom';
+﻿import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import Hero from '@/pages/Hero';
+
 
 export const LandingRoute = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

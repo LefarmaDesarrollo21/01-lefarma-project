@@ -1,4 +1,6 @@
-import type { SseUserInfo } from './sse.types';
+﻿import type { SseUserInfo } from './sse.types';
+import type { Area } from './catalogo.types';
+
 
 // User info from backend (matches UserInfo in backend DTOs)
 export interface UserInfo {
@@ -113,6 +115,10 @@ export interface AuthState {
   pendingUsername: string | null;
   empresas: Empresa[];
   sucursales: Sucursal[];
+  areas: Area[];
+  area: Area | null;
+
+  hasFirma: boolean | null;
 
   // Existing actions
   logout: () => Promise<void>;
@@ -126,9 +132,13 @@ export interface AuthState {
   // New actions for 3-step flow
   loginStepOne: (username: string) => Promise<void>;
   loginStepTwo: (password: string, domain: string) => Promise<void>;
-  loginStepThree: (empresaId: string, sucursalId: string) => Promise<void>;
+  loginStepThree: (empresaId: string, sucursalId: string, areaId?: string) => Promise<void>;
   resetLoginFlow: () => void;
 
-  // SSE compatibility
+  // Firma signature actions
+  setHasFirma: (has: boolean) => void;
+  fetchProfileSignature: () => Promise<void>;
+
+  // SSE
   updateUserFromSse: (sseUser: SseUserInfo) => void;
 }

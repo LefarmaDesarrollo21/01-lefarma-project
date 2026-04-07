@@ -1,7 +1,6 @@
 using Lefarma.API.Features.Auth.DTOs;
 
 namespace Lefarma.API.Features.Auth;
-
 public interface ISseService
 {
     Task RegisterConnectionAsync(int userId, HttpResponse response, CancellationToken cancellationToken = default);

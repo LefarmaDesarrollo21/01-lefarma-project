@@ -1,3 +1,4 @@
+﻿
 interface TinyMceViewerProps {
   contenido: string;
 }

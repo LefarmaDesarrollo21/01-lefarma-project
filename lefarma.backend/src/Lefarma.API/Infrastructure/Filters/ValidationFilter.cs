@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Lefarma.API.Infrastructure.Filters
 {
-    /// <summary>
+/// <summary>
     /// Filtro de validación global que automáticamente valida requests
     /// usando FluentValidation y retorna respuestas consistentes.
     /// También enriquece el WideEvent con información de errores de validación.
@@ -29,10 +29,10 @@ namespace Lefarma.API.Infrastructure.Filters
             var requestType = context.ActionArguments
                 .Values
                 .Where(v => v != null &&
-                           !v.GetType().IsPrimitive &&
+                           !v!.GetType().IsPrimitive &&
                            !v.GetType().IsValueType &&
                            v.GetType() != typeof(string))
-                .Select(v => v.GetType())
+                .Select(v => v!.GetType())
                 .FirstOrDefault();
 
             if (requestType == null)

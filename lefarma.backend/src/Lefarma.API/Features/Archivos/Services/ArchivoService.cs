@@ -8,7 +8,6 @@ using Lefarma.API.Shared.Errors;
 using Microsoft.Extensions.Options;
 
 namespace Lefarma.API.Features.Archivos.Services;
-
 public class ArchivoService : IArchivoService
 {
     private readonly IArchivoRepository _repository;

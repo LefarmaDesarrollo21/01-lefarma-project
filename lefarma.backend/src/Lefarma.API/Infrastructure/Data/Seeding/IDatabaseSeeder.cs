@@ -1,5 +1,4 @@
 namespace Lefarma.API.Infrastructure.Data.Seeding;
-
 /// <summary>
 /// Interface for database seeding operations.
 /// </summary>

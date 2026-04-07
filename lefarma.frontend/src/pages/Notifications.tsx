@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Página de Notificaciones
  * Muestra todas las notificaciones del usuario con filtros
  * Incluye formulario de prueba para enviar notificaciones

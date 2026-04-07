@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo } from 'react';
+﻿import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import {
@@ -49,80 +49,62 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { MultiSelect } from '@/components/ui/multi-select';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import { MultiSelect } from '@/components/ui/multi-select';
 
-// Componente memoizado para la sección de roles
-const RolesSection = memo(({
+// @lat: [[usuarios#RolesSection]]
+const RolesSection = memo(function RolesSection({
   rolesIds,
   roles,
   onRemoveRol,
   onAddRoles,
 }: {
   rolesIds: number[];
-  roles: Rol[];
-  onRemoveRol: (id: number) => void;
+  roles: any[];
+  onRemoveRol: (rolId: number) => void;
   onAddRoles: () => void;
-}) => (
-  <div className="space-y-3">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Shield className="h-5 w-5 text-muted-foreground" />
-        <label className="text-base font-semibold">Roles Asignados</label>
-        <Badge variant="secondary">
-          {rolesIds.length} rol{rolesIds.length !== 1 ? 'es' : ''}
-        </Badge>
+}) {
+  const selectedRoles = roles.filter(r => rolesIds.includes(r.idRol));
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Shield className="h-4 w-4 text-muted-foreground" />
+          Roles asignados
+        </div>
+        <Button type="button" variant="outline" size="sm" className="h-7 gap-1" onClick={onAddRoles}>
+          <Plus className="h-3 w-3" />
+          Agregar
+        </Button>
       </div>
-      <Button type="button" size="sm" variant="outline" onClick={onAddRoles}>
-        <Plus className="h-4 w-4 mr-1" />
-        Agregar
-      </Button>
-    </div>
-
-    {rolesIds.length > 0 ? (
-      <div className="space-y-2">
-        {roles
-          .filter(r => rolesIds.includes(r.idRol))
-          .map((rol) => (
-            <div
-              key={rol.idRol}
-              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Shield className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{rol.nombreRol}</p>
-                  <p className="text-xs text-muted-foreground">{rol.descripcion || 'Sin descripción'}</p>
-                </div>
-              </div>
-              <Button
+      {selectedRoles.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedRoles.map(rol => (
+            <Badge key={rol.idRol} variant="secondary" className="gap-1 pr-1">
+              {rol.nombreRol}
+              <button
                 type="button"
-                size="sm"
-                variant="ghost"
                 onClick={() => onRemoveRol(rol.idRol)}
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
               >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
           ))}
-      </div>
-    ) : (
-      <p className="text-sm text-muted-foreground italic p-4 border border-dashed rounded-lg text-center">
-        No hay roles asignados a este usuario
-      </p>
-    )}
-  </div>
-));
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">No hay roles asignados.</p>
+      )}
+    </div>
+  );
+});
 
-// Componente memoizado para la sección de permisos
-const PermisosSection = memo(({
+// @lat: [[usuarios#PermisosSection]]
+const PermisosSection = memo(function PermisosSection({
   permisosIds,
   permisosPorCategoria,
   collapsedCategories,
@@ -133,76 +115,69 @@ const PermisosSection = memo(({
   permisosPorCategoria: Record<string, Permiso[]>;
   collapsedCategories: Set<string>;
   onToggleCategory: (categoria: string) => void;
-  onTogglePermiso: (id: number, checked: boolean) => void;
-}) => (
-  <div className="space-y-3">
-    <div className="flex items-center gap-2">
-      <Key className="h-5 w-5 text-muted-foreground" />
-      <label className="text-base font-semibold">Permisos por Categoría</label>
-      <Badge variant="secondary">
-        {permisosIds.length} permiso{permisosIds.length !== 1 ? 's' : ''}
-      </Badge>
-    </div>
-
+  onTogglePermiso: (permisoId: number, checked: boolean) => void;
+}) {
+  const categorias = Object.keys(permisosPorCategoria).sort();
+  return (
     <div className="space-y-2">
-      {Object.entries(permisosPorCategoria)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([categoria, permsCategoria]) => {
-          const isCollapsed = collapsedCategories.has(categoria);
-          const permisosAsignados = permsCategoria.filter(p => permisosIds.includes(p.idPermiso));
-
-          return (
-            <div key={categoria} className="border rounded-lg overflow-hidden">
-              <button
-                type="button"
-                onClick={() => onToggleCategory(categoria)}
-                className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted/80 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{categoria}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {permisosAsignados.length}/{permsCategoria.length}
-                  </Badge>
-                </div>
-                {isCollapsed ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-
-              {!isCollapsed && (
-                <div className="p-3 space-y-2 bg-background max-h-60 overflow-y-auto">
-                  {permsCategoria.map((permiso) => {
-                    const isChecked = permisosIds.includes(permiso.idPermiso);
-                    return (
-                      <div
-                        key={permiso.idPermiso}
-                        className={cn(
-                          "flex items-start gap-3 p-2 rounded transition-colors",
-                          isChecked ? "bg-primary/5" : ""
-                        )}
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <Key className="h-4 w-4 text-muted-foreground" />
+        Permisos directos
+      </div>
+      {categorias.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No hay permisos disponibles.</p>
+      ) : (
+        <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+          {categorias.map(cat => {
+            const isCollapsed = collapsedCategories.has(cat);
+            const permisos = permisosPorCategoria[cat];
+            const selectedCount = permisos.filter(p => permisosIds.includes(p.idPermiso)).length;
+            return (
+              <div key={cat} className="rounded-md border">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium hover:bg-muted/50"
+                  onClick={() => onToggleCategory(cat)}
+                >
+                  <span className="flex items-center gap-2">
+                    {cat}
+                    <span className="text-muted-foreground">
+                      ({selectedCount}/{permisos.length})
+                    </span>
+                  </span>
+                  {isCollapsed ? (
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  ) : (
+                    <ChevronUp className="h-3 w-3 text-muted-foreground" />
+                  )}
+                </button>
+                {!isCollapsed && (
+                  <div className="border-t px-3 py-2 space-y-1">
+                    {permisos.map(p => (
+                      <label
+                        key={p.idPermiso}
+                        className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/30 rounded px-1 py-0.5"
                       >
                         <Checkbox
-                          checked={isChecked}
-                          onCheckedChange={(checked) => onTogglePermiso(permiso.idPermiso, checked as boolean)}
-                          className="mt-0.5"
+                          checked={permisosIds.includes(p.idPermiso)}
+                          onCheckedChange={(checked) => onTogglePermiso(p.idPermiso, !!checked)}
                         />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{permiso.nombrePermiso}</p>
-                          <p className="text-xs text-muted-foreground truncate">{permiso.codigoPermiso}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                        <span>{p.nombrePermiso}</span>
+                        <span className="text-muted-foreground ml-auto text-[10px]">
+                          {p.codigoPermiso}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
-  </div>
-));
+  );
+});
 
 const usuarioSchema = z.object({
   samAccountName: z.string().min(1, 'Requerido'),

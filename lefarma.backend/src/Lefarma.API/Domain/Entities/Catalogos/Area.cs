@@ -1,9 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Lefarma.API.Domain.Entities.Catalogos
-{
-    public class Area
+namespace Lefarma.API.Domain.Entities.Catalogos {
+public class Area
     {
         public int IdArea { get; set; }
         public int IdEmpresa { get; set; }

@@ -10,7 +10,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Catalogos
 {
-    [Route("api/catalogos/[controller]")]
+[Route("api/catalogos/[controller]")]
     [ApiController]
     [EndpointGroupName("Catalogos")]
     //[HasPermission(Permissions.Catalogos.View)]
@@ -25,8 +25,12 @@ namespace Lefarma.API.Features.Catalogos
 
         [HttpGet]
         [SwaggerOperation(Summary = "Obtener todas las áreas", Description = "Retorna la lista completa de áreas con filtros opcionales")]
-        public async Task<IActionResult> GetAllAreas([FromQuery] AreaRequest query)
+        public async Task<IActionResult> GetAllAreas(AreaRequest? query)
         {
+            if(query == null)
+            {
+                query = new AreaRequest();
+            }
             var result = await _areaService.GetAllAsync(query);
 
             return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<AreaResponse>>
@@ -40,7 +44,7 @@ namespace Lefarma.API.Features.Catalogos
         [HttpGet("{id}")]
         [SwaggerOperation(Summary = "Obtener área por ID", Description = "Retorna un área específica por su identificador")]
         public async Task<IActionResult> GetAreaById(
-            [FromRoute][SwaggerParameter(Description = "Identificador único del área", Required = true)] int id)
+            [SwaggerParameter(Description = "Identificador único del área", Required = true)] int id)
         {
             var result = await _areaService.GetByIdAsync(id);
 
@@ -56,7 +60,7 @@ namespace Lefarma.API.Features.Catalogos
         //[HasPermission(Permissions.Catalogos.Manage)]
         [SwaggerOperation(Summary = "Crear nueva área", Description = "Crea un área con los datos proporcionados")]
         public async Task<IActionResult> CreateArea(
-            [FromBody][SwaggerRequestBody(Description = "Datos del área a crear", Required = true)] CreateAreaRequest request)
+            [SwaggerRequestBody(Description = "Datos del área a crear", Required = true)] CreateAreaRequest request)
         {
             var result = await _areaService.CreateAsync(request);
 
@@ -75,8 +79,8 @@ namespace Lefarma.API.Features.Catalogos
         //[HasPermission(Permissions.Catalogos.Manage)]
         [SwaggerOperation(Summary = "Actualizar área", Description = "Actualiza los datos de un área existente")]
         public async Task<IActionResult> UpdateArea(
-            [FromRoute][SwaggerParameter(Description = "Identificador del área a actualizar", Required = true)] int id,
-            [FromBody][SwaggerRequestBody(Description = "Datos actualizados del área", Required = true)] UpdateAreaRequest request)
+            [SwaggerParameter(Description = "Identificador del área a actualizar", Required = true)] int id,
+            [SwaggerRequestBody(Description = "Datos actualizados del área", Required = true)] UpdateAreaRequest request)
         {
             var result = await _areaService.UpdateAsync(id, request);
 
@@ -92,7 +96,7 @@ namespace Lefarma.API.Features.Catalogos
         //[HasPermission(Permissions.Catalogos.Manage)]
         [SwaggerOperation(Summary = "Eliminar área", Description = "Elimina un área por su identificador")]
         public async Task<IActionResult> DeleteArea(
-            [FromRoute][SwaggerParameter(Description = "Identificador del área a eliminar", Required = true)] int id)
+            [SwaggerParameter(Description = "Identificador del área a eliminar", Required = true)] int id)
         {
             var result = await _areaService.DeleteAsync(id);
 

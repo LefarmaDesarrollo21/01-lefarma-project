@@ -1,6 +1,5 @@
-namespace Lefarma.API.Domain.Entities.Config
-{
-    public class Workflow
+namespace Lefarma.API.Domain.Entities.Config {
+public class Workflow
     {
         public int IdWorkflow { get; set; }
         public string Nombre { get; set; } = null!;

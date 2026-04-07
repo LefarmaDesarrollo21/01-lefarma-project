@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using Lefarma.API.Features.Catalogos.Proveedores;
 using Lefarma.API.Features.Catalogos.Proveedores.DTOs;
@@ -9,11 +10,10 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Catalogos;
-
 [Route("api/catalogos/[controller]")]
 [ApiController]
 [EndpointGroupName("Catalogos")]
-[HasPermission(Permissions.Catalogos.View)]
+// [HasPermission(Permissions.Catalogos.View)]
 public class ProveedoresController : ControllerBase
 {
     private readonly IProveedorService _proveedorService;
@@ -23,10 +23,17 @@ public class ProveedoresController : ControllerBase
         _proveedorService = proveedorService;
     }
 
+    private int GetUserId() =>
+        int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : 0;
+
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todos los proveedores", Description = "Retorna la lista completa de proveedores con filtros opcionales")]
-    public async Task<IActionResult> GetAll([FromQuery] ProveedorRequest query)
+    public async Task<IActionResult> GetAll(ProveedorRequest? query)
     {
+        if (query == null)
+        {
+            query = new ProveedorRequest();
+        }
         var result = await _proveedorService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<ProveedorResponse>>
@@ -40,7 +47,7 @@ public class ProveedoresController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener proveedor por ID", Description = "Retorna un proveedor específico por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único del proveedor", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único del proveedor", Required = true)] int id)
     {
         var result = await _proveedorService.GetByIdAsync(id);
 
@@ -56,7 +63,7 @@ public class ProveedoresController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nuevo proveedor", Description = "Crea un proveedor con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos del proveedor a crear", Required = true)] CreateProveedorRequest request)
+        [SwaggerRequestBody(Description = "Datos del proveedor a crear", Required = true)] CreateProveedorRequest request)
     {
         var result = await _proveedorService.CreateAsync(request);
 
@@ -75,8 +82,8 @@ public class ProveedoresController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar proveedor", Description = "Actualiza los datos de un proveedor existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador del proveedor a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados del proveedor", Required = true)] UpdateProveedorRequest request)
+        [SwaggerParameter(Description = "Identificador del proveedor a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados del proveedor", Required = true)] UpdateProveedorRequest request)
     {
         var result = await _proveedorService.UpdateAsync(id, request);
 
@@ -92,7 +99,7 @@ public class ProveedoresController : ControllerBase
 //    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Eliminar proveedor", Description = "Elimina un proveedor por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador del proveedor a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador del proveedor a eliminar", Required = true)] int id)
     {
         var result = await _proveedorService.DeleteAsync(id);
 
@@ -108,9 +115,9 @@ public class ProveedoresController : ControllerBase
 //    [HasPermission(Permissions.Proveedores.Autorizar)]
     [SwaggerOperation(Summary = "Autorizar proveedor por CxP", Description = "Marca un proveedor como autorizado por el área de Cuentas por Pagar")]
     public async Task<IActionResult> Autorizar(
-        [FromRoute][SwaggerParameter(Description = "Identificador del proveedor a autorizar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador del proveedor a autorizar", Required = true)] int id)
     {
-        var result = await _proveedorService.AutorizarAsync(id);
+        var result = await _proveedorService.AutorizarAsync(id, GetUserId());
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<ProveedorResponse>
         {
@@ -124,10 +131,16 @@ public class ProveedoresController : ControllerBase
 //    [HasPermission(Permissions.Proveedores.Rechazar)]
     [SwaggerOperation(Summary = "Rechazar proveedor por CxP", Description = "Rechaza un proveedor con un motivo")]
     public async Task<IActionResult> Rechazar(
-        [FromRoute][SwaggerParameter(Description = "Identificador del proveedor a rechazar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Motivo del rechazo", Required = true)] RechazoProveedorRequest request)
+        [SwaggerParameter(Description = "Identificador del proveedor a rechazar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Motivo del rechazo", Required = true)] RechazarProveedorRequest request)
     {
-        var result = await _proveedorService.RechazarAsync(id, request.Motivo);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await _proveedorService.RechazarAsync(id, request.Motivo, GetUserId());
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<ProveedorResponse>
         {

@@ -1,7 +1,8 @@
-/**
+﻿/**
  * RecipientSelector - Componente para seleccionar usuarios y roles
  * Permite selección múltiple de usuarios y roles para envío de notificaciones
  */
+
 
 import { useState, useEffect } from 'react';
 import { Check, ChevronsUpDown, Users } from 'lucide-react';

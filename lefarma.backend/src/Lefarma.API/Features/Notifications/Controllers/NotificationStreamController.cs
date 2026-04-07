@@ -6,7 +6,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Lefarma.API.Features.Notifications.Controllers;
-
 /// <summary>
 /// Controller for Server-Sent Events (SSE) streaming of real-time notifications.
 /// Maintains persistent connections with clients for instant notification delivery.
@@ -53,7 +52,7 @@ public class NotificationStreamController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task GetStream([FromQuery] string? token, CancellationToken ct)
+    public async Task GetStream(string? token, CancellationToken ct)
     {
         try
         {

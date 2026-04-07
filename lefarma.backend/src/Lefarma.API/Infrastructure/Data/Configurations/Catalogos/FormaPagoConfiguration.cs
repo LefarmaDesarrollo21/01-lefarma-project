@@ -2,9 +2,8 @@ using Lefarma.API.Domain.Entities.Catalogos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
-{
-    public class FormaPagoConfiguration : IEntityTypeConfiguration<FormaPago>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos {
+public class FormaPagoConfiguration : IEntityTypeConfiguration<FormaPago>
     {
         public void Configure(EntityTypeBuilder<FormaPago> builder)
         {

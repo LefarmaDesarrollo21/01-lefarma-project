@@ -1,5 +1,4 @@
 namespace Lefarma.API.Features.Auth.Roles.DTOs;
-
 /// <summary>
 /// DTO for Rol catalog (simplified for dropdown/selection)
 /// </summary>

@@ -3,7 +3,7 @@ using Lefarma.API.Features.Catalogos.CuentasContables.DTOs;
 
 namespace Lefarma.API.Features.Catalogos.CuentasContables
 {
-    public interface ICuentaContableService
+public interface ICuentaContableService
     {
         Task<ErrorOr<IEnumerable<CuentaContableResponse>>> GetAllAsync(CuentaContableRequest query);
         Task<ErrorOr<CuentaContableResponse>> GetByIdAsync(int id);

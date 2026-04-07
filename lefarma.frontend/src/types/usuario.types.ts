@@ -1,5 +1,6 @@
-import { Rol } from './rol.types';
+﻿import { Rol } from './rol.types';
 import { Permiso } from './permiso.types';
+
 
 export interface UsuarioDetalle {
   idUsuario: number;
@@ -9,7 +10,7 @@ export interface UsuarioDetalle {
   idCentroCosto?: number;
   puesto?: string;
   numeroEmpleado?: string;
-  firmaDigital?: string;
+  firmaPath?: string;
   telefonoOficina?: string;
   extension?: string;
   celular?: string;

@@ -1,4 +1,4 @@
-import { API } from './api';
+﻿import { API } from './api';
 import type {
   HelpArticle,
   HelpModule,
@@ -9,6 +9,7 @@ import type {
   HelpImageUploadResponse,
 } from '@/types/help.types';
 import type { ApiResponse } from '@/types/api.types';
+
 
 const HELP_URL = '/help/articles';
 const MODULES_URL = '/help/modules';
@@ -52,6 +53,15 @@ export const helpService = {
     const params = modulo ? { modulo } : {};
     const response = await API.get<ApiResponse<HelpArticle[]>>(
       `${HELP_URL}/for-user`,
+      { params }
+    );
+    return response.data.data;
+  },
+
+  getPublicForUser: async (modulo?: string): Promise<HelpArticle[]> => {
+    const params = modulo ? { modulo } : {};
+    const response = await API.get<ApiResponse<HelpArticle[]>>(
+      `${HELP_URL}/public`,
       { params }
     );
     return response.data.data;

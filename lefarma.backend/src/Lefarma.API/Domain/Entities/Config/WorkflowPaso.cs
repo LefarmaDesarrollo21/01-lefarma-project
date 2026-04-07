@@ -1,6 +1,5 @@
-﻿namespace Lefarma.API.Domain.Entities.Config
-{
-    public class WorkflowPaso
+namespace Lefarma.API.Domain.Entities.Config {
+public class WorkflowPaso
     {
         public int IdPaso { get; set; }
         public int IdWorkflow { get; set; }

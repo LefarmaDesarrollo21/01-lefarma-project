@@ -2,7 +2,6 @@ using FluentValidation;
 using Lefarma.API.Features.Profile.DTOs;
 
 namespace Lefarma.API.Features.Profile;
-
 /// <summary>
 /// Validador para actualización de perfil
 /// </summary>
@@ -35,10 +34,10 @@ public class UpdateProfileRequestValidator : AbstractValidator<UpdateProfileRequ
             .When(x => !string.IsNullOrWhiteSpace(x.NumeroEmpleado))
             .WithMessage("El número de empleado no puede exceder 50 caracteres");
 
-        RuleFor(x => x.FirmaDigital)
+        RuleFor(x => x.FirmaPath)
             .MaximumLength(500)
-            .When(x => !string.IsNullOrWhiteSpace(x.FirmaDigital))
-            .WithMessage("La firma digital no puede exceder 500 caracteres");
+            .When(x => !string.IsNullOrWhiteSpace(x.FirmaPath))
+            .WithMessage("La ruta de la firma no puede exceder 500 caracteres");
 
         // Validaciones de contacto
         RuleFor(x => x.TelefonoOficina)

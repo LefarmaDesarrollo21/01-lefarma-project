@@ -2,9 +2,8 @@ using Lefarma.API.Domain.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Auth
-{
-    public class DominioConfigConfiguration : IEntityTypeConfiguration<DominioConfig>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Auth {
+public class DominioConfigConfiguration : IEntityTypeConfiguration<DominioConfig>
     {
         public void Configure(EntityTypeBuilder<DominioConfig> builder)
         {

@@ -1,10 +1,9 @@
-﻿using Lefarma.API.Shared.Extensions;
+using Lefarma.API.Shared.Extensions;
 using Lefarma.API.Shared.Logging;
 
 namespace Lefarma.API.Shared.Services;
-
 /// <summary>
-/// Clase base para servicios que proporciona funcionalidad común de enriquecimiento de WideEvent.
+/// Clase base para servicios que proporciona funcionalidad com�n de enriquecimiento de WideEvent.
 /// </summary>
 public abstract class BaseService
 {
@@ -17,7 +16,7 @@ public abstract class BaseService
     }
 
     /// <summary>
-    /// Enriquece el WideEvent actual con información del contexto de la operación.
+    /// Enriquece el WideEvent actual con informaci�n del contexto de la operaci�n.
     /// </summary>
     protected void EnrichWideEvent(
         string action,

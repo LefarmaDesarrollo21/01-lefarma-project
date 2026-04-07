@@ -9,11 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lefarma.API.Features.Catalogos;
-
 [Route("api/catalogos/[controller]")]
 [ApiController]
 [EndpointGroupName("Catalogos")]
-[HasPermission(Permissions.Catalogos.View)]
 public class GastosController : ControllerBase
 {
     private readonly IGastoService _gastoService;
@@ -25,8 +23,12 @@ public class GastosController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Obtener todos los gastos", Description = "Retorna la lista completa de gastos con filtros opcionales")]
-    public async Task<IActionResult> GetAll([FromQuery] GastoRequest query)
+    public async Task<IActionResult> GetAll(GastoRequest? query)
     {
+        if(query == null)
+        {
+            query = new GastoRequest();
+        }
         var result = await _gastoService.GetAllAsync(query);
 
         return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<GastoResponse>>
@@ -40,7 +42,7 @@ public class GastosController : ControllerBase
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Obtener gasto por ID", Description = "Retorna un gasto específico por su identificador")]
     public async Task<IActionResult> GetById(
-        [FromRoute][SwaggerParameter(Description = "Identificador único del gasto", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador único del gasto", Required = true)] int id)
     {
         var result = await _gastoService.GetByIdAsync(id);
 
@@ -53,10 +55,10 @@ public class GastosController : ControllerBase
     }
 
     [HttpPost]
-    //[HasPermission(Permissions.Catalogos.Manage)]
+    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Crear nuevo gasto", Description = "Crea un gasto con los datos proporcionados")]
     public async Task<IActionResult> Create(
-        [FromBody][SwaggerRequestBody(Description = "Datos del gasto a crear", Required = true)] CreateGastoRequest request)
+        [SwaggerRequestBody(Description = "Datos del gasto a crear", Required = true)] CreateGastoRequest request)
     {
         var result = await _gastoService.CreateAsync(request);
 
@@ -72,11 +74,11 @@ public class GastosController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    //[HasPermission(Permissions.Catalogos.Manage)]
+    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Actualizar gasto", Description = "Actualiza los datos de un gasto existente")]
     public async Task<IActionResult> Update(
-        [FromRoute][SwaggerParameter(Description = "Identificador del gasto a actualizar", Required = true)] int id,
-        [FromBody][SwaggerRequestBody(Description = "Datos actualizados del gasto", Required = true)] UpdateGastoRequest request)
+        [SwaggerParameter(Description = "Identificador del gasto a actualizar", Required = true)] int id,
+        [SwaggerRequestBody(Description = "Datos actualizados del gasto", Required = true)] UpdateGastoRequest request)
     {
         var result = await _gastoService.UpdateAsync(id, request);
 
@@ -89,10 +91,10 @@ public class GastosController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-//    [HasPermission(Permissions.Catalogos.Manage)]
+    [HasPermission(Permissions.Catalogos.Manage)]
     [SwaggerOperation(Summary = "Eliminar gasto", Description = "Elimina un gasto por su identificador")]
     public async Task<IActionResult> Delete(
-        [FromRoute][SwaggerParameter(Description = "Identificador del gasto a eliminar", Required = true)] int id)
+        [SwaggerParameter(Description = "Identificador del gasto a eliminar", Required = true)] int id)
     {
         var result = await _gastoService.DeleteAsync(id);
 

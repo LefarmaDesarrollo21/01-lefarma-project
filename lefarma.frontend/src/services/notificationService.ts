@@ -1,7 +1,8 @@
-/**
+﻿/**
  * Servicio para el sistema de notificaciones de Lefarma
  * Maneja el envío y recepción de notificaciones a través de múltiples canales
  */
+
 
 import { API } from './api';
 import { ApiResponse } from '@/types/api.types';

@@ -3,7 +3,7 @@ using Lefarma.API.Features.Config.Workflows.DTOs;
 
 namespace Lefarma.API.Features.Config.Workflows
 {
-    public interface IWorkflowService
+public interface IWorkflowService
     {
         Task<ErrorOr<IEnumerable<WorkflowResponse>>> GetAllAsync(WorkflowRequest query);
         Task<ErrorOr<WorkflowResponse>> GetByIdAsync(int id);

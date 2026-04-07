@@ -5,7 +5,6 @@ using Lefarma.API.Features.Notifications.DTOs;
 using System.Text.Json;
 
 namespace Lefarma.API.Features.Notifications.Services.Channels;
-
 /// <summary>
 /// In-App notification channel implementation using Server-Sent Events (SSE).
 /// Creates UserNotification records and sends real-time notifications to connected users.
@@ -69,7 +68,7 @@ public class InAppNotificationChannel : INotificationChannel
                 {
                     // Check if user notification already exists
                     var existingUserNotification = await _notificationRepository.GetUserNotificationAsync(
-                        notificationId.Value, userId, ct);
+                        notificationId!.Value, userId, ct);
 
                     if (existingUserNotification != null)
                     {

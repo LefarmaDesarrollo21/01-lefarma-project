@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Auth;
-
 public class AuditLog
 {
     public long IdAudit { get; set; }

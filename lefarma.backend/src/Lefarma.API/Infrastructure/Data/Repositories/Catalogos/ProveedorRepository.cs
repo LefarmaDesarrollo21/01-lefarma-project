@@ -1,16 +1,23 @@
 using Lefarma.API.Domain.Entities.Catalogos;
 using Lefarma.API.Domain.Interfaces.Catalogos;
-using Lefarma.API.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
-namespace Lefarma.API.Infrastructure.Data.Repositories.Catalogos
+namespace Lefarma.API.Infrastructure.Data.Repositories.Catalogos;
+
+public class ProveedorRepository : BaseRepository<Proveedor>, IProveedorRepository
 {
-    public class ProveedorRepository : BaseRepository<Proveedor>, IProveedorRepository
-    {
-        private readonly ApplicationDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-        public ProveedorRepository(ApplicationDbContext context) : base(context)
-        {
-            _context = context;
-        }
+    public ProveedorRepository(ApplicationDbContext context) : base(context)
+    {
+        _context = context;
+    }
+
+    public async Task<Proveedor?> GetByIdWithDetailsAsync(int id)
+    {
+        return await _context.Set<Proveedor>()
+            .Include(p => p.RegimenFiscal!)
+            .Include(p => p.Detalle)
+            .FirstOrDefaultAsync(p => p.IdProveedor == id);
     }
 }

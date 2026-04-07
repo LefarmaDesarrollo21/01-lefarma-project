@@ -2,7 +2,6 @@ using Lefarma.API.Domain.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Infrastructure.Data;
-
 public class AsokamDbContext : DbContext
 {
     public AsokamDbContext(DbContextOptions<AsokamDbContext> options) : base(options)

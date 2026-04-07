@@ -2,7 +2,6 @@ using ErrorOr;
 using Lefarma.API.Services.Identity.Models;
 
 namespace Lefarma.API.Services.Identity;
-
 /// <summary>
 /// Service for LDAP/Active Directory authentication and user management.
 /// </summary>

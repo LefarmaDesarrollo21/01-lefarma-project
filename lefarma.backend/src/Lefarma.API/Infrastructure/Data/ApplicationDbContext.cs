@@ -1,4 +1,4 @@
-﻿using Lefarma.API.Domain.Entities.Auth;
+using Lefarma.API.Domain.Entities.Auth;
 using Lefarma.API.Domain.Entities.Catalogos;
 using Lefarma.API.Domain.Entities.Config;
 using Lefarma.API.Domain.Entities.Logging;
@@ -9,9 +9,8 @@ using Lefarma.API.Domain.Entities.Archivos;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
-namespace Lefarma.API.Infrastructure.Data
-{
-    public class ApplicationDbContext : DbContext
+namespace Lefarma.API.Infrastructure.Data {
+public class ApplicationDbContext : DbContext
     {
         // Constructor del ApplicationDbContext
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
@@ -46,12 +45,14 @@ namespace Lefarma.API.Infrastructure.Data
 
         // DbSets - Catalogos Nuevos (Sistema CxP)
         public DbSet<Proveedor> Proveedores { get; set; }
+        public DbSet<ProveedorDetalle> ProveedoresDetalle { get; set; }
         public DbSet<CentroCosto> CentrosCosto { get; set; }
         public DbSet<CuentaContable> CuentasContables { get; set; }
         public DbSet<EstatusOrden> EstatusOrden { get; set; }
         public DbSet<RegimenFiscal> RegimenesFiscales { get; set; }
         public DbSet<Banco> Bancos { get; set; }
         public DbSet<MedioPago> MediosPago { get; set; }
+        public DbSet<TipoImpuesto> TiposImpuesto { get; set; }
 
         // DbSets - Auth/Identity
         public DbSet<Usuario> Usuarios { get; set; }

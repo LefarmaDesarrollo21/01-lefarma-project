@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Catalogos.Empresas
 {
-    public class EmpresaService : BaseService, IEmpresaService
+public class EmpresaService : BaseService, IEmpresaService
     {
         private readonly IEmpresaRepository _empresaRepository;
         private readonly ILogger<EmpresaService> _logger;
@@ -71,15 +71,6 @@ namespace Lefarma.API.Features.Catalogos.Empresas
                 };
 
                 var empresas = await empresasQuery.ToListAsync();
-
-                if (!empresas.Any())
-                {
-                    EnrichWideEvent(action: "GetAll", count: 0, additionalContext: new Dictionary<string, object>
-                    {
-                        ["filters"] = new { query.Nombre, query.RFC, query.Ciudad, query.Activo }
-                    });
-                    return CommonErrors.NotFound("Empresas");
-                }
 
                 var response = empresas.Select(e => e.ToResponse()).ToList();
 

@@ -1,7 +1,6 @@
 using System.Text;
 
 namespace Lefarma.API.Shared.Extensions;
-
 /// <summary>
 /// Extensiones para manejo de excepciones
 /// </summary>

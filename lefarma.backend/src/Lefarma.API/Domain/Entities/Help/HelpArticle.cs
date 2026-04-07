@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Help;
-
 public class HelpArticle
 {
     public int Id { get; set; }

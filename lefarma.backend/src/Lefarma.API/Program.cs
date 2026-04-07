@@ -14,6 +14,7 @@ using Lefarma.API.Features.Catalogos.CuentasContables;
 using Lefarma.API.Features.Catalogos.EstatusOrden;
 using Lefarma.API.Features.Catalogos.Proveedores;
 using Lefarma.API.Features.Catalogos.RegimenesFiscales;
+using Lefarma.API.Features.Catalogos.TiposImpuesto;
 using Lefarma.API.Features.Catalogos.Empresas;
 using Lefarma.API.Features.Catalogos.FormasPago;
 using Lefarma.API.Features.Catalogos.Gastos;
@@ -130,6 +131,7 @@ builder.Services.AddScoped<IEstatusOrdenRepository, EstatusOrdenRepository>();
 builder.Services.AddScoped<IRegimenFiscalRepository, RegimenFiscalRepository>();
 builder.Services.AddScoped<IProveedorRepository, ProveedorRepository>();
 builder.Services.AddScoped<ICuentaContableRepository, CuentaContableRepository>();
+builder.Services.AddScoped<ITipoImpuestoRepository, TipoImpuestoRepository>();
 
 // Help System
 builder.Services.AddScoped<IHelpArticleRepository, HelpArticleRepository>();
@@ -183,6 +185,7 @@ builder.Services.AddScoped<IEstatusOrdenService, EstatusOrdenService>();
 builder.Services.AddScoped<IRegimenFiscalService, RegimenFiscalService>();
 builder.Services.AddScoped<IProveedorService, ProveedorService>();
 builder.Services.AddScoped<ICuentaContableService, CuentaContableService>();
+builder.Services.AddScoped<ITipoImpuestoService, TipoImpuestoService>();
 
 // Logging Services
 builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
@@ -380,7 +383,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         return true;
     });
-    options.TagActionsBy(api => new List<string>() { api.GroupName ?? "Sin Categor�a" });
+    options.TagActionsBy(api => new List<string>() { api.GroupName ?? "Sin Categoría" });
 });
 
 // Configure CORS to allow all origins
@@ -432,11 +435,16 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Lefarma API v1");
-    // c.RoutePrefix = ""; // Hacer que Swagger est� disponible en la ra�z
+    // c.RoutePrefix = ""; // Hacer que Swagger est disponible en la raz
 });
 // }
 
 app.UseHttpsRedirection();
+
+// ---> AGREGADO PARA LA SPA <---
+// Permite servir index.html por defecto y habilita los archivos estáticos base de wwwroot
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseSerilogRequestLogging(options =>
 {
@@ -481,5 +489,8 @@ app.MapControllers();
 //     await seeder.SeedAsync();
 // }
 
-app.Run();
+// ---> AGREGADO PARA LA SPA <---
+// Redirige cualquier petición no manejada al index.html para que el router de tu frontend se encargue
+app.MapFallbackToFile("/index.html");
 
+app.Run();

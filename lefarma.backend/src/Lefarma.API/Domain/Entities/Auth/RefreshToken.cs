@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Auth;
-
 public class RefreshToken
 {
     public long IdRefreshToken { get; set; }

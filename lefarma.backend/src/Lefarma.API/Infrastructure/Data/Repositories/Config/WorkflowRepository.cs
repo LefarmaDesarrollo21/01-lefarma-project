@@ -1,10 +1,9 @@
-﻿using Lefarma.API.Domain.Entities.Config;
+using Lefarma.API.Domain.Entities.Config;
 using Lefarma.API.Domain.Interfaces.Config;
 using Microsoft.EntityFrameworkCore;
 
-namespace Lefarma.API.Infrastructure.Data.Repositories.Config
-{
-    public class WorkflowRepository : BaseRepository<Workflow>, IWorkflowRepository
+namespace Lefarma.API.Infrastructure.Data.Repositories.Config {
+public class WorkflowRepository : BaseRepository<Workflow>, IWorkflowRepository
     {
         private readonly ApplicationDbContext _context;
 

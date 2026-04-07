@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Lefarma.API.Features.Catalogos.MediosPago
 {
-    public class MedioPagoService : BaseService, IMedioPagoService
+public class MedioPagoService : BaseService, IMedioPagoService
     {
         private readonly IMedioPagoRepository _medioPagoRepository;
         private readonly ILogger<MedioPagoService> _logger;

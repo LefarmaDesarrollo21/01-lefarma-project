@@ -1,4 +1,5 @@
-import { Permiso } from './permiso.types';
+﻿import { Permiso } from './permiso.types';
+
 
 export interface UsuarioBasico {
   idUsuario: number;

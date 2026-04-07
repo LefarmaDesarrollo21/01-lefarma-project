@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/store/authStore';
+﻿import { useAuthStore } from '@/store/authStore';
 import { usePageStore } from '@/store/pageStore';
 import { useConfigStore } from '@/store/configStore';
 import { useNavigate } from 'react-router-dom';
@@ -13,14 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Building2, MapPin, User, LogOut, Sun, Moon, Monitor } from 'lucide-react';
+import { Building2, MapPin, Layers, User, LogOut, Sun, Moon, Monitor, PenLine, AlertTriangle } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useState } from 'react';
 import CambiarUbicacionModal from './CambiarUbicacionModal';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export const Header = () => {
-  const { user, empresa, sucursal, logout } = useAuthStore();
+  const { user, empresa, sucursal, area, hasFirma, logout } = useAuthStore();
   const { title, subtitle } = usePageStore();
   const { ui, setTema } = useConfigStore();
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-border relative flex items-center justify-between px-4 sm:px-6">
+    <header className={`h-16 bg-card relative flex items-center justify-between px-4 sm:px-6 ${hasFirma === false ? 'border-b-2 border-amber-400 dark:border-amber-500' : 'border-b border-border'}`}>
       {/* Left side: Toggle + Location Info (hidden on mobile) */}
       <div className="flex items-center gap-4">
         <SidebarTrigger />
@@ -64,7 +64,23 @@ export const Header = () => {
             <MapPin className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">{sucursal?.nombre || 'Sin sucursal'}</span>
           </div>
+          {area && (
+            <>
+              <div className="h-4 w-px bg-border" />
+              <div className="flex items-center gap-2 text-sm">
+                <Layers className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">{area.nombre}</span>
+              </div>
+            </>
+          )}
         </div>
+
+        {hasFirma === false && (
+          <div className="hidden md:flex items-center gap-1.5 rounded-full border border-amber-400 dark:border-amber-500/60 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-0.5 text-xs text-amber-700 dark:text-amber-400">
+            <PenLine className="h-3 w-3" />
+            <span>Sin firma digital</span>
+          </div>
+        )}
       </div>
 
       {/* Center: Page Title (md+ only) */}
@@ -137,14 +153,33 @@ export const Header = () => {
                 <MapPin className="h-3 w-3" />
                 <span className="truncate">{sucursal?.nombre || 'Sin sucursal'}</span>
               </div>
+              {area && (
+                <div className="flex items-center gap-2">
+                  <Layers className="h-3 w-3" />
+                  <span className="truncate">{area.nombre}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <PenLine className="h-3 w-3" />
+                {hasFirma === true ? (
+                  <span className="text-emerald-600 dark:text-emerald-400">Firma digital cargada</span>
+                ) : hasFirma === false ? (
+                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Sin firma digital
+                  </span>
+                ) : (
+                  <span>Verificando firma...</span>
+                )}
+              </div>
             </div>
 
             <DropdownMenuSeparator />
 
             {/* Actions */}
-            <DropdownMenuItem onClick={() => navigate('/perfil')}>
+            <DropdownMenuItem onClick={() => navigate('/configuracion')}>
               <User className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
+              <span>Configuración</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setModalOpen(true)}>
               <Building2 className="mr-2 h-4 w-4" />

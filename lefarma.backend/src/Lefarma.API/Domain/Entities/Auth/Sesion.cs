@@ -1,5 +1,4 @@
 namespace Lefarma.API.Domain.Entities.Auth;
-
 public class Sesion
 {
     public long IdSesion { get; set; }

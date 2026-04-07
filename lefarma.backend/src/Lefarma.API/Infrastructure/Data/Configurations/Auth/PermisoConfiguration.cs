@@ -2,9 +2,8 @@ using Lefarma.API.Domain.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Auth
-{
-    public class PermisoConfiguration : IEntityTypeConfiguration<Permiso>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Auth {
+public class PermisoConfiguration : IEntityTypeConfiguration<Permiso>
     {
         public void Configure(EntityTypeBuilder<Permiso> builder)
         {

@@ -1,10 +1,9 @@
-﻿using Lefarma.API.Domain.Entities.Config;
+using Lefarma.API.Domain.Entities.Config;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lefarma.API.Infrastructure.Data.Configurations.Config
-{
-    public class WorkflowConfiguration : IEntityTypeConfiguration<Workflow>
+namespace Lefarma.API.Infrastructure.Data.Configurations.Config {
+public class WorkflowConfiguration : IEntityTypeConfiguration<Workflow>
     {
         public void Configure(EntityTypeBuilder<Workflow> builder)
         {

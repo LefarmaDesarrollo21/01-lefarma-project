@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import { FileText, Plus, Pencil, Trash2, Search, Loader2, RefreshCcw } from 'lucide-react';
@@ -328,8 +328,9 @@ export default function CuentasContablesList() {
               onRefresh={fetchCuentas}
               filterConfig={{
                 tableId: 'cuentas-contables',
-                searchableColumns: ['codigo', 'nombre'],
-                defaultSearchColumns: ['codigo'],
+                searchableColumns: ['cuenta', 'descripcion'],
+                defaultSearchColumns: ['cuenta'],
+                defaultVisibleColumns: ['cuenta', 'descripcion', 'centroCostoNombre', 'activo', 'actions'],
               }}
             />
             {loading && (
