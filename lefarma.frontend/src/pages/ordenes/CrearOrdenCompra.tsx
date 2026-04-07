@@ -31,7 +31,19 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Loader2,
   Plus,
@@ -47,6 +59,7 @@ import {
   ChevronsUpDown,
   Check,
   Search,
+  ChevronDown,
 } from 'lucide-react';
 import {
   Command,
@@ -66,7 +79,24 @@ import type {
   UnidadMedida,
   Gasto,
   Medida,
+  TipoImpuesto,
 } from '@/types/catalogo.types';
+
+interface Proveedor {
+  idProveedor: number;
+  razonSocial: string;
+  rfc?: string;
+  codigoPostal?: string;
+  regimenFiscalId?: number;
+  regimenFiscalDescripcion?: string;
+  usoCfdi?: string;
+  sinDatosFiscales?: boolean;
+  detalle?: {
+    personaContactoNombre?: string;
+    contactoTelefono?: string;
+    contactoEmail?: string;
+  };
+}
 
 const partidaSchema = z.object({
   descripcion: z.string().min(1, 'La descripción es requerida').max(500),
@@ -74,9 +104,11 @@ const partidaSchema = z.object({
   idUnidadMedida: z.number().positive('Seleccione una unidad'),
   precioUnitario: z.number().positive('Debe ser mayor a 0'),
   descuento: z.number().min(0),
+  idTipoImpuesto: z.number().positive('Seleccione un impuesto'),
   porcentajeIva: z.number().min(0).max(100),
   totalRetenciones: z.number().min(0),
   otrosImpuestos: z.number().min(0),
+  tipoOtrosImpuestos: z.enum(['MXN', 'PERCENTAGE']),
   deducible: z.boolean(),
 });
 
@@ -114,9 +146,11 @@ const emptyPartida: PartidaFormValues = {
   idUnidadMedida: 0,
   precioUnitario: 0,
   descuento: 0,
+  idTipoImpuesto: 0,
   porcentajeIva: 16,
   totalRetenciones: 0,
   otrosImpuestos: 0,
+  tipoOtrosImpuestos: 'MXN',
   deducible: true,
 };
 const fmt = (n: number) =>
@@ -145,13 +179,14 @@ function NumericInput({
   id?: string;
   suffix?: string;
 }) {
-  const [displayValue, setDisplayValue] = useState(() => (value === 0 ? '' : value.toString()));
+  const [displayValue, setDisplayValue] = useState(() => (value === 0 ? '0' : value.toString()));
+  const isFocusedRef = useRef(false);
 
   useEffect(() => {
-    if (document.activeElement?.id !== id) {
-      setDisplayValue(value === 0 ? '' : value.toString());
+    if (!isFocusedRef.current) {
+      setDisplayValue(value === 0 ? '0' : value.toString());
     }
-  }, [value, id]);
+  }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
@@ -162,10 +197,16 @@ function NumericInput({
     onChange(isNaN(num) ? 0 : num);
   };
 
+  const handleFocus = () => {
+    isFocusedRef.current = true;
+  };
+
   const handleBlur = () => {
+    isFocusedRef.current = false;
     const num = parseFloat(displayValue);
-    onChange(isNaN(num) ? 0 : num);
-    setDisplayValue(num === 0 ? '' : num.toString());
+    const validNum = isNaN(num) ? 0 : num;
+    onChange(validNum);
+    setDisplayValue(validNum === 0 ? '0' : validNum.toString());
   };
 
   return (
@@ -177,6 +218,7 @@ function NumericInput({
         placeholder={placeholder}
         value={displayValue}
         onChange={handleChange}
+        onFocus={handleFocus}
         onBlur={handleBlur}
         className={cn('pr-12', className)}
       />
@@ -212,6 +254,115 @@ function FormSection({
   );
 }
 
+function UnidadMedidaSelector({
+  value,
+  onChange,
+  unidadesMedida,
+  medidas,
+}: {
+  value: number;
+  onChange: (val: number) => void;
+  unidadesMedida: UnidadMedida[];
+  medidas: Medida[];
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedUnidad = unidadesMedida.find((u) => u.idUnidadMedida === value);
+
+  const unidadesPorMedida = useMemo(() => {
+    const grupos: Record<number, { medida: Medida; unidades: UnidadMedida[] }> = {};
+    unidadesMedida.forEach((unidad) => {
+      const medidaId = unidad.idMedida || 0;
+      const medida = medidas.find((m) => m.idMedida === medidaId);
+      if (!grupos[medidaId]) {
+        grupos[medidaId] = {
+          medida: medida || { idMedida: medidaId, nombre: 'Sin categoría', activo: true, fechaCreacion: '' },
+          unidades: [],
+        };
+      }
+      grupos[medidaId].unidades.push(unidad);
+    });
+    return Object.values(grupos).sort((a, b) => a.medida.nombre.localeCompare(b.medida.nombre));
+  }, [unidadesMedida, medidas]);
+
+  return (
+    <FormItem className="md:col-span-4">
+      <FormLabel>Unidad de Medida *</FormLabel>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <FormControl>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between border-slate-200 bg-white hover:bg-slate-50"
+            >
+              <span className="truncate">
+                {selectedUnidad ? (
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium">{selectedUnidad.abreviatura}</span>
+                    <span className="text-sm text-slate-500">— {selectedUnidad.nombre}</span>
+                  </span>
+                ) : (
+                  <span className="text-slate-400">Seleccionar unidad...</span>
+                )}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
+            </Button>
+          </FormControl>
+        </PopoverTrigger>
+        <PopoverContent className="w-[400px] p-0" align="start" sideOffset={4}>
+          <Command className="rounded-lg border shadow-md">
+            <div className="flex items-center border-b bg-slate-50 px-3 py-2">
+              <Search className="mr-2 h-4 w-4 text-slate-400" />
+              <CommandInput
+                placeholder="Buscar unidad de medida..."
+                className="flex-1 bg-transparent outline-none placeholder:text-slate-400"
+              />
+            </div>
+            <CommandEmpty className="py-6 text-center text-sm text-slate-500">
+              No se encontró ninguna unidad.
+            </CommandEmpty>
+            <CommandList className="max-h-[300px] overflow-auto">
+              {unidadesPorMedida.map((grupo) => (
+                <CommandGroup
+                  key={grupo.medida.idMedida}
+                  heading={grupo.medida.nombre}
+                  className="px-2 py-2"
+                >
+                  <div className="space-y-0.5">
+                    {grupo.unidades.map((unidad) => (
+                      <CommandItem
+                        key={unidad.idUnidadMedida}
+                        value={`${unidad.nombre} ${unidad.abreviatura}`}
+                        onSelect={() => {
+                          onChange(unidad.idUnidadMedida);
+                          setOpen(false);
+                        }}
+                        className="flex cursor-pointer items-center justify-between rounded-md px-2 py-2 hover:bg-slate-100"
+                      >
+                        <span className="flex items-center gap-3">
+                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-xs font-semibold text-slate-700">
+                            {unidad.abreviatura}
+                          </span>
+                          <span className="text-sm">{unidad.nombre}</span>
+                        </span>
+                        {value === unidad.idUnidadMedida && (
+                          <Check className="h-4 w-4 text-primary" />
+                        )}
+                      </CommandItem>
+                    ))}
+                  </div>
+                </CommandGroup>
+              ))}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      <FormMessage />
+    </FormItem>
+  );
+}
+
 export default function CrearOrdenCompra() {
   usePageTitle('Orden de compra', 'Captura de orden de compra');
   const navigate = useNavigate();
@@ -225,7 +376,14 @@ export default function CrearOrdenCompra() {
   const [unidadesMedida, setUnidadesMedida] = useState<UnidadMedida[]>([]);
   const [medidas, setMedidas] = useState<Medida[]>([]);
   const [regimenesFiscales, setRegimenesFiscales] = useState<RegimenFiscalItem[]>([]);
+  const [tiposImpuesto, setTiposImpuesto] = useState<TipoImpuesto[]>([]);
+  const [defaultTipoImpuestoId, setDefaultTipoImpuestoId] = useState<number>(0);
   const [loadingCatalogs, setLoadingCatalogs] = useState(true);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [buscandoProveedor, setBuscandoProveedor] = useState(false);
+  const [proveedorNoExiste, setProveedorNoExiste] = useState(false);
+  const [mostrarDialogoProveedor, setMostrarDialogoProveedor] = useState(false);
+  const [valuesPendientes, setValuesPendientes] = useState<FormValues | null>(null);
   const catalogFetched = useRef(false);
   const userHasInteracted = useRef(false);
   const form = useForm<FormValues>({
@@ -266,30 +424,6 @@ export default function CrearOrdenCompra() {
     return areas.filter((a) => !selectedEmpresaId || a.idEmpresa === selectedEmpresaId);
   }, [areas, selectedEmpresaId, userHasInteracted.current]);
 
-  const unidadesPorMedida = useMemo(() => {
-    const grupos: Record<number, { medida: Medida; unidades: UnidadMedida[] }> = {};
-
-    unidadesMedida.forEach((unidad) => {
-      const medidaId = unidad.idMedida || 0;
-      const medida = medidas.find((m) => m.idMedida === medidaId);
-
-      if (!grupos[medidaId]) {
-        grupos[medidaId] = {
-          medida: medida || {
-            idMedida: medidaId,
-            nombre: 'Sin categoría',
-            activo: true,
-            fechaCreacion: '',
-          },
-          unidades: [],
-        };
-      }
-      grupos[medidaId].unidades.push(unidad);
-    });
-
-    return Object.values(grupos).sort((a, b) => a.medida.nombre.localeCompare(b.medida.nombre));
-  }, [unidadesMedida, medidas]);
-
   const sinDatosFiscales = form.watch('sinDatosFiscales');
   useEffect(() => {
     if (sinDatosFiscales) {
@@ -312,79 +446,168 @@ export default function CrearOrdenCompra() {
       subtotal += base;
       totalIva += base * ((p.porcentajeIva || 0) / 100);
       totalRetenciones += p.totalRetenciones || 0;
-      totalOtrosImpuestos += p.otrosImpuestos || 0;
+      const otrosImpuestosValor = p.tipoOtrosImpuestos === 'PERCENTAGE'
+        ? base * ((p.otrosImpuestos || 0) / 100)
+        : (p.otrosImpuestos || 0);
+      totalOtrosImpuestos += otrosImpuestosValor;
       totalDescuentos += p.descuento || 0;
     }
     const total = subtotal + totalIva - totalRetenciones + totalOtrosImpuestos;
     return { subtotal, totalIva, totalRetenciones, totalOtrosImpuestos, total, totalDescuentos };
   }, [watchedPartidas]);
-  const fetchCatalogs = async () => {
-    setLoadingCatalogs(true);
+  const fetchCatalogs = () => {
+    // Cargar todos los catálogos en paralelo sin bloquear la UI
     const errors: string[] = [];
 
-    try {
-      // Cargar Empresas, Sucursales y Áreas (esenciales - deben funcionar)
-      const [empresasData, sucursalesData, areasData] = await Promise.all([
-        authService.getEmpresas(),
-        authService.getSucursales(),
-        authService.getAreas(),
-      ]);
+    // Catálogos esenciales - Empresas, Sucursales, Áreas
+    Promise.all([
+      authService.getEmpresas().catch(err => {
+        console.error('[fetchCatalogs] Error al cargar Empresas:', err);
+        toast.error('Error al cargar empresas');
+        return [];
+      }),
+      authService.getSucursales().catch(err => {
+        console.error('[fetchCatalogs] Error al cargar Sucursales:', err);
+        toast.error('Error al cargar sucursales');
+        return [];
+      }),
+      authService.getAreas().catch(err => {
+        console.error('[fetchCatalogs] Error al cargar Áreas:', err);
+        toast.error('Error al cargar áreas');
+        return [];
+      }),
+    ]).then(([empresasData, sucursalesData, areasData]) => {
       setEmpresas((empresasData as unknown as Empresa[]) || []);
       setSucursales((sucursalesData as unknown as Sucursal[]) || []);
       setAreas(areasData || []);
-    } catch (err) {
-      console.error('[fetchCatalogs] ERROR en catálogos principales:', err);
-      toast.error('Error al cargar empresas, sucursales o áreas');
       setLoadingCatalogs(false);
-      return;
-    }
+    });
 
-    // Cargar catálogos secundarios de forma independiente (si fallan uno, no afectan los otros)
+    // Catálogos secundarios - cada uno independiente
+    API.get<ApiResponse<Gasto[]>>('/catalogos/Gastos')
+      .then(res => {
+        if (res.data.success) setTiposGasto(res.data.data || []);
+      })
+      .catch(err => {
+        console.warn('[fetchCatalogs] Error al cargar Gastos:', err);
+        errors.push('Tipos de Gasto');
+      });
+
+    API.get<ApiResponse<FormaPago[]>>('/catalogos/FormasPago')
+      .then(res => {
+        if (res.data.success) setFormasPago(res.data.data || []);
+      })
+      .catch(err => {
+        console.warn('[fetchCatalogs] Error al cargar FormasPago:', err);
+        errors.push('Formas de Pago');
+      });
+
+    API.get<ApiResponse<UnidadMedida[]>>('/catalogos/UnidadesMedida')
+      .then(res => {
+        if (res.data.success) setUnidadesMedida(res.data.data || []);
+      })
+      .catch(err => {
+        console.warn('[fetchCatalogs] Error al cargar UnidadesMedida:', err);
+        errors.push('Unidades de Medida');
+      });
+
+    API.get<ApiResponse<Medida[]>>('/catalogos/Medidas')
+      .then(res => {
+        if (res.data.success) setMedidas(res.data.data || []);
+      })
+      .catch(err => {
+        console.warn('[fetchCatalogs] Error al cargar Medidas:', err);
+        errors.push('Medidas');
+      });
+
+    API.get<ApiResponse<RegimenFiscalItem[]>>('/catalogos/RegimenesFiscales')
+      .then(res => {
+        if (res.data.success) setRegimenesFiscales(res.data.data || []);
+      })
+      .catch(err => {
+        console.warn('[fetchCatalogs] Error al cargar RegimenesFiscales:', err);
+        errors.push('Regímenes Fiscales');
+      });
+
+    API.get<ApiResponse<TipoImpuesto[]>>('/catalogos/TiposImpuesto')
+      .then(res => {
+        if (res.data.success) {
+          const tipos = res.data.data || [];
+          setTiposImpuesto(tipos);
+          const iva16 = tipos.find((t) => t.clave === 'T16');
+          if (iva16) {
+            setDefaultTipoImpuestoId(iva16.idTipoImpuesto);
+            form.setValue('partidas', [{ ...emptyPartida, idTipoImpuesto: iva16.idTipoImpuesto, porcentajeIva: Number((iva16.tasa * 100).toFixed(2)) }]);
+          }
+        }
+      })
+      .catch(err => {
+        console.warn('[fetchCatalogs] Error al cargar TiposImpuesto:', err);
+        errors.push('Tipos de Impuesto');
+      });
+
+    // Mostrar errores acumulados después de un tiempo
+    setTimeout(() => {
+      if (errors.length > 0) {
+        toast.warning(`No tienes permisos para ver: ${errors.join(', ')}`);
+      }
+    }, 1000);
+  };
+
+  const buscarProveedores = async (termino: string, tipo: 'razonSocial' | 'rfc') => {
+    if (!termino || termino.length < 1) return;
+
+    setBuscandoProveedor(true);
     try {
-      const gastoRes = await API.get<ApiResponse<Gasto[]>>('/catalogos/Gastos');
-      if (gastoRes.data.success) setTiposGasto(gastoRes.data.data || []);
+      const params = tipo === 'razonSocial' 
+        ? { razonSocial: termino }
+        : { rfc: termino };
+      
+      const response = await API.get<ApiResponse<Proveedor[]>>('/catalogos/Proveedores', { params });
+      if (response.data.success) {
+        setProveedores(response.data.data || []);
+      }
     } catch (err) {
-      console.warn('[fetchCatalogs] Error al cargar Gastos:', err);
-      errors.push('Tipos de Gasto');
+      console.error('Error al buscar proveedores:', err);
+    } finally {
+      setBuscandoProveedor(false);
     }
+  };
+
+  const seleccionarProveedor = (proveedor: Proveedor) => {
+    form.setValue('razonSocialProveedor', proveedor.razonSocial);
+    form.setValue('rfcProveedor', proveedor.rfc || '');
+    form.setValue('codigoPostalProveedor', proveedor.codigoPostal || '');
+    form.setValue('idRegimenFiscal', proveedor.regimenFiscalId || 0);
+    form.setValue('usoCFDI', proveedor.usoCfdi || '');
+    form.setValue('personaContacto', proveedor.detalle?.personaContactoNombre || '');
+    form.setValue('sinDatosFiscales', proveedor.sinDatosFiscales || false);
+    setProveedores([]);
+    setProveedorNoExiste(false);
+  };
+
+  const validarProveedorExistente = async (): Promise<boolean> => {
+    const rfc = form.getValues('rfcProveedor');
+    if (!rfc || rfc.length < 10) return true;
 
     try {
-      const fpRes = await API.get<ApiResponse<FormaPago[]>>('/catalogos/FormasPago');
-      if (fpRes.data.success) setFormasPago(fpRes.data.data || []);
+      const response = await API.get<ApiResponse<Proveedor[]>>('/catalogos/Proveedores', {
+        params: { rfc: rfc }
+      });
+      
+      if (response.data.success && response.data.data && response.data.data.length > 0) {
+        const proveedor = response.data.data[0];
+        if (proveedor.razonSocial === form.getValues('razonSocialProveedor')) {
+          return true;
+        }
+      }
+      
+      setProveedorNoExiste(true);
+      return false;
     } catch (err) {
-      console.warn('[fetchCatalogs] Error al cargar FormasPago:', err);
-      errors.push('Formas de Pago');
+      console.error('Error al validar proveedor:', err);
+      return true;
     }
-
-    try {
-      const umRes = await API.get<ApiResponse<UnidadMedida[]>>('/catalogos/UnidadesMedida');
-      if (umRes.data.success) setUnidadesMedida(umRes.data.data || []);
-    } catch (err) {
-      console.warn('[fetchCatalogs] Error al cargar UnidadesMedida:', err);
-      errors.push('Unidades de Medida');
-    }
-
-    try {
-      const medRes = await API.get<ApiResponse<Medida[]>>('/catalogos/Medidas');
-      if (medRes.data.success) setMedidas(medRes.data.data || []);
-    } catch (err) {
-      console.warn('[fetchCatalogs] Error al cargar Medidas:', err);
-      errors.push('Medidas');
-    }
-
-    try {
-      const rfRes = await API.get<ApiResponse<RegimenFiscalItem[]>>('/catalogos/RegimenesFiscales');
-      if (rfRes.data.success) setRegimenesFiscales(rfRes.data.data || []);
-    } catch (err) {
-      console.warn('[fetchCatalogs] Error al cargar RegimenesFiscales:', err);
-      errors.push('Regímenes Fiscales');
-    }
-
-    if (errors.length > 0) {
-      toast.warning(`No tienes permisos para ver: ${errors.join(', ')}`);
-    }
-
-    setLoadingCatalogs(false);
   };
   useEffect(() => {
     if (catalogFetched.current) return;
@@ -410,6 +633,34 @@ export default function CrearOrdenCompra() {
           return;
         }
       }
+      
+      const proveedorExiste = await validarProveedorExistente();
+      if (!proveedorExiste) {
+        setValuesPendientes(values);
+        setMostrarDialogoProveedor(true);
+        setIsSaving(false);
+        return;
+      }
+      
+      await guardarOrden(values);
+    } catch (error) {
+      const apiError = error as { errors?: Array<{ description: string }>; message?: string };
+      const errs = apiError.errors ?? [];
+      if (errs.length > 0) {
+        errs.forEach((e) =>
+          toast.error(apiError.message ?? 'Error', { description: e.description })
+        );
+      } else {
+        toast.error(apiError.message ?? 'Error al crear la orden de compra');
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const guardarOrden = async (values: FormValues) => {
+    setIsSaving(true);
+    try {
       const payload: CreateOrdenCompraRequest = {
         ...values,
         rfcProveedor: values.rfcProveedor || null,
@@ -440,6 +691,13 @@ export default function CrearOrdenCompra() {
       setIsSaving(false);
     }
   };
+  
+  const confirmarGuardarProveedorNuevo = () => {
+    setMostrarDialogoProveedor(false);
+    if (valuesPendientes) {
+      guardarOrden(valuesPendientes);
+    }
+  };
   if (loadingCatalogs) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -452,134 +710,120 @@ export default function CrearOrdenCompra() {
       <Form {...form}>
         <form className="space-y-6">
           {/* Card: Datos Generales */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                <FileText className="h-5 w-5" />
-                Datos Generales
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Sección: Ubicación */}
-              <FormSection icon={Building2} title="Ubicación">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="idEmpresa"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Empresa *</FormLabel>
-                        <Select
-                          onValueChange={(val) => {
-                            userHasInteracted.current = true;
-                            field.onChange(Number(val));
-                          }}
-                          value={field.value ? String(field.value) : ''}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona empresa..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {empresas.map((e) => (
-                              <SelectItem key={e.idEmpresa} value={String(e.idEmpresa)}>
-                                {e.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="idSucursal"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sucursal *</FormLabel>
-                        <Select
-                          onValueChange={(val) => {
-                            userHasInteracted.current = true;
-                            field.onChange(Number(val));
-                          }}
-                          value={field.value ? String(field.value) : ''}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona sucursal..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {filteredSucursales.map((s) => (
-                              <SelectItem key={s.idSucursal} value={String(s.idSucursal)}>
-                                {s.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="idArea"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Área *</FormLabel>
-                        <Select
-                          onValueChange={(val) => {
-                            userHasInteracted.current = true;
-                            field.onChange(Number(val));
-                          }}
-                          value={field.value ? String(field.value) : ''}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona área..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {filteredAreas.map((a) => (
-                              <SelectItem key={a.idArea} value={String(a.idArea)}>
-                                {a.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </FormSection>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold">Notas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FormField
-                control={form.control}
-                name="notasGenerales"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Información adicional relevante para esta orden de compra..."
-                        rows={3}
-                        {...field}
+          <Collapsible defaultOpen={false}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer pb-4">
+                  <CardTitle className="flex items-center justify-between text-lg font-semibold">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Datos Generales
+                    </div>
+                    <ChevronDown className="h-5 w-5 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-6">
+                  {/* Sección: Ubicación */}
+                  <FormSection icon={Building2} title="Ubicación">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <FormField
+                        control={form.control}
+                        name="idEmpresa"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Empresa *</FormLabel>
+                            <Select
+                              onValueChange={(val) => {
+                                userHasInteracted.current = true;
+                                field.onChange(Number(val));
+                              }}
+                              value={field.value ? String(field.value) : ''}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecciona empresa..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {empresas.map((e) => (
+                                  <SelectItem key={e.idEmpresa} value={String(e.idEmpresa)}>
+                                    {e.nombre}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
+                      <FormField
+                        control={form.control}
+                        name="idSucursal"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Sucursal *</FormLabel>
+                            <Select
+                              onValueChange={(val) => {
+                                userHasInteracted.current = true;
+                                field.onChange(Number(val));
+                              }}
+                              value={field.value ? String(field.value) : ''}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecciona sucursal..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {filteredSucursales.map((s) => (
+                                  <SelectItem key={s.idSucursal} value={String(s.idSucursal)}>
+                                    {s.nombre}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="idArea"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Área *</FormLabel>
+                            <Select
+                              onValueChange={(val) => {
+                                userHasInteracted.current = true;
+                                field.onChange(Number(val));
+                              }}
+                              value={field.value ? String(field.value) : ''}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecciona área..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {filteredAreas.map((a) => (
+                                  <SelectItem key={a.idArea} value={String(a.idArea)}>
+                                    {a.nombre}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </FormSection>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-lg font-semibold">
@@ -663,23 +907,50 @@ export default function CrearOrdenCompra() {
                   )}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="notasGenerales"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notas</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Información adicional relevante para esta orden de compra..."
-                        rows={3}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="notaFormaPago"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Nota de Forma de Pago
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Instrucciones especiales de pago" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Instrucciones específicas sobre cómo realizar el pago al proveedor
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="notasGenerales"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notas Generales</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Información adicional relevante para esta orden de compra..."
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Cualquier información adicional sobre la orden que deba ser considerada
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -716,18 +987,181 @@ export default function CrearOrdenCompra() {
                   <FormField
                     control={form.control}
                     name="razonSocialProveedor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Razón Social *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Nombre completo o razón social del proveedor"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const [open, setOpen] = useState(false);
+                      const [busqueda, setBusqueda] = useState('');
+                      const [buscado, setBuscado] = useState(false);
+                      const [selectedIndex, setSelectedIndex] = useState(0);
+
+                      const handleBuscar = (valor: string) => {
+                        setBusqueda(valor);
+                        setBuscado(false);
+                        setSelectedIndex(0);
+                        if (valor.length >= 1) {
+                          setBuscado(true);
+                          buscarProveedores(valor, 'razonSocial');
+                        }
+                      };
+
+                      const handleKeyDown = (e: React.KeyboardEvent) => {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const totalOptions = proveedores.length + (busqueda.length > 0 ? 1 : 0);
+                          setSelectedIndex((prev) => (prev + 1) % totalOptions);
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          const totalOptions = proveedores.length + (busqueda.length > 0 ? 1 : 0);
+                          setSelectedIndex((prev) => (prev - 1 + totalOptions) % totalOptions);
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (selectedIndex < proveedores.length && proveedores.length > 0) {
+                            const proveedor = proveedores[selectedIndex];
+                            if (proveedor) {
+                              seleccionarProveedor(proveedor);
+                              setOpen(false);
+                              setBusqueda('');
+                              setBuscado(false);
+                              setSelectedIndex(0);
+                            }
+                          } else if (busqueda.length > 0) {
+                            field.onChange(busqueda);
+                            setOpen(false);
+                            setBusqueda('');
+                            setBuscado(false);
+                            setSelectedIndex(0);
+                          }
+                        }
+                      };
+
+                      return (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Razón Social *</FormLabel>
+                          <Popover open={open} onOpenChange={(isOpen) => {
+                            setOpen(isOpen);
+                            if (isOpen) {
+                              setBusqueda('');
+                              setBuscado(false);
+                              setSelectedIndex(0);
+                              setProveedores([]);
+                            }
+                          }}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={open}
+                                  className="w-full justify-between border-slate-200 bg-white hover:bg-slate-50"
+                                >
+                                  <span className="truncate">
+                                    {field.value || "Buscar proveedor por razón social..."}
+                                  </span>
+                                  <Search className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[400px] p-0" align="start">
+                              <Command shouldFilter={false} className="rounded-lg border shadow-md">
+                                <div className="flex items-center border-b bg-slate-50 px-3 py-2">
+                                  <Search className="mr-2 h-4 w-4 text-slate-400" />
+                                  <CommandInput
+                                    placeholder="Escribe para buscar..."
+                                    value={busqueda}
+                                    onValueChange={handleBuscar}
+                                    onKeyDown={handleKeyDown}
+                                    className="flex-1 bg-transparent outline-none placeholder:text-slate-400"
+                                  />
+                                </div>
+                                <CommandList className="max-h-[300px] overflow-auto">
+                                  {busqueda.length === 0 ? (
+                                    <div className="py-4 text-center text-sm text-muted-foreground">
+                                      Escribe para buscar proveedores
+                                    </div>
+                                  ) : buscandoProveedor ? (
+                                    <div className="py-4 text-center text-sm text-muted-foreground">
+                                      <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+                                      Buscando...
+                                    </div>
+                                  ) : buscado && proveedores.length === 0 ? (
+                                    <CommandGroup heading="Nuevo proveedor">
+                                      <CommandItem
+                                        value="__nuevo__"
+                                        onSelect={() => {
+                                          field.onChange(busqueda);
+                                          setOpen(false);
+                                          setBusqueda('');
+                                          setBuscado(false);
+                                          setSelectedIndex(0);
+                                        }}
+                                        className="flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100"
+                                      >
+                                        <span className="font-medium text-primary">
+                                          + Usar "{busqueda}"
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                          Se creará como proveedor nuevo
+                                        </span>
+                                      </CommandItem>
+                                    </CommandGroup>
+                                  ) : proveedores.length > 0 ? (
+                                    <>
+                                      <CommandGroup heading="Ocupar:">
+                                        <CommandItem
+                                          value="__nuevo__"
+                                          onSelect={() => {
+                                            field.onChange(busqueda);
+                                            setOpen(false);
+                                            setBusqueda('');
+                                            setBuscado(false);
+                                            setSelectedIndex(0);
+                                          }}
+                                          className={cn(
+                                            "flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm",
+                                            selectedIndex === 0 && "bg-slate-100"
+                                          )}
+                                        >
+                                          <span className="font-medium text-primary transition-colors hover:text-primary/80">
+                                            + Usar "{busqueda}"
+                                          </span>
+                                          <span className="text-xs text-muted-foreground">
+                                            Crear como proveedor nuevo
+                                          </span>
+                                        </CommandItem>
+                                      </CommandGroup>
+                                      <CommandGroup heading="Proveedores encontrados">
+                                        {proveedores.map((proveedor, index) => (
+                                          <CommandItem
+                                            key={proveedor.idProveedor}
+                                            value={String(proveedor.idProveedor)}
+                                            onSelect={() => {
+                                              seleccionarProveedor(proveedor);
+                                              setOpen(false);
+                                              setBusqueda('');
+                                              setBuscado(false);
+                                              setSelectedIndex(0);
+                                            }}
+                                            className={cn(
+                                              "flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm",
+                                              index + 1 === selectedIndex && "bg-slate-100"
+                                            )}
+                                          >
+                                            <span className="font-medium">{proveedor.razonSocial}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                              RFC: {proveedor.rfc || 'N/A'}
+                                            </span>
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </>
+                                  ) : null}
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
               </FormSection>
@@ -738,25 +1172,191 @@ export default function CrearOrdenCompra() {
                     <FormField
                       control={form.control}
                       name="rfcProveedor"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>RFC</FormLabel>
-                          <FormControl>
-                            <Input placeholder="ABCD010101XXX" {...field} />
-                          </FormControl>
-                          <FormDescription className="text-xs">
-                            12 caracteres para personas morales, 13 para físicas
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const [open, setOpen] = useState(false);
+                        const [busquedaRfc, setBusquedaRfc] = useState('');
+                        const [buscadoRfc, setBuscadoRfc] = useState(false);
+                        const [selectedIndexRfc, setSelectedIndexRfc] = useState(0);
+
+                        const handleBuscarRfc = (valor: string) => {
+                          setBusquedaRfc(valor);
+                          setBuscadoRfc(false);
+                          setSelectedIndexRfc(0);
+                          if (valor.length >= 1) {
+                            setBuscadoRfc(true);
+                            buscarProveedores(valor, 'rfc');
+                          }
+                        };
+
+                        const handleKeyDownRfc = (e: React.KeyboardEvent) => {
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const totalOptions = proveedores.length + (busquedaRfc.length > 0 ? 1 : 0);
+                            setSelectedIndexRfc((prev) => (prev + 1) % totalOptions);
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            const totalOptions = proveedores.length + (busquedaRfc.length > 0 ? 1 : 0);
+                            setSelectedIndexRfc((prev) => (prev - 1 + totalOptions) % totalOptions);
+                          } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (selectedIndexRfc < proveedores.length && proveedores.length > 0) {
+                              const proveedor = proveedores[selectedIndexRfc];
+                              if (proveedor) {
+                                seleccionarProveedor(proveedor);
+                                setOpen(false);
+                                setBusquedaRfc('');
+                                setBuscadoRfc(false);
+                                setSelectedIndexRfc(0);
+                              }
+                            } else if (busquedaRfc.length > 0) {
+                              field.onChange(busquedaRfc.toUpperCase());
+                              setOpen(false);
+                              setBusquedaRfc('');
+                              setBuscadoRfc(false);
+                              setSelectedIndexRfc(0);
+                            }
+                          }
+                        };
+
+                        return (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>RFC *</FormLabel>
+                            <Popover open={open} onOpenChange={(isOpen) => {
+                              setOpen(isOpen);
+                              if (isOpen) {
+                                setBusquedaRfc('');
+                                setBuscadoRfc(false);
+                                setSelectedIndexRfc(0);
+                                setProveedores([]);
+                              }
+                            }}>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={open}
+                                    className="w-full justify-between border-slate-200 bg-white hover:bg-slate-50"
+                                  >
+                                    <span className="truncate font-mono">
+                                      {field.value || "Buscar por RFC..."}
+                                    </span>
+                                    <Search className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[400px] p-0" align="start">
+                                <Command shouldFilter={false} className="rounded-lg border shadow-md">
+                                  <div className="flex items-center border-b bg-slate-50 px-3 py-2">
+                                    <Search className="mr-2 h-4 w-4 text-slate-400" />
+                                    <CommandInput
+                                      placeholder="Escribe RFC para buscar..."
+                                      value={busquedaRfc}
+                                      onValueChange={handleBuscarRfc}
+                                      onKeyDown={handleKeyDownRfc}
+                                      className="flex-1 bg-transparent outline-none placeholder:text-slate-400"
+                                    />
+                                  </div>
+                                  <CommandList className="max-h-[300px] overflow-auto">
+                                    {busquedaRfc.length === 0 ? (
+                                      <div className="py-4 text-center text-sm text-muted-foreground">
+                                        Escribe para buscar proveedores
+                                      </div>
+                                    ) : buscandoProveedor ? (
+                                      <div className="py-4 text-center text-sm text-muted-foreground">
+                                        <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+                                        Buscando...
+                                      </div>
+                                    ) : buscadoRfc && proveedores.length === 0 ? (
+                                      <CommandGroup heading="Nuevo proveedor">
+                                        <CommandItem
+                                          value="__nuevo__"
+                                          onSelect={() => {
+                                            field.onChange(busquedaRfc.toUpperCase());
+                                            setOpen(false);
+                                            setBusquedaRfc('');
+                                            setBuscadoRfc(false);
+                                            setSelectedIndexRfc(0);
+                                          }}
+                                          className="flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100"
+                                        >
+                                          <span className="font-mono font-medium text-primary">
+                                            + Usar "{busquedaRfc.toUpperCase()}"
+                                          </span>
+                                          <span className="text-xs text-muted-foreground">
+                                            Se creará como proveedor nuevo
+                                          </span>
+                                        </CommandItem>
+                                      </CommandGroup>
+                                    ) : proveedores.length > 0 ? (
+                                      <>
+                                      <CommandGroup heading="Ocupar:">
+                                        <CommandItem
+                                          value="__nuevo__"
+                                          onSelect={() => {
+                                            field.onChange(busquedaRfc.toUpperCase());
+                                            setOpen(false);
+                                            setBusquedaRfc('');
+                                            setBuscadoRfc(false);
+                                            setSelectedIndexRfc(0);
+                                          }}
+                                          className={cn(
+                                            "flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm",
+                                            selectedIndexRfc === 0 && "bg-slate-100"
+                                          )}
+                                        >
+                                          <span className="font-mono font-medium text-primary transition-colors hover:text-primary/80">
+                                            + Usar "{busquedaRfc.toUpperCase()}"
+                                          </span>
+                                          <span className="text-xs text-muted-foreground">
+                                            Crear como proveedor nuevo
+                                          </span>
+                                        </CommandItem>
+                                      </CommandGroup>
+                                        <CommandGroup heading="Proveedores encontrados">
+                                          {proveedores.map((proveedor, index) => (
+                                            <CommandItem
+                                              key={proveedor.idProveedor}
+                                              value={String(proveedor.idProveedor)}
+                                              onSelect={() => {
+                                                seleccionarProveedor(proveedor);
+                                                setOpen(false);
+                                                setBusquedaRfc('');
+                                                setBuscadoRfc(false);
+                                                setSelectedIndexRfc(0);
+                                              }}
+                                              className={cn(
+                                                "flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100 hover:shadow-sm",
+                                                index + 1 === selectedIndexRfc && "bg-slate-100"
+                                              )}
+                                            >
+                                              <span className="font-mono font-medium">{proveedor.rfc}</span>
+                                              <span className="text-xs text-muted-foreground">
+                                                {proveedor.razonSocial}
+                                              </span>
+                                            </CommandItem>
+                                          ))}
+                                        </CommandGroup>
+                                      </>
+                                    ) : null}
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                            <FormDescription className="text-xs">
+                              12 caracteres para personas morales, 13 para físicas
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                     <FormField
                       control={form.control}
                       name="codigoPostalProveedor"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Código Postal</FormLabel>
+                          <FormLabel>Código Postal *</FormLabel>
                           <FormControl>
                             <Input placeholder="00000" maxLength={5} {...field} />
                           </FormControl>
@@ -769,7 +1369,7 @@ export default function CrearOrdenCompra() {
                       name="idRegimenFiscal"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Régimen Fiscal</FormLabel>
+                          <FormLabel>Régimen Fiscal *</FormLabel>
                           <Select
                             onValueChange={(val) => field.onChange(Number(val))}
                             value={field.value ? String(field.value) : ''}
@@ -799,7 +1399,7 @@ export default function CrearOrdenCompra() {
                       name="usoCFDI"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Uso del CFDI</FormLabel>
+                          <FormLabel>Uso del CFDI *</FormLabel>
                           <Select
                             onValueChange={(val) => field.onChange(val)}
                             value={field.value || ''}
@@ -841,7 +1441,7 @@ export default function CrearOrdenCompra() {
               )}
 
               <FormSection icon={User} title="Contacto">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
                     name="personaContacto"
@@ -850,22 +1450,6 @@ export default function CrearOrdenCompra() {
                         <FormLabel>Persona de Contacto</FormLabel>
                         <FormControl>
                           <Input placeholder="Nombre de quien atiende esta orden" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="notaFormaPago"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <CreditCard className="h-3.5 w-3.5" />
-                          Nota de Forma de Pago
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="Instrucciones especiales de pago" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -882,11 +1466,12 @@ export default function CrearOrdenCompra() {
               <CardTitle className="text-lg font-semibold">Partidas</CardTitle>
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
+                variant="default"
+                size="default"
                 onClick={() => append(emptyPartida)}
+                className="text-base font-semibold shadow-sm"
               >
-                <Plus className="mr-1 h-4 w-4" /> Agregar Partida
+                <Plus className="mr-2 h-5 w-5" /> Agregar Partida
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -895,13 +1480,16 @@ export default function CrearOrdenCompra() {
                 const lineBase =
                   (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
                 const lineIva = lineBase * ((p?.porcentajeIva || 0) / 100);
+                const otrosImpuestosValor = p?.tipoOtrosImpuestos === 'PERCENTAGE'
+                  ? lineBase * ((p?.otrosImpuestos || 0) / 100)
+                  : (p?.otrosImpuestos || 0);
                 const lineTotal =
-                  lineBase + lineIva - (p?.totalRetenciones || 0) + (p?.otrosImpuestos || 0);
+                  lineBase + lineIva - (p?.totalRetenciones || 0) + otrosImpuestosValor;
                 return (
                   <div key={item.id} className="space-y-4">
                     {index > 0 && (
                       <div className="my-8 flex items-center justify-center">
-                        <div className="h-0.5 w-24 rounded-full bg-primary/40" />
+                        <div className="bg-primary/40 h-0.5 w-24 rounded-full" />
                       </div>
                     )}
                     <div className="space-y-4 rounded-lg border bg-card p-4">
@@ -910,7 +1498,9 @@ export default function CrearOrdenCompra() {
                           <span className="bg-primary/10 flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold text-primary">
                             {index + 1}
                           </span>
-                          <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-sm font-bold text-transparent">Partida</span>
+                          <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-sm font-bold text-transparent">
+                            Partida
+                          </span>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
@@ -939,20 +1529,20 @@ export default function CrearOrdenCompra() {
                           )}
                           {(p?.otrosImpuestos || 0) > 0 && (
                             <span className="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-600 dark:bg-purple-950 dark:text-purple-400">
-                              Otros{' '}
+                              Otros{p?.tipoOtrosImpuestos === 'PERCENTAGE' ? ' %' : ''}{' '}
                               <span className="ml-1 font-semibold tabular-nums">
-                                {fmt(p.otrosImpuestos)}
+                                {fmt(otrosImpuestosValor)}
                               </span>
                             </span>
                           )}
-                          <span className="ring-primary/20 inline-flex items-center rounded-full bg-primary px-4 py-1.5 text-sm font-bold text-primary-foreground shadow-sm ring-1">
+                          <span className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-sm font-bold text-primary ring-1 ring-primary/20">
                             Total {fmt(lineTotal)}
                           </span>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            className="hover:bg-destructive/10 h-7 w-7 text-destructive hover:text-destructive"
                             onClick={() => remove(index)}
                             disabled={fields.length <= 1}
                           >
@@ -994,100 +1584,14 @@ export default function CrearOrdenCompra() {
                         <FormField
                           control={form.control}
                           name={`partidas.${index}.idUnidadMedida`}
-                          render={({ field }) => {
-                            const [open, setOpen] = useState(false);
-                            const selectedUnidad = unidadesMedida.find(
-                              (u) => u.idUnidadMedida === field.value
-                            );
-
-                            return (
-                              <FormItem className="md:col-span-4">
-                                <FormLabel>Unidad de Medida *</FormLabel>
-                                <Popover open={open} onOpenChange={setOpen}>
-                                  <PopoverTrigger asChild>
-                                    <FormControl>
-                                      <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        aria-expanded={open}
-                                        className="w-full justify-between border-slate-200 bg-white hover:bg-slate-50"
-                                      >
-                                        <span className="truncate">
-                                          {selectedUnidad ? (
-                                            <span className="flex items-center gap-2">
-                                              <span className="font-medium">
-                                                {selectedUnidad.abreviatura}
-                                              </span>
-                                              <span className="text-sm text-slate-500">
-                                                — {selectedUnidad.nombre}
-                                              </span>
-                                            </span>
-                                          ) : (
-                                            <span className="text-slate-400">
-                                              Seleccionar unidad...
-                                            </span>
-                                          )}
-                                        </span>
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
-                                      </Button>
-                                    </FormControl>
-                                  </PopoverTrigger>
-                                  <PopoverContent
-                                    className="w-[400px] p-0"
-                                    align="start"
-                                    sideOffset={4}
-                                  >
-                                    <Command className="rounded-lg border shadow-md">
-                                      <div className="flex items-center border-b bg-slate-50 px-3 py-2">
-                                        <Search className="mr-2 h-4 w-4 text-slate-400" />
-                                        <CommandInput
-                                          placeholder="Buscar unidad de medida..."
-                                          className="flex-1 bg-transparent outline-none placeholder:text-slate-400"
-                                        />
-                                      </div>
-                                      <CommandEmpty className="py-6 text-center text-sm text-slate-500">
-                                        No se encontró ninguna unidad.
-                                      </CommandEmpty>
-                                      <CommandList className="max-h-[300px] overflow-auto">
-                                        {unidadesPorMedida.map((grupo) => (
-                                          <CommandGroup
-                                            key={grupo.medida.idMedida}
-                                            heading={grupo.medida.nombre}
-                                            className="px-2 py-2"
-                                          >
-                                            <div className="space-y-0.5">
-                                              {grupo.unidades.map((unidad) => (
-                                                <CommandItem
-                                                  key={unidad.idUnidadMedida}
-                                                  value={`${unidad.nombre} ${unidad.abreviatura}`}
-                                                  onSelect={() => {
-                                                    field.onChange(unidad.idUnidadMedida);
-                                                    setOpen(false);
-                                                  }}
-                                                  className="flex cursor-pointer items-center justify-between rounded-md px-2 py-2 hover:bg-slate-100"
-                                                >
-                                                  <span className="flex items-center gap-3">
-                                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-xs font-semibold text-slate-700">
-                                                      {unidad.abreviatura}
-                                                    </span>
-                                                    <span className="text-sm">{unidad.nombre}</span>
-                                                  </span>
-                                                  {field.value === unidad.idUnidadMedida && (
-                                                    <Check className="h-4 w-4 text-primary" />
-                                                  )}
-                                                </CommandItem>
-                                              ))}
-                                            </div>
-                                          </CommandGroup>
-                                        ))}
-                                      </CommandList>
-                                    </Command>
-                                  </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                              </FormItem>
-                            );
-                          }}
+                          render={({ field }) => (
+                            <UnidadMedidaSelector
+                              value={field.value}
+                              onChange={field.onChange}
+                              unidadesMedida={unidadesMedida}
+                              medidas={medidas}
+                            />
+                          )}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4 md:grid-cols-12">
@@ -1129,21 +1633,41 @@ export default function CrearOrdenCompra() {
                         />
                         <FormField
                           control={form.control}
-                          name={`partidas.${index}.porcentajeIva`}
-                          render={({ field }) => (
-                            <FormItem className="col-span-1 md:col-span-2">
-                              <FormLabel>% IVA</FormLabel>
-                              <FormControl>
-                                <NumericInput
-                                  id={`iva-${index}`}
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  suffix="%"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                          name={`partidas.${index}.idTipoImpuesto`}
+                          render={({ field }) => {
+                            const selectedTipo = tiposImpuesto.find((t) => t.idTipoImpuesto === field.value);
+                            return (
+                              <FormItem className="col-span-1 md:col-span-2">
+                                <FormLabel>Impuesto</FormLabel>
+                                <Select
+                                  onValueChange={(val) => {
+                                    const id = Number(val);
+                                    field.onChange(id);
+                                    const tipo = tiposImpuesto.find((t) => t.idTipoImpuesto === id);
+                                    if (tipo) {
+                                      const pct = Number((tipo.tasa * 100).toFixed(2));
+                                      form.setValue(`partidas.${index}.porcentajeIva`, pct);
+                                    }
+                                  }}
+                                  value={field.value ? String(field.value) : ''}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecciona impuesto..." />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {tiposImpuesto.map((ti) => (
+                                      <SelectItem key={ti.idTipoImpuesto} value={String(ti.idTipoImpuesto)}>
+                                        {ti.nombre} ({(ti.tasa * 100).toFixed(0)}%)
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
                         />
                         <FormField
                           control={form.control}
@@ -1165,20 +1689,40 @@ export default function CrearOrdenCompra() {
                         />
                         <FormField
                           control={form.control}
-                          name={`partidas.${index}.otrosImpuestos`}
-                          render={({ field }) => (
-                            <FormItem className="col-span-1 md:col-span-2">
-                              <FormLabel>Otros Impuestos</FormLabel>
-                              <FormControl>
-                                <NumericInput
-                                  id={`otros-impuestos-${index}`}
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  suffix="MXN"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                          name={`partidas.${index}.tipoOtrosImpuestos`}
+                          render={({ field: tipoField }) => (
+                            <FormField
+                              control={form.control}
+                              name={`partidas.${index}.otrosImpuestos`}
+                              render={({ field: valorField }) => (
+                                <FormItem className="col-span-2 md:col-span-4">
+                                  <FormLabel>Otros Impuestos</FormLabel>
+                                  <div className="flex">
+                                    <FormControl className="flex-1">
+                                      <NumericInput
+                                        id={`otros-impuestos-${index}`}
+                                        value={valorField.value}
+                                        onChange={valorField.onChange}
+                                        className="rounded-r-none border-r-0"
+                                      />
+                                    </FormControl>
+                                    <Select
+                                      value={tipoField.value}
+                                      onValueChange={(val) => tipoField.onChange(val as 'MXN' | 'PERCENTAGE')}
+                                    >
+                                      <SelectTrigger className="w-20 rounded-l-none border-l-0 bg-muted px-2 focus:ring-0 focus:ring-offset-0">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="MXN">MXN</SelectItem>
+                                        <SelectItem value="PERCENTAGE">%</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           )}
                         />
                         <FormField
@@ -1207,65 +1751,100 @@ export default function CrearOrdenCompra() {
               <CardTitle className="text-lg font-semibold">Resumen</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {watchedPartidas?.map((p, idx) => {
-                  const base =
-                    (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
+                  const base = (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
                   const iva = base * ((p?.porcentajeIva || 0) / 100);
+                  const otrosImpuestosValor = p?.tipoOtrosImpuestos === 'PERCENTAGE'
+                    ? base * ((p?.otrosImpuestos || 0) / 100)
+                    : (p?.otrosImpuestos || 0);
                   const partTotal =
-                    base + iva - (p?.totalRetenciones || 0) + (p?.otrosImpuestos || 0);
-                  const pDesc = p?.descripcion?.slice(0, 30) || `Partida ${idx + 1}`;
+                    base + iva - (p?.totalRetenciones || 0) + otrosImpuestosValor;
+                  const pDesc = p?.descripcion?.slice(0, 25) || `Partida ${idx + 1}`;
                   return (
-                    <div
-                      key={idx}
-                      className="border-b py-1.5 last:border-0 even:bg-muted/10"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                    <div key={idx} className="rounded-md border bg-card p-2 shadow-sm">
+                      <div className="mb-1 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="bg-primary/10 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold text-primary">
                             {idx + 1}
                           </span>
-                          <span className="text-sm font-medium">{pDesc}</span>
+                          <span className="max-w-[100px] truncate text-xs font-medium">
+                            {pDesc}
+                          </span>
                         </div>
-                        <span className="text-sm font-bold text-primary">{fmt(partTotal)}</span>
+                        <span className="text-xs font-bold text-primary">{fmt(partTotal)}</span>
+                      </div>
+                      <div className="space-y-0.5 text-[10px] text-muted-foreground">
+                        <div className="flex justify-between">
+                          <span>Subtotal</span>
+                          <span className="tabular-nums">{fmt(base)}</span>
+                        </div>
+                        {(p?.descuento || 0) > 0 && (
+                          <div className="flex justify-between text-destructive">
+                            <span>Desc</span>
+                            <span className="tabular-nums">−{fmt(p.descuento)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span>IVA ({p?.porcentajeIva || 0}%)</span>
+                          <span className="tabular-nums">{fmt(iva)}</span>
+                        </div>
+                        {(p?.totalRetenciones || 0) > 0 && (
+                          <div className="flex justify-between text-destructive">
+                            <span>Retenc</span>
+                            <span className="tabular-nums">−{fmt(p.totalRetenciones)}</span>
+                          </div>
+                        )}
+                        {(p?.otrosImpuestos || 0) > 0 && (
+                          <div className="flex justify-between">
+                            <span>Otros{p?.tipoOtrosImpuestos === 'PERCENTAGE' ? ' %' : ''}</span>
+                            <span className="tabular-nums">{fmt(otrosImpuestosValor)}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="rounded-lg border-2 border-primary/30 bg-primary/10 p-3 shadow-md">
-                <div className="mb-2 flex items-center justify-between border-b border-primary/20 pb-2">
+              <div className="border-primary/30 bg-primary/10 rounded-lg border-2 p-3 shadow-md">
+                <div className="border-primary/20 mb-2 flex items-center justify-between border-b pb-2">
                   <span className="text-base font-bold">Total de la Orden</span>
                   <span className="rounded-lg bg-primary px-4 py-1 text-xl font-bold text-primary-foreground shadow-sm">
                     {fmt(totales.total)}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="tabular-nums">{fmt(totales.subtotal)}</span>
+                    <span className="font-medium tabular-nums">{fmt(totales.subtotal)}</span>
                   </div>
                   {totales.totalDescuentos > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Descuentos</span>
-                      <span className="tabular-nums text-destructive">−{fmt(totales.totalDescuentos)}</span>
+                      <span className="font-medium tabular-nums text-destructive">
+                        −{fmt(totales.totalDescuentos)}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">IVA</span>
-                    <span className="tabular-nums">{fmt(totales.totalIva)}</span>
+                    <span className="font-medium tabular-nums">{fmt(totales.totalIva)}</span>
                   </div>
                   {totales.totalRetenciones > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Retenciones</span>
-                      <span className="tabular-nums text-destructive">−{fmt(totales.totalRetenciones)}</span>
+                      <span className="font-medium tabular-nums text-destructive">
+                        −{fmt(totales.totalRetenciones)}
+                      </span>
                     </div>
                   )}
                   {totales.totalOtrosImpuestos > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Otros</span>
-                      <span className="tabular-nums">{fmt(totales.totalOtrosImpuestos)}</span>
+                      <span className="font-medium tabular-nums">
+                        {fmt(totales.totalOtrosImpuestos)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -1298,6 +1877,29 @@ export default function CrearOrdenCompra() {
           </div>
         </form>
       </Form>
+      
+      <Dialog open={mostrarDialogoProveedor} onOpenChange={setMostrarDialogoProveedor}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Proveedor no registrado</DialogTitle>
+            <DialogDescription>
+              El proveedor con RFC <strong>{form.getValues('rfcProveedor')}</strong> no existe en el catálogo.
+              <br /><br />
+              Será enviado primero para su autorización antes de procesar la orden de compra.
+              <br /><br />
+              ¿Desea continuar?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setMostrarDialogoProveedor(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmarGuardarProveedorNuevo}>
+              Sí, continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
