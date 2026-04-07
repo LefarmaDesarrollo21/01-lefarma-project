@@ -1,4 +1,5 @@
-﻿using Lefarma.API.Domain.Entities.Config;
+using Lefarma.API.Domain.Entities.Config;
+using Lefarma.API.Domain.Entities.Operaciones;
 
 namespace Lefarma.API.Domain.Interfaces.Config
 {
@@ -13,6 +14,7 @@ namespace Lefarma.API.Domain.Interfaces.Config
         int IdOrden,
         int IdAccion,
         int IdUsuario,
+        OrdenCompra Orden,
         string? Comentario,
         Dictionary<string, object>? DatosAdicionales = null
     );

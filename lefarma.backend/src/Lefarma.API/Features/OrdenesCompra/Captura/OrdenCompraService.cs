@@ -36,7 +36,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
         {
             try
             {
-                var q = _repo.GetQueryable().Include(o => o.Partidas).AsQueryable();
+                var q = _repo.GetQueryable().Include(o => o.Partidas).Include(o => o.CentroCosto).Include(o => o.CuentaContable).AsQueryable();
 
                 if (query.IdEmpresa.HasValue) q = q.Where(o => o.IdEmpresa == query.IdEmpresa.Value);
                 if (query.IdSucursal.HasValue) q = q.Where(o => o.IdSucursal == query.IdSucursal.Value);
@@ -255,7 +255,10 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
             NotaFormaPago = o.NotaFormaPago,
             NotasGenerales = o.NotasGenerales,
             IdCentroCosto = o.IdCentroCosto,
-            CuentaContable = o.CuentaContable,
+            CentroCostoNombre = o.CentroCosto?.Nombre,
+            IdCuentaContable = o.IdCuentaContable,
+            CuentaContableNumero = o.CuentaContable?.Cuenta,
+            CuentaContableDescripcion = o.CuentaContable?.Descripcion,
             RequiereComprobacionPago = o.RequiereComprobacionPago,
             RequiereComprobacionGasto = o.RequiereComprobacionGasto,
             FechaSolicitud = o.FechaSolicitud,

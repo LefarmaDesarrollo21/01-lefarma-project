@@ -34,6 +34,8 @@ namespace Lefarma.API.Infrastructure.Data
         public DbSet<WorkflowPaso> WorkflowPasos { get; set; }
         public DbSet<WorkflowParticipante> WorkflowParticipantes { get; set; }
         public DbSet<WorkflowAccion> WorkflowAcciones { get; set; }
+        public DbSet<WorkflowAccionHandler> WorkflowAccionHandlers { get; set; }
+        public DbSet<WorkflowCampo> WorkflowCampos { get; set; }
         public DbSet<WorkflowNotificacion> WorkflowNotificaciones { get; set; }
         public DbSet<WorkflowCondicion> WorkflowCondiciones { get; set; }
         public DbSet<WorkflowBitacora> WorkflowBitacoras { get; set; }

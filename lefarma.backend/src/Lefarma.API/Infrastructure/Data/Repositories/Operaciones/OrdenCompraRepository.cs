@@ -16,6 +16,8 @@ namespace Lefarma.API.Infrastructure.Data.Repositories.Operaciones
         public async Task<OrdenCompra?> GetWithPartidasAsync(int idOrden)
             => await _context.OrdenesCompra
                 .Include(o => o.Partidas)
+                .Include(o => o.CentroCosto)
+                .Include(o => o.CuentaContable)
                 .FirstOrDefaultAsync(o => o.IdOrden == idOrden);
 
         public async Task<ICollection<OrdenCompra>> GetByEstadoAsync(EstadoOC estado)

@@ -3,7 +3,6 @@ using Lefarma.API.Domain.Entities.Operaciones;
 using Lefarma.API.Domain.Interfaces.Config;
 using Lefarma.API.Domain.Interfaces.Operaciones;
 using Lefarma.API.Features.OrdenesCompra.Firmas.DTOs;
-using Lefarma.API.Features.OrdenesCompra.Firmas.Handlers;
 using Lefarma.API.Infrastructure.Data;
 using Lefarma.API.Shared.Errors;
 using Lefarma.API.Shared.Logging;
@@ -16,7 +15,6 @@ namespace Lefarma.API.Features.OrdenesCompra.Firmas
     {
         private readonly IOrdenCompraRepository _ordenRepo;
         private readonly IWorkflowEngine _engine;
-        private readonly IServiceProvider _serviceProvider;
         private readonly IWorkflowRepository _workflowRepo;
         private readonly ApplicationDbContext _context;
         private readonly AsokamDbContext _asokamContext;
@@ -28,7 +26,6 @@ namespace Lefarma.API.Features.OrdenesCompra.Firmas
             IOrdenCompraRepository ordenRepo,
             IWorkflowEngine engine,
             IWorkflowRepository workflowRepo,
-            IServiceProvider serviceProvider,
             ApplicationDbContext context,
             AsokamDbContext asokamContext,
             IWideEventAccessor wideEventAccessor)
@@ -37,7 +34,6 @@ namespace Lefarma.API.Features.OrdenesCompra.Firmas
             _ordenRepo = ordenRepo;
             _engine = engine;
             _workflowRepo = workflowRepo;
-            _serviceProvider = serviceProvider;
             _context = context;
             _asokamContext = asokamContext;
         }
@@ -56,33 +52,7 @@ namespace Lefarma.API.Features.OrdenesCompra.Firmas
                 if (orden.Estado is EstadoOC.Cerrada or EstadoOC.Cancelada)
                     return CommonErrors.Conflict("OrdenCompra", $"La orden {orden.Folio} ya está cerrada o cancelada.");
 
-                // Cargar paso actual para verificar requisitos del paso
-                WorkflowPasoInfo? pasoActual = null;
                 var workflowConfig = await _workflowRepo.GetByCodigoProcesoAsync(CODIGO_PROCESO);
-                if (orden.IdPasoActual.HasValue)
-                {
-                    var paso = workflowConfig?.Pasos.FirstOrDefault(p => p.IdPaso == orden.IdPasoActual.Value && p.Activo);
-                    if (paso is not null)
-                        pasoActual = new WorkflowPasoInfo(paso.RequiereComentario, paso.HandlerKey);
-                }
-
-                // Validar comentario obligatorio
-                if (pasoActual?.RequiereComentario == true && string.IsNullOrWhiteSpace(request.Comentario))
-                    return CommonErrors.Validation("Comentario", "El comentario es obligatorio en este paso.");
-
-                // Ejecutar step handler específico (Firma3Handler, Firma4Handler, etc.)
-                if (!string.IsNullOrEmpty(pasoActual?.HandlerKey))
-                {
-                    var handler = _serviceProvider.GetKeyedService<IStepHandler>(pasoActual.HandlerKey);
-                    if (handler is not null)
-                    {
-                        var error = await handler.ValidarAsync(orden, request.DatosAdicionales);
-                        if (error is not null)
-                            return CommonErrors.Validation(pasoActual.HandlerKey, error);
-
-                        await handler.AplicarAsync(orden, request.DatosAdicionales);
-                    }
-                }
 
                 var estadoAnterior = orden.Estado.ToString();
 
@@ -96,13 +66,14 @@ namespace Lefarma.API.Features.OrdenesCompra.Firmas
                     IdOrden: idOrden,
                     IdAccion: request.IdAccion,
                     IdUsuario: idUsuario,
+                    Orden: orden,
                     Comentario: request.Comentario,
                     DatosAdicionales: datosAdicionales
                 );
 
                 var resultado = await _engine.EjecutarAccionAsync(ctx);
                 if (!resultado.Exitoso)
-                    return CommonErrors.Conflict("Workflow", resultado.Error ?? "Error en el motor de workflow.");
+                    return CommonErrors.Validation("Workflow", resultado.Error ?? "Error en el motor de workflow.");
 
                 // Actualizar estado de la orden
                 if (TryMapEstado(resultado.NuevoCodigoEstado, out var nuevoEstado))
@@ -165,6 +136,71 @@ namespace Lefarma.API.Features.OrdenesCompra.Firmas
             {
                 EnrichWideEvent("GetAcciones", entityId: idOrden, exception: ex);
                 return CommonErrors.DatabaseError("obtener las acciones disponibles");
+            }
+        }
+
+        public async Task<ErrorOr<AccionMetadataResponse>> GetAccionMetadataAsync(int idOrden, int idAccion, int idUsuario)
+        {
+            try
+            {
+                var orden = await _ordenRepo.GetWithPartidasAsync(idOrden);
+                if (orden is null)
+                    return CommonErrors.NotFound("orden de compra", idOrden.ToString());
+
+                var workflow = await _workflowRepo.GetByCodigoProcesoAsync(CODIGO_PROCESO);
+                if (workflow is null)
+                    return CommonErrors.NotFound("workflow", CODIGO_PROCESO);
+
+                if (!orden.IdPasoActual.HasValue)
+                    return CommonErrors.Conflict("orden", "La orden no tiene paso actual configurado.");
+
+                var pasoActual = workflow.Pasos.FirstOrDefault(p => p.IdPaso == orden.IdPasoActual.Value && p.Activo);
+                if (pasoActual is null)
+                    return CommonErrors.NotFound("paso actual", orden.IdPasoActual.Value.ToString());
+
+                var accion = pasoActual.AccionesOrigen.FirstOrDefault(a => a.IdAccion == idAccion && a.Activo);
+                if (accion is null)
+                    return CommonErrors.NotFound("acción", idAccion.ToString());
+
+                var handlers = (await _workflowRepo.GetAccionHandlersAsync(idAccion)).ToList();
+                var campos = (await _workflowRepo.GetCamposByWorkflowAsync(workflow.IdWorkflow)).ToList();
+
+                // CamposRequeridos: nombres técnicos de campos vinculados a RequiredFields activos
+                var camposRequeridos = handlers
+                    .Where(h => h.HandlerKey == "RequiredFields" && h.Campo != null)
+                    .Select(h => h.Campo!.NombreTecnico)
+                    .ToList();
+
+                return new AccionMetadataResponse
+                {
+                    IdOrden = idOrden,
+                    IdAccion = accion.IdAccion,
+                    NombreAccion = accion.NombreAccion,
+                    TipoAccion = accion.TipoAccion,
+                    RequiereComentario = pasoActual.RequiereComentario,
+                    RequiereAdjunto = pasoActual.RequiereAdjunto,
+                    Handlers = handlers.Select(h => new AccionHandlerMetadataResponse
+                    {
+                        IdHandler = h.IdHandler,
+                        HandlerKey = h.HandlerKey,
+                        ConfiguracionJson = h.ConfiguracionJson,
+                        OrdenEjecucion = h.OrdenEjecucion
+                    }).ToList(),
+                    CamposWorkflow = campos.Select(c => new WorkflowCampoMetadataResponse
+                    {
+                        IdWorkflowCampo = c.IdWorkflowCampo,
+                        NombreTecnico = c.NombreTecnico,
+                        EtiquetaUsuario = c.EtiquetaUsuario,
+                        TipoControl = c.TipoControl,
+                        SourceCatalog = c.SourceCatalog
+                    }).ToList(),
+                    CamposRequeridos = camposRequeridos.ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                EnrichWideEvent("GetAccionMetadata", entityId: idOrden, exception: ex, additionalContext: new Dictionary<string, object> { ["idAccion"] = idAccion });
+                return CommonErrors.DatabaseError("obtener metadatos de acción");
             }
         }
 
@@ -270,8 +306,5 @@ namespace Lefarma.API.Features.OrdenesCompra.Firmas
             return accion.Notificaciones.FirstOrDefault(n => n.Activo && n.IdPasoDestino == idPasoDestino)
                 ?? accion.Notificaciones.FirstOrDefault(n => n.Activo && n.IdPasoDestino == null);
         }
-
-        // Record auxiliar interno
-        private record WorkflowPasoInfo(bool RequiereComentario, string? HandlerKey);
     }
 }

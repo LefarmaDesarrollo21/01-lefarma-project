@@ -21,7 +21,10 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura.DTOs
         public string? NotaFormaPago { get; set; }
         public string? NotasGenerales { get; set; }
         public int? IdCentroCosto { get; set; }
-        public string? CuentaContable { get; set; }
+        public string? CentroCostoNombre { get; set; }
+        public int? IdCuentaContable { get; set; }
+        public string? CuentaContableNumero { get; set; }
+        public string? CuentaContableDescripcion { get; set; }
         public bool RequiereComprobacionPago { get; set; }
         public bool RequiereComprobacionGasto { get; set; }
         public DateTime FechaSolicitud { get; set; }

@@ -228,6 +228,7 @@ public class ArchivoService : IArchivoService
             archivo.Extension,
             archivo.TipoMime,
             archivo.TamanoBytes,
+            archivo.Metadata,
             archivo.FechaCreacion,
             archivo.Activo
         );

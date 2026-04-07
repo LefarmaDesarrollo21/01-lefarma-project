@@ -35,10 +35,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { toast } from 'sonner';
-import type { Workflow, WorkflowPaso, WorkflowAccion } from '@/types/workflow.types';
+import type { Workflow, WorkflowPaso, WorkflowAccion, WorkflowAccionHandler, WorkflowCampo } from '@/types/workflow.types';
 
 interface WorkflowWithDetails extends Workflow {
   pasos: WorkflowPaso[];
+  campos?: WorkflowCampo[];
 }
 
 interface CreatePasoPayload {
@@ -46,7 +47,6 @@ interface CreatePasoPayload {
   orden: number;
   codigoEstado: string | null;
   descripcionAyuda: string | null;
-  handlerKey: string | null;
   esInicio: boolean;
   esFinal: boolean;
   activo: boolean;
@@ -62,6 +62,13 @@ const ACTION_COLORS = {
   RETORNO: '#f59e0b',    // amber
   CANCELACION: '#6b7280' // gray
 } as const;
+
+const HANDLER_LABELS: Record<string, string> = {
+  RequiredFields:   'Campos requeridos',
+  FieldUpdater:     'Actualizar campo',
+  DocumentRequired: 'Documento requerido',
+  SmartAudit:       'Auditoría inteligente',
+};
 
 export default function WorkflowDiagram() {
   const { id } = useParams<{ id: string }>();
@@ -176,11 +183,6 @@ export default function WorkflowDiagram() {
                             {paso.requiereAdjunto && (
                               <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30 text-xs">
                                 Adjunto
-                              </Badge>
-                            )}
-                            {paso.handlerKey && (
-                              <Badge variant="secondary" className="text-xs">
-                                {paso.handlerKey}
                               </Badge>
                             )}
                           </div>
@@ -396,16 +398,6 @@ export default function WorkflowDiagram() {
                     </div>
                   )}
 
-                  {selectedPaso.handlerKey && (
-                    <div>
-                      <label className="text-xs text-muted-foreground">Handler</label>
-                      <Badge variant="outline" className="mt-1 font-mono">
-                        <Wrench className="mr-1 h-3 w-3" />
-                        {selectedPaso.handlerKey}
-                      </Badge>
-                    </div>
-                  )}
-
                   <div className="border-t border-border pt-3">
                     <label className="text-xs text-muted-foreground mb-2 block">Requisitos</label>
                     <div className="space-y-2">
@@ -507,6 +499,7 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
   const [editingPaso, setEditingPaso] = useState<WorkflowPaso | null>(null);
   const [isCreatingPaso, setIsCreatingPaso] = useState(false);
   const [editingAccion, setEditingAccion] = useState<WorkflowAccion | null>(null);
+  const [editingAccionHandler, setEditingAccionHandler] = useState<{ accion: WorkflowAccion; handler: WorkflowAccionHandler | null } | null>(null);
   const [editingCondicion, setEditingCondicion] = useState<any | null>(null);
   const [editingParticipante, setEditingParticipante] = useState<any | null>(null);
   const [editingNotificacion, setEditingNotificacion] = useState<any | null>(null);
@@ -515,6 +508,7 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
   const [modalStates, setModalStates] = useState({
     stepForm: false,
     actionModal: false,
+    handlerModal: false,
     condicionModal: false,
     participanteModal: false,
     notificacionModal: false
@@ -541,7 +535,6 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
       nombrePaso: '',
       codigoEstado: '',
       descripcionAyuda: '',
-      handlerKey: '',
       esInicio: false,
       esFinal: false,
       activo: true,
@@ -563,7 +556,6 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
         orden: updatedPaso.orden,
         codigoEstado: updatedPaso.codigoEstado || null,
         descripcionAyuda: updatedPaso.descripcionAyuda || null,
-        handlerKey: updatedPaso.handlerKey || null,
         esInicio: updatedPaso.esInicio,
         esFinal: updatedPaso.esFinal,
         activo: updatedPaso.activo,
@@ -618,7 +610,7 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
 
       <div className={embedded ? 'h-full overflow-hidden p-4' : 'flex-1 overflow-hidden px-6'}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-5 mb-4">
+            <TabsList className="grid w-full grid-cols-6 mb-4">
               <TabsTrigger value="pasos" className="gap-2">
                 <GitBranch className="h-4 w-4" />
                 Pasos
@@ -630,6 +622,10 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
               <TabsTrigger value="condiciones" className="gap-2">
                 <Filter className="h-4 w-4" />
                 Condiciones
+              </TabsTrigger>
+              <TabsTrigger value="handlers" className="gap-2">
+                <Wrench className="h-4 w-4" />
+                Reglas
               </TabsTrigger>
               <TabsTrigger value="participantes" className="gap-2">
                 <Users className="h-4 w-4" />
@@ -716,12 +712,6 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
                                     Adjunto
                                   </Badge>
                                 )}
-                                {paso.handlerKey && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    <Wrench className="mr-1 h-3 w-3" />
-                                    {paso.handlerKey}
-                                  </Badge>
-                                )}
                                 <Badge variant="outline" className="text-xs">
                                   <Info className="mr-1 h-3 w-3" />
                                   {`${(paso.acciones || []).length} acciones`}
@@ -762,7 +752,6 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
                                     orden: paso.orden,
                                     codigoEstado: paso.codigoEstado || null,
                                     descripcionAyuda: paso.descripcionAyuda || null,
-                                    handlerKey: paso.handlerKey || null,
                                     esInicio: paso.esInicio,
                                     esFinal: paso.esFinal,
                                     activo: !paso.activo,
@@ -962,6 +951,96 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Ejemplo: "Si Total {'>'} $100,000 → ir a Firma 5"
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="handlers" className="mt-0 h-full">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Configura reglas automáticas por acción ({workflow.pasos.reduce((acc, p) => acc + (p.acciones || []).reduce((accA, a) => accA + (a.handlers?.length || 0), 0), 0)} reglas configuradas)
+                    </p>
+                  </div>
+
+                  {workflow.pasos.some(p => (p.acciones || []).some(a => (a.handlers?.length || 0) > 0)) ? (
+                    <div className="space-y-3">
+                      {workflow.pasos.flatMap(paso =>
+                        (paso.acciones || []).map(accion => (
+                          <div key={`accion-${accion.idAccion}`} className="rounded-lg border border-border bg-card p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-semibold">{paso.nombrePaso} · {accion.nombreAccion}</p>
+                                <p className="text-xs text-muted-foreground">{accion.tipoAccion}</p>
+                              </div>
+                              <Button
+                                size="sm"
+                                className="gap-2"
+                                onClick={() => {
+                                  setEditingAccionHandler({ accion, handler: null });
+                                  toggleModal('handlerModal', true);
+                                }}
+                              >
+                                <Plus className="h-4 w-4" />
+                                Agregar regla
+                              </Button>
+                            </div>
+
+                            <div className="mt-3 space-y-2">
+                              {(accion.handlers || []).length === 0 ? (
+                                <p className="text-xs text-muted-foreground">Sin reglas configuradas.</p>
+                              ) : (accion.handlers || []).map(handler => (
+                                <div key={handler.idHandler} className="flex items-center justify-between rounded-md border px-3 py-2">
+                                  <div>
+                                    <p className="text-sm font-medium">{HANDLER_LABELS[handler.handlerKey] ?? handler.handlerKey}</p>
+                                    <p className="text-xs text-muted-foreground font-mono">{handler.handlerKey} · Orden: {handler.ordenEjecucion}</p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditingAccionHandler({ accion, handler });
+                                        toggleModal('handlerModal', true);
+                                      }}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-destructive"
+                                      onClick={async () => {
+                                        if (!confirm('¿Eliminar esta regla?')) return;
+                                        try {
+                                          await API.delete(`/config/workflows/${workflow.idWorkflow}/acciones/${accion.idAccion}/handlers/${handler.idHandler}`);
+                                          toast.success('Regla eliminada');
+                                          await onSave();
+                                        } catch (error: any) {
+                                          toast.error(error?.message ?? 'No se pudo eliminar la regla');
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-border bg-muted/30 p-8 text-center">
+                      <Wrench className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Sin reglas configuradas
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Agrega reglas automáticas (campos requeridos, actualizar campo, documento requerido) por acción
                       </p>
                     </div>
                   )}
@@ -1192,6 +1271,19 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
           setEditingAccion(null);
         }}
       />
+
+      <HandlerEditModal
+        workflow={workflow}
+        accion={editingAccionHandler?.accion || null}
+        handler={editingAccionHandler?.handler || null}
+        open={modalStates.handlerModal}
+        setOpen={(open) => toggleModal('handlerModal', open)}
+        onSave={async () => {
+          await onSave();
+          toggleModal('handlerModal', false);
+          setEditingAccionHandler(null);
+        }}
+      />
       
       {/* Condicion Edit Modal */}
       <CondicionEditModal
@@ -1354,22 +1446,6 @@ function StepEditForm({ paso, open, onClose, onSave }: StepEditFormProps) {
               />
               <p className="text-xs text-muted-foreground">
                 Este texto aparecerá como ayuda contextual para el usuario
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="handlerKey" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Handler (Opcional)
-              </Label>
-              <Input
-                id="handlerKey"
-                value={formData.handlerKey || ''}
-                onChange={(e) => handleChange('handlerKey', e.target.value)}
-                placeholder="ej. Firma3Handler, Firma4Handler"
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Clase del handler para lógica personalizada (ej. asignar CC en Firma 3)
               </p>
             </div>
           </div>
@@ -1808,6 +1884,390 @@ function ActionEditModal({ workflow, accion, open, setOpen, onSave }: ActionEdit
             </div>
           </div>
         )}
+      </form>
+    </Modal>
+  );
+}
+
+// ============================================================================
+// HandlerEditModal Component
+// ============================================================================
+
+interface HandlerEditModalProps {
+  workflow: WorkflowWithDetails;
+  accion: WorkflowAccion | null;
+  handler: WorkflowAccionHandler | null;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  onSave: () => Promise<void>;
+}
+
+function HandlerEditModal({ workflow, accion, handler, open, setOpen, onSave }: HandlerEditModalProps) {
+  const [isSaving, setIsSaving] = useState(false);
+  const [handlerKey, setHandlerKey] = useState('RequiredFields');
+  const [ordenEjecucion, setOrdenEjecucion] = useState(1);
+  const [activo, setActivo] = useState(true);
+
+  // Smart UI state per handler type
+  const [selectedFields, setSelectedFields] = useState<string[]>([]);
+  const [fuField, setFuField] = useState('');
+  const [fuSource, setFuSource] = useState<'value' | 'input'>('value');
+  const [fuValue, setFuValue] = useState('');
+  const [fuInputKey, setFuInputKey] = useState('');
+  const [documentLabel, setDocumentLabel] = useState('');
+  const [auditLevel, setAuditLevel] = useState<'basic' | 'advanced'>('basic');
+
+  const availableCampos = (workflow.campos || []).filter((c: WorkflowCampo) => c.activo);
+
+  const handlerOptions = [
+    { value: 'RequiredFields',   label: 'Campos requeridos' },
+    { value: 'FieldUpdater',     label: 'Actualizar campo' },
+    { value: 'DocumentRequired', label: 'Documento requerido' },
+    { value: 'SmartAudit',       label: 'Auditoría inteligente' },
+  ];
+
+  const resetSmartState = () => {
+    setSelectedFields([]);
+    setFuField(''); setFuSource('value'); setFuValue(''); setFuInputKey('');
+    setDocumentLabel('');
+    setAuditLevel('basic');
+  };
+
+  const parseExistingJson = (key: string, json: string) => {
+    try {
+      const p = JSON.parse(json);
+      if (key === 'RequiredFields' && Array.isArray(p.fields)) setSelectedFields(p.fields);
+      if (key === 'FieldUpdater' && p.field) {
+        setFuField(p.field);
+        setFuSource(p.source === 'input' ? 'input' : 'value');
+        setFuValue(p.value !== undefined ? String(p.value) : '');
+        setFuInputKey(p.inputKey || '');
+      }
+      if (key === 'DocumentRequired' && p.etiqueta) setDocumentLabel(p.etiqueta);
+      if (key === 'SmartAudit' && p.level) setAuditLevel(p.level);
+    } catch { /* json inválido, dejar defaults */ }
+  };
+
+  useEffect(() => {
+    resetSmartState();
+    if (handler) {
+      setHandlerKey(handler.handlerKey);
+      setOrdenEjecucion(handler.ordenEjecucion || 1);
+      setActivo(handler.activo ?? true);
+      if (handler.configuracionJson) parseExistingJson(handler.handlerKey, handler.configuracionJson);
+    } else {
+      setHandlerKey('RequiredFields');
+      setOrdenEjecucion(1);
+      setActivo(true);
+    }
+  }, [handler, open]);
+
+  const handleTypeChange = (value: string) => {
+    setHandlerKey(value);
+    resetSmartState();
+  };
+
+  const computeJson = (key: string): string | null => {
+    if (key === 'RequiredFields') {
+      return selectedFields.length > 0 ? JSON.stringify({ fields: selectedFields }) : null;
+    }
+    if (key === 'FieldUpdater') {
+      if (!fuField) return null;
+      if (fuSource === 'input') {
+        const obj: Record<string, string> = { field: fuField, source: 'input' };
+        if (fuInputKey) obj.inputKey = fuInputKey;
+        return JSON.stringify(obj);
+      }
+      let val: unknown = fuValue;
+      if (fuValue === 'true') val = true;
+      else if (fuValue === 'false') val = false;
+      else if (fuValue !== '' && !isNaN(Number(fuValue))) val = Number(fuValue);
+      return JSON.stringify({ field: fuField, value: val });
+    }
+    if (key === 'DocumentRequired') {
+      return documentLabel ? JSON.stringify({ etiqueta: documentLabel }) : null;
+    }
+    if (key === 'SmartAudit') {
+      return JSON.stringify({ level: auditLevel });
+    }
+    return null;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accion) { toast.error('Selecciona una acción para configurar reglas'); return; }
+
+    setIsSaving(true);
+    try {
+      const payload = {
+        handlerKey,
+        configuracionJson: computeJson(handlerKey),
+        ordenEjecucion: Number(ordenEjecucion || 1),
+        activo
+      };
+      if (handler) {
+        await API.put(`/config/workflows/${workflow.idWorkflow}/acciones/${accion.idAccion}/handlers/${handler.idHandler}`, payload);
+      } else {
+        await API.post(`/config/workflows/${workflow.idWorkflow}/acciones/${accion.idAccion}/handlers`, payload);
+      }
+      toast.success(handler ? 'Regla actualizada' : 'Regla creada');
+      setOpen(false);
+      await onSave();
+    } catch (error: any) {
+      toast.error(error?.message ?? 'Error al guardar la regla');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const jsonPreview = computeJson(handlerKey);
+
+  const renderConfig = () => {
+    if (handlerKey === 'RequiredFields') {
+      return (
+        <div className="space-y-2">
+          <Label>Campos obligatorios</Label>
+          {availableCampos.length === 0 ? (
+            <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+              No hay campos configurados en este workflow.
+              <br />
+              <span className="text-xs">Agrega campos en el tab "Campos" primero.</span>
+            </div>
+          ) : (
+            <div className="rounded-md border divide-y">
+              {availableCampos.map((campo: WorkflowCampo) => (
+                <label
+                  key={campo.idWorkflowCampo}
+                  className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  <Checkbox
+                    checked={selectedFields.includes(campo.nombreTecnico)}
+                    onCheckedChange={() =>
+                      setSelectedFields(prev =>
+                        prev.includes(campo.nombreTecnico)
+                          ? prev.filter(f => f !== campo.nombreTecnico)
+                          : [...prev, campo.nombreTecnico]
+                      )
+                    }
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{campo.etiquetaUsuario}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{campo.nombreTecnico}</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs shrink-0">{campo.tipoControl}</Badge>
+                </label>
+              ))}
+            </div>
+          )}
+          {selectedFields.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedFields.length} campo{selectedFields.length !== 1 ? 's' : ''} seleccionado{selectedFields.length !== 1 ? 's' : ''}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    if (handlerKey === 'FieldUpdater') {
+      return (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Campo a actualizar</Label>
+            {availableCampos.length > 0 ? (
+              <Select value={fuField} onValueChange={setFuField}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un campo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableCampos.map((campo: WorkflowCampo) => (
+                    <SelectItem key={campo.idWorkflowCampo} value={campo.nombreTecnico}>
+                      {campo.etiquetaUsuario}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                value={fuField}
+                onChange={e => setFuField(e.target.value)}
+                placeholder="ej. requiereComprobacionPago"
+                className="font-mono text-sm"
+              />
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Origen del valor</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {(['value', 'input'] as const).map(src => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setFuSource(src)}
+                  className={`rounded-md border px-3 py-2 text-sm transition-colors text-left ${
+                    fuSource === src
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border hover:bg-muted/50'
+                  }`}
+                >
+                  {src === 'value' ? '📌 Valor fijo' : '✏️ Dato del usuario'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {fuSource === 'value' ? (
+            <div className="space-y-2">
+              <Label>Valor</Label>
+              <Input
+                value={fuValue}
+                onChange={e => setFuValue(e.target.value)}
+                placeholder="true / false / 42 / texto"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">Usa true/false para booleanos, número o texto libre</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>
+                Clave en el payload del usuario{' '}
+                <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Input
+                value={fuInputKey}
+                onChange={e => setFuInputKey(e.target.value)}
+                placeholder={fuField || 'misma clave que el campo'}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Deja vacío si la clave en el payload del usuario coincide con el nombre del campo
+              </p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (handlerKey === 'DocumentRequired') {
+      return (
+        <div className="space-y-2">
+          <Label>Etiqueta del documento</Label>
+          <Input
+            value={documentLabel}
+            onChange={e => setDocumentLabel(e.target.value)}
+            placeholder="ej. Comprobante de Pago, Factura, Cotización..."
+          />
+          <p className="text-xs text-muted-foreground">
+            El usuario verá este nombre al adjuntar el documento requerido
+          </p>
+        </div>
+      );
+    }
+
+    if (handlerKey === 'SmartAudit') {
+      return (
+        <div className="space-y-2">
+          <Label>Nivel de auditoría</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {(['basic', 'advanced'] as const).map(level => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => setAuditLevel(level)}
+                className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                  auditLevel === level
+                    ? 'border-primary bg-primary/10 text-primary font-medium'
+                    : 'border-border hover:bg-muted/50'
+                }`}
+              >
+                {level === 'basic' ? 'Básico' : 'Avanzado'}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <Modal
+      id="modal-handler"
+      open={open}
+      setOpen={setOpen}
+      title={handler ? 'Editar regla' : 'Nueva regla'}
+      size="lg"
+      footer={
+        <div className="flex gap-2 justify-end pt-2">
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isSaving} onClick={handleSubmit} className="gap-2">
+            {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+            {handler ? 'Actualizar' : 'Guardar'} regla
+          </Button>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {accion && (
+          <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs">
+            Acción: <span className="font-semibold">{accion.nombreAccion}</span> · {accion.tipoAccion}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Tipo de regla</Label>
+            <Select value={handlerKey} onValueChange={handleTypeChange}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {handlerOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Orden de ejecución</Label>
+            <Input
+              type="number"
+              min={1}
+              value={ordenEjecucion}
+              onChange={e => setOrdenEjecucion(Number(e.target.value || 1))}
+            />
+          </div>
+        </div>
+
+        {/* Smart config per type */}
+        {renderConfig()}
+
+        {/* JSON preview */}
+        {jsonPreview && (
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Vista previa JSON
+            </p>
+            <pre className="rounded-md border bg-muted/50 px-3 py-2 text-xs font-mono overflow-x-auto text-muted-foreground whitespace-pre-wrap">
+              {JSON.stringify(JSON.parse(jsonPreview), null, 2)}
+            </pre>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="handler-activo"
+            checked={activo}
+            onCheckedChange={v => setActivo(Boolean(v))}
+          />
+          <Label htmlFor="handler-activo">Activa</Label>
+        </div>
       </form>
     </Modal>
   );

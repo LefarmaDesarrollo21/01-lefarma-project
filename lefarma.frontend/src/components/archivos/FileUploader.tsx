@@ -19,6 +19,8 @@ interface FileUploaderProps {
   textoErrorTamano?: string;
   textoErrorCantidad?: string;
   open: boolean;
+  /** Render inline (no overlay, no title bar) — for embedding inside an existing modal */
+  inline?: boolean;
   onUploadComplete: (archivos: Archivo[]) => void;
   onError?: (error: string) => void;
   onClose: () => void;
@@ -43,6 +45,7 @@ export function FileUploader({
   textoErrorTamano = 'El archivo excede el tamaño máximo',
   textoErrorCantidad = 'Máximo excedido',
   open,
+  inline = false,
   onUploadComplete,
   onError,
   onClose
@@ -159,102 +162,119 @@ export function FileUploader({
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">{titulo}</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  /** Contenido reutilizable en ambos modos */
+  const content = (
+    <>
+      {/* Drop zone */}
+      <div
+        className={`
+          border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
+          transition-colors
+          ${dragActive ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20' : 'border-gray-300 dark:border-zinc-600 hover:border-gray-400 dark:hover:border-zinc-500'}
+        `}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => inputRef.current?.click()}
+      >
+        <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+        <p className="text-sm text-gray-600 dark:text-zinc-300">{descripcion}</p>
+        <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1">
+          {tiposPermitidos.join(', ')} · Máx {tamanoMaximoMB}MB
+        </p>
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          accept={tiposPermitidos.join(',')}
+          multiple={multiple}
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+      </div>
 
-        {/* Content */}
-        <div className="p-4">
-          {/* Drop zone */}
-          <div
-            className={`
-              border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-              transition-colors
-              ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
-            `}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => inputRef.current?.click()}
-          >
-            <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600">{descripcion}</p>
-            <p className="text-sm text-gray-400 mt-2">
-              Tipos: {tiposPermitidos.join(', ')} | Máx: {tamanoMaximoMB}MB
-            </p>
-            <input
-              ref={inputRef}
-              type="file"
-              className="hidden"
-              accept={tiposPermitidos.join(',')}
-              multiple={multiple}
-              onChange={(e) => handleFiles(e.target.files)}
-            />
-          </div>
-
-          {/* Errors */}
-          {errors.length > 0 && (
-            <div className="mt-4 p-3 bg-red-50 rounded-lg">
-              {errors.map((error, i) => (
-                <div key={i} className="flex items-center gap-2 text-red-600 text-sm">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
-                </div>
-              ))}
+      {/* Errors */}
+      {errors.length > 0 && (
+        <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
+          {errors.map((error, i) => (
+            <div key={i} className="flex items-center gap-2 text-red-600 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              {error}
             </div>
-          )}
-
-          {/* File list */}
-          {files.length > 0 && (
-            <div className="mt-4 space-y-2">
-              {files.map((file, i) => (
-                <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                  <div className="flex items-center gap-2">
-                    <FileIcon className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm font-medium truncate max-w-[200px]">{file.name}</p>
-                      <p className="text-xs text-gray-400">{formatSize(file.size)}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeFile(i)}
-                    className="p-1 hover:bg-gray-200 rounded"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          ))}
         </div>
+      )}
 
-        {/* Footer */}
-        <div className="flex justify-end gap-2 p-4 border-t">
+      {/* File list */}
+      {files.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {files.map((file, i) => (
+            <div key={i} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-zinc-800 rounded">
+              <div className="flex items-center gap-2">
+                <FileIcon className="w-5 h-5 text-gray-400 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium truncate max-w-[200px]">{file.name}</p>
+                  <p className="text-xs text-gray-400">{formatSize(file.size)}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+                className="p-1 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Footer actions */}
+      <div className={`flex justify-end gap-2 ${inline ? 'mt-3' : 'mt-4 pt-4 border-t'}`}>
+        {!inline && (
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm"
             disabled={uploading}
           >
             Cancelar
           </button>
+        )}
+        <button
+          type="button"
+          onClick={handleUpload}
+          disabled={files.length === 0 || uploading}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+        >
+          {uploading ? 'Subiendo...' : 'Subir'}
+        </button>
+      </div>
+    </>
+  );
+
+  // Inline mode: render content directly (inside existing modal)
+  if (inline) {
+    return <div className="space-y-1">{content}</div>;
+  }
+
+  // Dialog mode: render with its own overlay
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+      <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl w-full max-w-lg mx-4">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b dark:border-zinc-700">
+          <h2 className="text-lg font-semibold">{titulo}</h2>
           <button
-            onClick={handleUpload}
-            disabled={files.length === 0 || uploading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full"
           >
-            {uploading ? 'Subiendo...' : 'Subir'}
+            <X className="w-5 h-5" />
           </button>
+        </div>
+        <div className="p-4">
+          {content}
         </div>
       </div>
     </div>

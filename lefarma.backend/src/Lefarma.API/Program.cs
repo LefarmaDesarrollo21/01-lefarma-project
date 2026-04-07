@@ -158,11 +158,9 @@ builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<IOrdenCompraService, OrdenCompraService>();
 builder.Services.AddScoped<IFirmasService, FirmasService>();
 
-// Step Handlers (keyed por HandlerKey configurado en workflow_pasos)
-builder.Services.AddKeyedScoped<IStepHandler, Firma3Handler>("Firma3Handler");
-builder.Services.AddKeyedScoped<IStepHandler, Firma4Handler>("Firma4Handler");
-builder.Services.AddKeyedScoped<IStepHandler, Firma5Handler>("Firma5Handler");
-builder.Services.AddKeyedScoped<IStepHandler, ComprobacionHandler>("ComprobacionHandler");
+// Dynamic Action Handlers (keyed por handler_key en config.workflow_accion_handlers)
+builder.Services.AddKeyedScoped<IWorkflowActionHandler, RequiredFieldsWorkflowHandler>("RequiredFields");
+builder.Services.AddKeyedScoped<IWorkflowActionHandler, FieldUpdaterWorkflowHandler>("FieldUpdater");
 
 // Servicios
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();

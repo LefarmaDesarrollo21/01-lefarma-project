@@ -11,5 +11,6 @@ namespace Lefarma.API.Domain.Entities.Config
         public DateTime FechaCreacion { get; set; }
 
         public virtual ICollection<WorkflowPaso> Pasos { get; set; } = new List<WorkflowPaso>();
+        public virtual ICollection<WorkflowCampo> Campos { get; set; } = new List<WorkflowCampo>();
     }
 }

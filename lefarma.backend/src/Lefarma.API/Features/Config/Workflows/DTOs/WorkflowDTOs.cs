@@ -52,6 +52,7 @@
         public bool Activo { get; set; }
         public DateTime FechaCreacion { get; set; }
         public List<WorkflowPasoResponse> Pasos { get; set; } = new();
+        public List<WorkflowCampoResponse> Campos { get; set; } = new();
         public WorkflowStatsResponse? Stats { get; set; }
     }
 
@@ -70,7 +71,6 @@
         public string NombrePaso { get; set; } = string.Empty;
         public string? CodigoEstado { get; set; }
         public string? DescripcionAyuda { get; set; }
-        public string? HandlerKey { get; set; }
         public bool EsInicio { get; set; }
         public bool EsFinal { get; set; }
         public bool Activo { get; set; }
@@ -90,7 +90,32 @@
         public string ClaseEstetica { get; set; } = string.Empty;
         public int? IdPasoDestino { get; set; }
         public bool Activo { get; set; }
+        public List<WorkflowAccionHandlerResponse> Handlers { get; set; } = new();
         public List<NotificacionResponse> Notificaciones { get; set; } = new();
+    }
+
+    public class WorkflowAccionHandlerResponse
+    {
+        public int IdHandler { get; set; }
+        public string HandlerKey { get; set; } = string.Empty;
+        public string? ConfiguracionJson { get; set; }
+        public int OrdenEjecucion { get; set; }
+        public bool Activo { get; set; }
+        public int? IdWorkflowCampo { get; set; }
+        public WorkflowCampoResponse? Campo { get; set; }
+    }
+
+    public class WorkflowCampoResponse
+    {
+        public int IdWorkflowCampo { get; set; }
+        public int IdWorkflow { get; set; }
+        public string NombreTecnico { get; set; } = string.Empty;
+        public string EtiquetaUsuario { get; set; } = string.Empty;
+        public string TipoControl { get; set; } = string.Empty;
+        public string? SourceCatalog { get; set; }
+        public string? PropiedadEntidad { get; set; }
+        public bool ValidarFiscal { get; set; }
+        public bool Activo { get; set; }
     }
 
     public class WorkflowRequest
@@ -119,7 +144,6 @@
         public int Orden { get; set; }
         public string? CodigoEstado { get; set; }
         public string? DescripcionAyuda { get; set; }
-        public string? HandlerKey { get; set; }
         public bool EsInicio { get; set; }
         public bool EsFinal { get; set; }
         public bool Activo { get; set; } = true;
@@ -134,7 +158,6 @@
         public int Orden { get; set; }
         public string? CodigoEstado { get; set; }
         public string? DescripcionAyuda { get; set; }
-        public string? HandlerKey { get; set; }
         public bool EsInicio { get; set; }
         public bool EsFinal { get; set; }
         public bool Activo { get; set; } = true;
@@ -161,6 +184,46 @@
         public required string TipoAccion { get; set; }
         public required string ClaseEstetica { get; set; }
         public int? IdPasoDestino { get; set; }
+        public bool Activo { get; set; } = true;
+    }
+
+    public class CreateAccionHandlerRequest
+    {
+        public required string HandlerKey { get; set; }
+        public string? ConfiguracionJson { get; set; }
+        public int OrdenEjecucion { get; set; } = 1;
+        public bool Activo { get; set; } = true;
+        public int? IdWorkflowCampo { get; set; }
+    }
+
+    public class UpdateAccionHandlerRequest
+    {
+        public required string HandlerKey { get; set; }
+        public string? ConfiguracionJson { get; set; }
+        public int OrdenEjecucion { get; set; } = 1;
+        public bool Activo { get; set; } = true;
+        public int? IdWorkflowCampo { get; set; }
+    }
+
+    public class CreateWorkflowCampoRequest
+    {
+        public required string NombreTecnico { get; set; }
+        public required string EtiquetaUsuario { get; set; }
+        public required string TipoControl { get; set; }
+        public string? SourceCatalog { get; set; }
+        public string? PropiedadEntidad { get; set; }
+        public bool ValidarFiscal { get; set; } = false;
+        public bool Activo { get; set; } = true;
+    }
+
+    public class UpdateWorkflowCampoRequest
+    {
+        public required string NombreTecnico { get; set; }
+        public required string EtiquetaUsuario { get; set; }
+        public required string TipoControl { get; set; }
+        public string? SourceCatalog { get; set; }
+        public string? PropiedadEntidad { get; set; }
+        public bool ValidarFiscal { get; set; } = false;
         public bool Activo { get; set; } = true;
     }
 

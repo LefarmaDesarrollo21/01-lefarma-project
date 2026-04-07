@@ -6,6 +6,7 @@ public record ArchivoListItemResponse(
     string Extension,
     string TipoMime,
     long TamanoBytes,
+    string? Metadata,
     DateTime FechaCreacion,
     bool Activo
 );
