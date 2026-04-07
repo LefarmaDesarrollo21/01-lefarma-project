@@ -13,6 +13,7 @@
 ## File Structure
 
 **Backend (9 new files):**
+
 - `Domain/Entities/Catalogos/FormaPago.cs` - EF Core entity
 - `Infrastructure/Data/Configurations/Catalogos/FormaPagoConfiguration.cs` - EF config
 - `Domain/Interfaces/Catalogos/IFormaPagoRepository.cs` - Repository interface
@@ -24,10 +25,12 @@
 - `Features/Catalogos/FormasPago/DTOs/FormaPagoDTOs.cs` - Request/Response DTOs
 
 **Frontend (2 new files):**
+
 - `pages/catalogos/generales/FormasPago/FormasPagoList.tsx` - CRUD page
 - Update `routes/AppRoutes.tsx` - Add route
 
 **Database:**
+
 - EF Migration to create `catalogos.formas_pago` table
 - Seed script with 3 initial forms of payment
 
@@ -36,6 +39,7 @@
 ## Task 1: Create Backend Entity
 
 **Files:**
+
 - Create: `lefarma.backend/src/Lefarma.API/Domain/Entities/Catalogos/FormaPago.cs`
 
 - [ ] **Step 1: Create FormaPago entity**
@@ -71,6 +75,7 @@ git commit -m "feat: add FormaPago entity"
 ## Task 2: Create EF Configuration
 
 **Files:**
+
 - Create: `lefarma.backend/src/Lefarma.API/Infrastructure/Data/Configurations/Catalogos/FormaPagoConfiguration.cs`
 
 - [ ] **Step 1: Create EF configuration**
@@ -134,6 +139,7 @@ namespace Lefarma.API.Infrastructure.Data.Configurations.Catalogos
 - [ ] **Step 2: Register configuration in ApplicationDbContext**
 
 Add to `ApplicationDbContext.cs` in `OnModelCreating`:
+
 ```csharp
 modelBuilder.ApplyConfiguration(new FormaPagoConfiguration());
 ```
@@ -151,6 +157,7 @@ git commit -m "feat: add FormaPago EF configuration"
 ## Task 3: Create DTOs
 
 **Files:**
+
 - Create: `lefarma.backend/src/Lefarma.API/Features/Catalogos/FormasPago/DTOs/FormaPagoDTOs.cs`
 
 - [ ] **Step 1: Create DTOs**
@@ -191,6 +198,7 @@ namespace Lefarma.API.Features.Catalogos.FormasPago.DTOs
 - [ ] **Step 2: Add extension method for response mapping**
 
 Create `Features/Catalogos/FormasPago/Extensions/FormaPagoExtensions.cs`:
+
 ```csharp
 using Lefarma.API.Domain.Entities.Catalogos;
 using Lefarma.API.Features.Catalogos.FormasPago.DTOs;
@@ -228,6 +236,7 @@ git commit -m "feat: add FormaPago DTOs and extensions"
 ## Task 4: Create Validator
 
 **Files:**
+
 - Create: `lefarma.backend/src/Lefarma.API/Features/Catalogos/FormasPago/FormaPagoValidator.cs`
 
 - [ ] **Step 1: Create FluentValidation validator**
@@ -269,6 +278,7 @@ git commit -m "feat: add FormaPago validator"
 ## Task 5: Create Repository Interface
 
 **Files:**
+
 - Create: `lefarma.backend/src/Lefarma.API/Domain/Interfaces/Catalogos/IFormaPagoRepository.cs`
 
 - [ ] **Step 1: Create repository interface**
@@ -302,6 +312,7 @@ git commit -m "feat: add IFormaPagoRepository interface"
 ## Task 6: Create Repository Implementation
 
 **Files:**
+
 - Create: `lefarma.backend/src/Lefarma.API/Infrastructure/Data/Repositories/Catalogos/FormaPagoRepository.cs`
 
 - [ ] **Step 1: Create repository implementation**
@@ -365,6 +376,7 @@ namespace Lefarma.API.Infrastructure.Data.Repositories.Catalogos
 - [ ] **Step 2: Add DbSet to ApplicationDbContext**
 
 Add to `ApplicationDbContext.cs`:
+
 ```csharp
 public DbSet<FormaPago> FormasPago { get; set; }
 ```
@@ -382,6 +394,7 @@ git commit -m "feat: add FormaPagoRepository implementation"
 ## Task 7: Create Service Interface
 
 **Files:**
+
 - Create: `lefarma.backend/src/Lefarma.API/Domain/Interfaces/Catalogos/IFormaPagoService.cs`
 
 - [ ] **Step 1: Create service interface**
@@ -415,6 +428,7 @@ git commit -m "feat: add IFormaPagoService interface"
 ## Task 8: Create Service Implementation
 
 **Files:**
+
 - Create: `lefarma.backend/src/Lefarma.API/Features/Catalogos/FormasPago/FormaPagoService.cs`
 
 - [ ] **Step 1: Create service implementation**
@@ -647,6 +661,7 @@ git commit -m "feat: add FormaPagoService implementation"
 ## Task 9: Create Controller
 
 **Files:**
+
 - Create: `lefarma.backend/src/Lefarma.API/Features/Catalogos/FormasPago/FormasPagoController.cs`
 
 - [ ] **Step 1: Create controller**
@@ -767,6 +782,7 @@ git commit -m "feat: add FormasPagoController with CRUD endpoints"
 ## Task 10: Register Services in DI
 
 **Files:**
+
 - Modify: `lefarma.backend/src/Lefarma.API/Program.cs`
 
 - [ ] **Step 1: Add repository and service registrations**
@@ -791,6 +807,7 @@ git commit -m "feat: register FormaPago services in DI"
 ## Task 11: Create EF Migration
 
 **Files:**
+
 - Create: EF Migration via CLI
 
 - [ ] **Step 1: Create migration**
@@ -824,6 +841,7 @@ git commit -m "feat: create and apply AddFormasPagoTable migration"
 ## Task 12: Seed Initial Data
 
 **Files:**
+
 - Create: `scripts/seed-formas-pago.sh`
 
 - [ ] **Step 1: Create seed script**
@@ -832,7 +850,7 @@ git commit -m "feat: create and apply AddFormasPagoTable migration"
 #!/bin/bash
 # Script para poblar catálogo de Formas de Pago
 
-API_URL="http://localhost:5000/api"
+API_URL="http://localhost:5174/api"
 USERNAME="54"
 PASSWORD="tt01tt"
 
@@ -939,6 +957,7 @@ git commit -m "feat: add seed script for formas de pago"
 ## Task 13: Create Frontend Page
 
 **Files:**
+
 - Create: `lefarma.frontend/src/pages/catalogos/generales/FormasPago/FormasPagoList.tsx`
 
 - [ ] **Step 1: Create FormasPagoList.tsx component**
@@ -1303,12 +1322,14 @@ git commit -m "feat: add FormasPagoList page with CRUD"
 ## Task 14: Add Route and Sidebar Menu
 
 **Files:**
+
 - Modify: `lefarma.frontend/src/routes/AppRoutes.tsx`
 - Modify: `lefarma.frontend/src/components/layout/Sidebar.tsx`
 
 - [ ] **Step 1: Add route to AppRoutes.tsx**
 
 Find the catalogos section and add:
+
 ```typescript
 import FormasPagoList from '@/pages/catalogos/generales/FormasPago/FormasPagoList';
 
@@ -1322,6 +1343,7 @@ import FormasPagoList from '@/pages/catalogos/generales/FormasPago/FormasPagoLis
 - [ ] **Step 2: Add menu item to Sidebar.tsx**
 
 Find the catalogos generales section and add:
+
 ```typescript
 {
   name: 'Formas de Pago',
@@ -1350,7 +1372,7 @@ cd lefarma.backend/src/Lefarma.API
 dotnet run
 ```
 
-Expected: API running on http://localhost:5000
+Expected: API running on http://localhost:5174
 
 - [ ] **Step 2: Start frontend**
 
@@ -1365,7 +1387,7 @@ Expected: Frontend running on http://localhost:5173
 
 ```bash
 # Test GET all
-curl http://localhost:5000/api/catalogos/formaspago
+curl http://localhost:5174/api/catalogos/formaspago
 
 # Expected: Array with 3 formas de pago
 ```
@@ -1399,12 +1421,14 @@ git commit -m "feat: complete Formas de Pago catalog implementation"
 This plan creates a complete Forms of Payment catalog with:
 
 **Backend:**
+
 - Entity, EF Configuration, Repository, Service, Controller, Validator, DTOs
 - Full CRUD API with proper error handling
 - Database table via EF migration
 - 3 initial seeded records
 
 **Frontend:**
+
 - Complete CRUD page following Areas pattern
 - DataTable with search, modal forms, toast notifications
 - Route and sidebar menu integration

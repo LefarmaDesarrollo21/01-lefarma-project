@@ -18,15 +18,16 @@ Todos los endpoints están bajo el prefijo `/api`.
 
 **Base URL:** `/api/catalogos/areas`
 
-| Método | Ruta | Descripción | Respuesta |
-|--------|------|-------------|-----------|
-| GET | `/` | Obtener todas las áreas | `ApiResponse<IEnumerable<AreaResponse>>` |
-| GET | `/{id}` | Obtener área por ID | `ApiResponse<AreaResponse>` |
-| POST | `/` | Crear nueva área | `ApiResponse<AreaResponse>` |
-| PUT | `/{id}` | Actualizar área | `ApiResponse<AreaResponse>` |
-| DELETE | `/{id}` | Eliminar área | `ApiResponse<bool>` |
+| Método | Ruta    | Descripción             | Respuesta                                |
+| ------ | ------- | ----------------------- | ---------------------------------------- |
+| GET    | `/`     | Obtener todas las áreas | `ApiResponse<IEnumerable<AreaResponse>>` |
+| GET    | `/{id}` | Obtener área por ID     | `ApiResponse<AreaResponse>`              |
+| POST   | `/`     | Crear nueva área        | `ApiResponse<AreaResponse>`              |
+| PUT    | `/{id}` | Actualizar área         | `ApiResponse<AreaResponse>`              |
+| DELETE | `/{id}` | Eliminar área           | `ApiResponse<bool>`                      |
 
 ### CreateAreaRequest
+
 ```json
 {
   "idEmpresa": 1,
@@ -45,15 +46,16 @@ Todos los endpoints están bajo el prefijo `/api`.
 
 **Base URL:** `/api/catalogos/empresas`
 
-| Método | Ruta | Descripción | Respuesta |
-|--------|------|-------------|-----------|
-| GET | `/` | Obtener todas las empresas | `ApiResponse<IEnumerable<EmpresaResponse>>` |
-| GET | `/{id}` | Obtener empresa por ID | `ApiResponse<EmpresaResponse>` |
-| POST | `/` | Crear nueva empresa | `ApiResponse<EmpresaResponse>` |
-| PUT | `/{id}` | Actualizar empresa | `ApiResponse<EmpresaResponse>` |
-| DELETE | `/{id}` | Eliminar empresa | `ApiResponse<bool>` |
+| Método | Ruta    | Descripción                | Respuesta                                   |
+| ------ | ------- | -------------------------- | ------------------------------------------- |
+| GET    | `/`     | Obtener todas las empresas | `ApiResponse<IEnumerable<EmpresaResponse>>` |
+| GET    | `/{id}` | Obtener empresa por ID     | `ApiResponse<EmpresaResponse>`              |
+| POST   | `/`     | Crear nueva empresa        | `ApiResponse<EmpresaResponse>`              |
+| PUT    | `/{id}` | Actualizar empresa         | `ApiResponse<EmpresaResponse>`              |
+| DELETE | `/{id}` | Eliminar empresa           | `ApiResponse<bool>`                         |
 
 ### CreateEmpresaRequest
+
 ```json
 {
   "nombre": "Lefarma S.A. de C.V.",
@@ -80,15 +82,16 @@ Todos los endpoints están bajo el prefijo `/api`.
 
 **Base URL:** `/api/catalogos/sucursales`
 
-| Método | Ruta | Descripción | Respuesta |
-|--------|------|-------------|-----------|
-| GET | `/` | Obtener todas las sucursales | `ApiResponse<IEnumerable<SucursalResponse>>` |
-| GET | `/{id}` | Obtener sucursal por ID | `ApiResponse<SucursalResponse>` |
-| POST | `/` | Crear nueva sucursal | `ApiResponse<SucursalResponse>` |
-| PUT | `/{id}` | Actualizar sucursal | `ApiResponse<SucursalResponse>` |
-| DELETE | `/{id}` | Eliminar sucursal | `ApiResponse<bool>` |
+| Método | Ruta    | Descripción                  | Respuesta                                    |
+| ------ | ------- | ---------------------------- | -------------------------------------------- |
+| GET    | `/`     | Obtener todas las sucursales | `ApiResponse<IEnumerable<SucursalResponse>>` |
+| GET    | `/{id}` | Obtener sucursal por ID      | `ApiResponse<SucursalResponse>`              |
+| POST   | `/`     | Crear nueva sucursal         | `ApiResponse<SucursalResponse>`              |
+| PUT    | `/{id}` | Actualizar sucursal          | `ApiResponse<SucursalResponse>`              |
+| DELETE | `/{id}` | Eliminar sucursal            | `ApiResponse<bool>`                          |
 
 ### CreateSucursalRequest
+
 ```json
 {
   "idEmpresa": 1,
@@ -114,15 +117,16 @@ Todos los endpoints están bajo el prefijo `/api`.
 
 **Base URL:** `/api/catalogos/tipogasto`
 
-| Método | Ruta | Descripción | Respuesta |
-|--------|------|-------------|-----------|
-| GET | `/` | Obtener todos los tipos de gasto | `ApiResponse<IEnumerable<TipoGastoResponse>>` |
-| GET | `/{id}` | Obtener tipo de gasto por ID | `ApiResponse<TipoGastoResponse>` |
-| POST | `/` | Crear nuevo tipo de gasto | `ApiResponse<TipoGastoResponse>` |
-| PUT | `/{id}` | Actualizar tipo de gasto | `ApiResponse<TipoGastoResponse>` |
-| DELETE | `/{id}` | Eliminar tipo de gasto | `ApiResponse<bool>` |
+| Método | Ruta    | Descripción                      | Respuesta                                     |
+| ------ | ------- | -------------------------------- | --------------------------------------------- |
+| GET    | `/`     | Obtener todos los tipos de gasto | `ApiResponse<IEnumerable<TipoGastoResponse>>` |
+| GET    | `/{id}` | Obtener tipo de gasto por ID     | `ApiResponse<TipoGastoResponse>`              |
+| POST   | `/`     | Crear nuevo tipo de gasto        | `ApiResponse<TipoGastoResponse>`              |
+| PUT    | `/{id}` | Actualizar tipo de gasto         | `ApiResponse<TipoGastoResponse>`              |
+| DELETE | `/{id}` | Eliminar tipo de gasto           | `ApiResponse<bool>`                           |
 
 ### CreateTipoGastoRequest
+
 ```json
 {
   "nombre": "Gastos de Viaje",
@@ -147,15 +151,16 @@ Todos los endpoints están bajo el prefijo `/api`.
 
 **Base URL:** `/api/catalogos/tiposmedida`
 
-| Método | Ruta | Descripción | Respuesta |
-|--------|------|-------------|-----------|
-| GET | `/` | Obtener todos los tipos de medida | `ApiResponse<IEnumerable<TipoMedidaResponse>>` |
-| GET | `/{id}` | Obtener tipo de medida por ID | `ApiResponse<TipoMedidaResponse>` |
-| POST | `/` | Crear nuevo tipo de medida | `ApiResponse<TipoMedidaResponse>` |
-| PUT | `/{id}` | Actualizar tipo de medida | `ApiResponse<TipoMedidaResponse>` |
-| DELETE | `/{id}` | Eliminar tipo de medida | `ApiResponse<bool>` |
+| Método | Ruta    | Descripción                       | Respuesta                                      |
+| ------ | ------- | --------------------------------- | ---------------------------------------------- |
+| GET    | `/`     | Obtener todos los tipos de medida | `ApiResponse<IEnumerable<TipoMedidaResponse>>` |
+| GET    | `/{id}` | Obtener tipo de medida por ID     | `ApiResponse<TipoMedidaResponse>`              |
+| POST   | `/`     | Crear nuevo tipo de medida        | `ApiResponse<TipoMedidaResponse>`              |
+| PUT    | `/{id}` | Actualizar tipo de medida         | `ApiResponse<TipoMedidaResponse>`              |
+| DELETE | `/{id}` | Eliminar tipo de medida           | `ApiResponse<bool>`                            |
 
 ### CreateTipoMedidaRequest
+
 ```json
 {
   "nombre": "Longitud",
@@ -170,15 +175,16 @@ Todos los endpoints están bajo el prefijo `/api`.
 
 **Base URL:** `/api/catalogos/unidadesmedida`
 
-| Método | Ruta | Descripción | Respuesta |
-|--------|------|-------------|-----------|
-| GET | `/` | Obtener todas las unidades de medida | `ApiResponse<IEnumerable<UnidadMedidaResponse>>` |
-| GET | `/{id}` | Obtener unidad de medida por ID | `ApiResponse<UnidadMedidaResponse>` |
-| POST | `/` | Crear nueva unidad de medida | `ApiResponse<UnidadMedidaResponse>` |
-| PUT | `/{id}` | Actualizar unidad de medida | `ApiResponse<UnidadMedidaResponse>` |
-| DELETE | `/{id}` | Eliminar unidad de medida | `ApiResponse<bool>` |
+| Método | Ruta    | Descripción                          | Respuesta                                        |
+| ------ | ------- | ------------------------------------ | ------------------------------------------------ |
+| GET    | `/`     | Obtener todas las unidades de medida | `ApiResponse<IEnumerable<UnidadMedidaResponse>>` |
+| GET    | `/{id}` | Obtener unidad de medida por ID      | `ApiResponse<UnidadMedidaResponse>`              |
+| POST   | `/`     | Crear nueva unidad de medida         | `ApiResponse<UnidadMedidaResponse>`              |
+| PUT    | `/{id}` | Actualizar unidad de medida          | `ApiResponse<UnidadMedidaResponse>`              |
+| DELETE | `/{id}` | Eliminar unidad de medida            | `ApiResponse<bool>`                              |
 
 ### CreateUnidadMedidaRequest
+
 ```json
 {
   "idTipoMedida": 1,
@@ -195,20 +201,22 @@ Todos los endpoints están bajo el prefijo `/api`.
 
 **Base URL:** `/api/help`
 
-| Método | Ruta | Descripción | Respuesta | Auth |
-|--------|------|-------------|-----------|------|
-| POST | `/images` | Subir imagen para articulo de ayuda | `ApiResponse<HelpImageUploadResponse>` | Administrator, Manager |
-| GET | `/articles/for-user` | Obtener articulos para usuario actual | `ApiResponse<IEnumerable<HelpArticleDto>>` | Autenticado |
+| Método | Ruta                 | Descripción                           | Respuesta                                  | Auth                   |
+| ------ | -------------------- | ------------------------------------- | ------------------------------------------ | ---------------------- |
+| POST   | `/images`            | Subir imagen para articulo de ayuda   | `ApiResponse<HelpImageUploadResponse>`     | Administrator, Manager |
+| GET    | `/articles/for-user` | Obtener articulos para usuario actual | `ApiResponse<IEnumerable<HelpArticleDto>>` | Autenticado            |
 
 ### POST /api/help/images
 
 Endpoint para subir imagenes utilizadas en articulos de ayuda.
 
 **Request:**
+
 - Content-Type: `multipart/form-data`
 - Campo: `file` (tipo archivo)
 
 **Restricciones:**
+
 - Formatos permitidos: JPG, PNG, GIF, WebP
 - Tamaño maximo: 5MB
 
@@ -238,9 +246,9 @@ Endpoint para obtener articulos de ayuda visibles para el usuario actual.
 
 **Query Parameters:**
 
-| Parametro | Tipo | Requerido | Descripcion |
-|-----------|------|-----------|-------------|
-| `modulo` | string | No | Filtrar por modulo (Catalogos, Auth, Notificaciones, Profile, Admin, SystemConfig, General) |
+| Parametro | Tipo   | Requerido | Descripcion                                                                                 |
+| --------- | ------ | --------- | ------------------------------------------------------------------------------------------- |
+| `modulo`  | string | No        | Filtrar por modulo (Catalogos, Auth, Notificaciones, Profile, Admin, SystemConfig, General) |
 
 **Response:** Array de `HelpArticleDto`
 
@@ -274,9 +282,10 @@ Las imagenes de ayuda se sirven como archivos estaticos:
 
 **URL Pattern:** `/media/help/{year}/{month}/{filename}`
 
-**Ejemplo:** `http://localhost:5000/media/help/2026/03/img_abc123.png`
+**Ejemplo:** `http://localhost:5174/media/help/2026/03/img_abc123.png`
 
 **Headers de Cache:**
+
 - `Cache-Control: public, max-age=31536000` (1 año)
 - Optimizado para assets inmutables
 
@@ -302,9 +311,7 @@ En caso de error:
   "success": false,
   "message": "Error de validación",
   "data": null,
-  "errors": [
-    { "field": "nombre", "message": "El nombre es requerido" }
-  ]
+  "errors": [{ "field": "nombre", "message": "El nombre es requerido" }]
 }
 ```
 
@@ -312,13 +319,13 @@ En caso de error:
 
 ## Códigos de Estado HTTP
 
-| Código | Significado |
-|--------|-------------|
-| 200 | Éxito |
-| 201 | Creado |
-| 400 | Bad Request (validación) |
-| 401 | No autorizado |
-| 403 | Prohibido |
-| 404 | No encontrado |
-| 409 | Conflicto (duplicado) |
-| 500 | Error interno del servidor |
+| Código | Significado                |
+| ------ | -------------------------- |
+| 200    | Éxito                      |
+| 201    | Creado                     |
+| 400    | Bad Request (validación)   |
+| 401    | No autorizado              |
+| 403    | Prohibido                  |
+| 404    | No encontrado              |
+| 409    | Conflicto (duplicado)      |
+| 500    | Error interno del servidor |
