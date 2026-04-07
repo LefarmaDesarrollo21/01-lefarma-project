@@ -79,17 +79,15 @@ if (typeof window !== 'undefined') {
   (window as any).clearTableConfigs = clearAllConfigs;
 }
 
-/**
- * Create default config for a table
- */
 export function createDefaultConfig(
   tableId: string,
   allColumnIds: string[],
-  defaultSearchColumns: string[] = []
+  defaultSearchColumns: string[] = [],
+  defaultVisibleColumns?: string[]
 ): TableConfig {
   return {
     tableId,
-    visibleColumns: allColumnIds,
+    visibleColumns: defaultVisibleColumns ?? allColumnIds,
     searchColumns: defaultSearchColumns.length > 0 ? defaultSearchColumns : allColumnIds,
     lastFilters: {},
   };
