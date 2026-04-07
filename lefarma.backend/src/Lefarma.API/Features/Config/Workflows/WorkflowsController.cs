@@ -141,6 +141,33 @@ namespace Lefarma.API.Features.Config.Workflows
             { Success = true, Message = "Acci�n eliminada exitosamente.", Data = null }));
         }
 
+        [HttpPost("{idWorkflow}/acciones/{idAccion}/handlers")]
+        [SwaggerOperation(Summary = "Crear handler para una acción")]
+        public async Task<IActionResult> CreateAccionHandler(int idWorkflow, int idAccion, [FromBody] CreateAccionHandlerRequest request)
+        {
+            var result = await _service.CreateAccionHandlerAsync(idWorkflow, idAccion, request);
+            return result.ToActionResult(this, data => Ok(new ApiResponse<WorkflowAccionHandlerResponse>
+            { Success = true, Message = "Handler creado exitosamente.", Data = data }));
+        }
+
+        [HttpPut("{idWorkflow}/acciones/{idAccion}/handlers/{idHandler}")]
+        [SwaggerOperation(Summary = "Actualizar handler de una acción")]
+        public async Task<IActionResult> UpdateAccionHandler(int idWorkflow, int idAccion, int idHandler, [FromBody] UpdateAccionHandlerRequest request)
+        {
+            var result = await _service.UpdateAccionHandlerAsync(idWorkflow, idAccion, idHandler, request);
+            return result.ToActionResult(this, data => Ok(new ApiResponse<WorkflowAccionHandlerResponse>
+            { Success = true, Message = "Handler actualizado exitosamente.", Data = data }));
+        }
+
+        [HttpDelete("{idWorkflow}/acciones/{idAccion}/handlers/{idHandler}")]
+        [SwaggerOperation(Summary = "Eliminar handler de una acción")]
+        public async Task<IActionResult> DeleteAccionHandler(int idWorkflow, int idAccion, int idHandler)
+        {
+            var result = await _service.DeleteAccionHandlerAsync(idWorkflow, idAccion, idHandler);
+            return result.ToActionResult(this, _ => Ok(new ApiResponse<object>
+            { Success = true, Message = "Handler eliminado exitosamente.", Data = null }));
+        }
+
         // ============================================================================
         // CONDICIONES
         // ============================================================================
@@ -241,6 +268,33 @@ namespace Lefarma.API.Features.Config.Workflows
             var result = await _service.DeleteNotificacionAsync(idWorkflow, idAccion, idNotificacion);
             return result.ToActionResult(this, _ => Ok(new ApiResponse<object>
             { Success = true, Message = "Notificaci�n eliminada exitosamente.", Data = null }));
+        }
+
+        [HttpPost("{idWorkflow}/campos")]
+        [SwaggerOperation(Summary = "Crear campo configurable de workflow")]
+        public async Task<IActionResult> CreateCampo(int idWorkflow, [FromBody] CreateWorkflowCampoRequest request)
+        {
+            var result = await _service.CreateCampoAsync(idWorkflow, request);
+            return result.ToActionResult(this, data => Ok(new ApiResponse<WorkflowCampoResponse>
+            { Success = true, Message = "Campo creado exitosamente.", Data = data }));
+        }
+
+        [HttpPut("{idWorkflow}/campos/{idWorkflowCampo}")]
+        [SwaggerOperation(Summary = "Actualizar campo configurable de workflow")]
+        public async Task<IActionResult> UpdateCampo(int idWorkflow, int idWorkflowCampo, [FromBody] UpdateWorkflowCampoRequest request)
+        {
+            var result = await _service.UpdateCampoAsync(idWorkflow, idWorkflowCampo, request);
+            return result.ToActionResult(this, data => Ok(new ApiResponse<WorkflowCampoResponse>
+            { Success = true, Message = "Campo actualizado exitosamente.", Data = data }));
+        }
+
+        [HttpDelete("{idWorkflow}/campos/{idWorkflowCampo}")]
+        [SwaggerOperation(Summary = "Eliminar campo configurable de workflow")]
+        public async Task<IActionResult> DeleteCampo(int idWorkflow, int idWorkflowCampo)
+        {
+            var result = await _service.DeleteCampoAsync(idWorkflow, idWorkflowCampo);
+            return result.ToActionResult(this, _ => Ok(new ApiResponse<object>
+            { Success = true, Message = "Campo eliminado exitosamente.", Data = null }));
         }
     }
 }

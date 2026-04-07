@@ -7,7 +7,6 @@ public class WorkflowPaso
         public string NombrePaso { get; set; } = null!;
         public string? CodigoEstado { get; set; }      // 'EN_REVISION_F2', 'AUTORIZADA'...
         public string? DescripcionAyuda { get; set; }
-        public string? HandlerKey { get; set; }        // 'Firma3Handler', 'Firma4Handler'
         public bool EsInicio { get; set; }
         public bool EsFinal { get; set; }
         public bool Activo { get; set; } = true;

@@ -44,6 +44,16 @@ public class OrdenCompraConfiguration : IEntityTypeConfiguration<OrdenCompra>
             builder.Property(o => o.Total).HasColumnName("total").HasColumnType("decimal(18,2)");
 
             builder.HasMany(o => o.Partidas).WithOne(p => p.Orden).HasForeignKey(p => p.IdOrden).OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(o => o.CentroCosto)
+                .WithMany()
+                .HasForeignKey(o => o.IdCentroCosto)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(o => o.CuentaContable)
+                .WithMany()
+                .HasForeignKey(o => o.IdCuentaContable)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

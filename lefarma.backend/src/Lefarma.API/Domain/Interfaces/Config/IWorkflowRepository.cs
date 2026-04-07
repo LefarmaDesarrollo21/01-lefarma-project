@@ -6,5 +6,7 @@ public interface IWorkflowRepository : IBaseRepository<Workflow>
         Task<Workflow?> GetByCodigoProcesoAsync(string codigoProceso);
         Task<WorkflowPaso?> GetPasoByCodigoEstadoAsync(int idWorkflow, string codigoEstado);
         Task<ICollection<WorkflowAccion>> GetAccionesDisponiblesAsync(int idPaso);
+        Task<ICollection<WorkflowAccionHandler>> GetAccionHandlersAsync(int idAccion);
+        Task<ICollection<WorkflowCampo>> GetCamposByWorkflowAsync(int idWorkflow);
     }
 }

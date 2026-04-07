@@ -1,8 +1,8 @@
-using Lefarma.API.Domain.Entities.Operaciones;
+﻿using Lefarma.API.Domain.Entities.Operaciones;
 
 namespace Lefarma.API.Features.OrdenesCompra.Captura.DTOs
 {
-public class OrdenCompraResponse
+    public class OrdenCompraResponse
     {
         public int IdOrden { get; set; }
         public string Folio { get; set; } = string.Empty;
@@ -19,8 +19,12 @@ public class OrdenCompraResponse
         public string? CodigoPostalProveedor { get; set; }
         public string? PersonaContacto { get; set; }
         public string? NotaFormaPago { get; set; }
+        public string? NotasGenerales { get; set; }
         public int? IdCentroCosto { get; set; }
+        public string? CentroCostoNombre { get; set; }
         public int? IdCuentaContable { get; set; }
+        public string? CuentaContableNumero { get; set; }
+        public string? CuentaContableDescripcion { get; set; }
         public bool RequiereComprobacionPago { get; set; }
         public bool RequiereComprobacionGasto { get; set; }
         public DateTime FechaSolicitud { get; set; }
@@ -29,7 +33,6 @@ public class OrdenCompraResponse
         public decimal TotalIva { get; set; }
         public decimal Total { get; set; }
         public List<OrdenCompraPartidaResponse> Partidas { get; set; } = new();
-        public string? NotasGenerales { get; set; }
     }
 
     public class OrdenCompraPartidaResponse
@@ -72,8 +75,8 @@ public class OrdenCompraResponse
         public int? IdRegimenFiscal { get; set; }
         public string? PersonaContacto { get; set; }
         public string? NotaFormaPago { get; set; }
-        public required List<CreatePartidaRequest> Partidas { get; set; }
         public string? NotasGenerales { get; set; }
+        public required List<CreatePartidaRequest> Partidas { get; set; }
     }
 
     public class CreatePartidaRequest

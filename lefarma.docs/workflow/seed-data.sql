@@ -19,33 +19,33 @@ SET IDENTITY_INSERT config.workflows OFF;
 SET IDENTITY_INSERT config.workflow_pasos ON;
 
 INSERT INTO config.workflow_pasos 
-(id_paso, id_workflow, orden, nombre_paso, codigo_estado, descripcion_ayuda, handler_key, es_inicio, es_final, requiere_firma, requiere_comentario, requiere_adjunto, activo)
+(id_paso, id_workflow, orden, nombre_paso, codigo_estado, descripcion_ayuda, es_inicio, es_final, requiere_firma, requiere_comentario, requiere_adjunto, activo)
 VALUES 
     -- Paso inicial (captura)
-    (1, 1, 0, 'Creada', 'CREADA', 'Orden de compra capturada por el usuario', NULL, 1, 0, 0, 0, 0, 1),
+    (1, 1, 0, 'Creada', 'CREADA', 'Orden de compra capturada por el usuario', 1, 0, 0, 0, 0, 1),
     
     -- Firma 2: Gerente General por Sucursal
-    (2, 1, 10, 'Firma 2 - Gerente General', 'EN_REVISION_F2', 'Autorización del Gerente General de la Empresa/Sucursal', NULL, 0, 0, 1, 0, 0, 1),
+    (2, 1, 10, 'Firma 2 - Gerente General', 'EN_REVISION_F2', 'Autorización del Gerente General de la Empresa/Sucursal', 0, 0, 1, 0, 0, 1),
     
-    -- Firma 3: CxP (Polo) - Asigna Centro de Costo y Cuenta Contable
-    (3, 1, 20, 'Firma 3 - CxP', 'EN_REVISION_F3', 'Revisión de CxP, asignación de centro de costo y cuenta contable', 'Firma3Handler', 0, 0, 1, 0, 0, 1),
+    -- Firma 3: CxP - Asigna Centro de Costo y Cuenta Contable vía handlers dinámicos
+    (3, 1, 20, 'Firma 3 - CxP', 'EN_REVISION_F3', 'Revisión de CxP, asignación de centro de costo y cuenta contable', 0, 0, 1, 0, 0, 1),
     
-    -- Firma 4: GAF (Diego) - Configura checks de comprobación
-    (4, 1, 30, 'Firma 4 - GAF', 'EN_REVISION_F4', 'Autorización del Gerente de Administración y Finanzas', 'Firma4Handler', 0, 0, 1, 0, 0, 1),
+    -- Firma 4: GAF - Configura checks de comprobación vía handlers dinámicos
+    (4, 1, 30, 'Firma 4 - GAF', 'EN_REVISION_F4', 'Autorización del Gerente de Administración y Finanzas', 0, 0, 1, 0, 0, 1),
     
-    -- Firma 5: Dirección Corporativa (Hector) - Solo para montos > $100k
-    (5, 1, 40, 'Firma 5 - Dirección Corporativa', 'EN_REVISION_F5', 'Autorización de Dirección Corporativa para montos mayores a $100,000', NULL, 0, 0, 1, 0, 0, 1),
+    -- Firma 5: Dirección Corporativa - Solo para montos > $100k (condición dinámica)
+    (5, 1, 40, 'Firma 5 - Dirección Corporativa', 'EN_REVISION_F5', 'Autorización de Dirección Corporativa para montos mayores a $100,000', 0, 0, 1, 0, 0, 1),
     
     -- Estados post-autorización
-    (6, 1, 50, 'Autorizada', 'AUTORIZADA', 'Orden autorizada, lista para pago', NULL, 0, 0, 0, 0, 0, 1),
-    (7, 1, 60, 'En Tesorería', 'EN_TESORERIA', 'Orden en proceso de pago por Tesorería', NULL, 0, 0, 0, 0, 0, 1),
-    (8, 1, 70, 'Pagada', 'PAGADA', 'Pago realizado, pendiente de comprobación', NULL, 0, 0, 0, 0, 0, 1),
-    (9, 1, 80, 'En Comprobación', 'EN_COMPROBACION', 'Usuario subiendo comprobantes de gasto', NULL, 0, 0, 0, 0, 1, 1),
-    (10, 1, 90, 'Cerrada', 'CERRADA', 'Ciclo completo, orden cerrada', NULL, 0, 1, 0, 0, 0, 1),
+    (6, 1, 50, 'Autorizada', 'AUTORIZADA', 'Orden autorizada, lista para pago', 0, 0, 0, 0, 0, 1),
+    (7, 1, 60, 'En Tesorería', 'EN_TESORERIA', 'Orden en proceso de pago por Tesorería', 0, 0, 0, 0, 0, 1),
+    (8, 1, 70, 'Pagada', 'PAGADA', 'Pago realizado, pendiente de comprobación', 0, 0, 0, 0, 0, 1),
+    (9, 1, 80, 'En Comprobación', 'EN_COMPROBACION', 'Usuario subiendo comprobantes de gasto', 0, 0, 0, 0, 1, 1),
+    (10, 1, 90, 'Cerrada', 'CERRADA', 'Ciclo completo, orden cerrada', 0, 1, 0, 0, 0, 1),
     
     -- Estados de rechazo
-    (11, 1, 100, 'Rechazada', 'RECHAZADA', 'Orden rechazada en alguna firma', NULL, 0, 1, 0, 1, 0, 1),
-    (12, 1, 110, 'Cancelada', 'CANCELADA', 'Orden cancelada por el usuario', NULL, 0, 1, 0, 1, 0, 1);
+    (11, 1, 100, 'Rechazada', 'RECHAZADA', 'Orden rechazada en alguna firma', 0, 1, 0, 1, 0, 1),
+    (12, 1, 110, 'Cancelada', 'CANCELADA', 'Orden cancelada por el usuario', 0, 1, 0, 1, 0, 1);
 
 SET IDENTITY_INSERT config.workflow_pasos OFF;
 
@@ -132,7 +132,56 @@ VALUES
 SET IDENTITY_INSERT config.workflow_acciones OFF;
 
 -- =============================================================================
--- 5. CONDICIONES (Reglas Dinámicas)
+-- 5. CAMPOS CONFIGURABLES (workflow_campos)
+-- Diccionario de todos los campos que puede manejar el workflow dinámicamente.
+-- propiedad_entidad → nombre de la propiedad C# en OrdenCompra (para FieldUpdater con reflexión).
+-- validar_fiscal    → solo para Archivo: si 1, se verificará con webservice fiscal (omite imágenes).
+-- =============================================================================
+SET IDENTITY_INSERT config.workflow_campos ON;
+
+INSERT INTO config.workflow_campos
+(id_workflow_campo, id_workflow, nombre_tecnico, etiqueta_usuario, tipo_control, source_catalog, propiedad_entidad, validar_fiscal, activo)
+VALUES
+    (1, 1, 'id_centro_costo',             'Centro de costo',               'Selector', 'catalogos/CentrosCosto',     'IdCentroCosto',               0, 1),
+    (2, 1, 'id_cuenta_contable',          'Cuenta contable',               'Selector', 'catalogos/CuentasContables', 'IdCuentaContable',             0, 1),
+    (3, 1, 'requiere_comprobacion_pago',  'Requiere comprobación de pago', 'Checkbox', NULL,                         'RequiereComprobacionPago',     0, 1),
+    (4, 1, 'requiere_comprobacion_gasto', 'Requiere comprobación de gasto','Checkbox', NULL,                         'RequiereComprobacionGasto',    0, 1),
+    (5, 1, 'comprobante_pago',            'Comprobante de Pago',           'Archivo',  NULL,                         NULL,                           0, 1),
+    (6, 1, 'comprobante_gasto',           'Comprobante de Gasto',          'Archivo',  NULL,                         NULL,                           1, 1);  -- validar_fiscal=1: webservice CFDI
+
+SET IDENTITY_INSERT config.workflow_campos OFF;
+
+-- =============================================================================
+-- 6. HANDLERS DINÁMICOS POR ACCIÓN (workflow_accion_handlers)
+-- Solo 2 tipos: RequiredFields (valida) y FieldUpdater (guarda en orden).
+-- RequiredFields con tipo_control=Archivo valida que el documento esté en BD.
+-- FieldUpdater usa reflexión sobre propiedad_entidad del campo.
+-- =============================================================================
+SET IDENTITY_INSERT config.workflow_accion_handlers ON;
+
+INSERT INTO config.workflow_accion_handlers
+(id_handler, id_accion, handler_key, configuracion_json, orden_ejecucion, activo, id_workflow_campo)
+VALUES
+    -- Firma 3 - Autorizar: validar + guardar centro de costo y cuenta contable
+    (1, 5, 'RequiredFields', NULL, 1, 1, 1),
+    (9, 5, 'RequiredFields', NULL, 2, 1, 2),
+    (6, 5, 'FieldUpdater',   NULL, 3, 1, 1),
+    (7, 5, 'FieldUpdater',   NULL, 4, 1, 2),
+
+    -- Firma 4 - Autorizar: guardar checkboxes de comprobación
+    (2, 8, 'FieldUpdater', NULL, 1, 1, 3),
+    (3, 8, 'FieldUpdater', NULL, 2, 1, 4),
+
+    -- Tesorería - Marcar como Pagada: requiere comprobante de pago (tipo Archivo, validar_fiscal=0)
+    (4, 16, 'RequiredFields', NULL, 1, 1, 5),
+
+    -- Iniciar Comprobación: requiere comprobante de gasto (tipo Archivo, validar_fiscal=1 → webservice fiscal)
+    (5, 17, 'RequiredFields', NULL, 1, 1, 6);
+
+SET IDENTITY_INSERT config.workflow_accion_handlers OFF;
+
+-- =============================================================================
+-- 7. CONDICIONES (Reglas Dinámicas)
 -- =============================================================================
 SET IDENTITY_INSERT config.workflow_condiciones ON;
 
@@ -148,7 +197,7 @@ VALUES
 SET IDENTITY_INSERT config.workflow_condiciones OFF;
 
 -- =============================================================================
--- 6. NOTIFICACIONES (Templates por Acción)
+-- 8. NOTIFICACIONES (Templates por Acción)
 -- =============================================================================
 SET IDENTITY_INSERT config.workflow_notificaciones ON;
 
@@ -215,7 +264,7 @@ VALUES
 SET IDENTITY_INSERT config.workflow_notificaciones OFF;
 
 -- =============================================================================
--- 7. DATOS DE PRUEBA: Usuario Detalle (Opcional)
+-- 9. DATOS DE PRUEBA: Usuario Detalle (Opcional)
 -- =============================================================================
 -- Inserta perfiles extendidos de usuarios para pruebas
 -- Nota: Los id_usuario deben corresponder con los de tu BD de Seguridad
@@ -245,6 +294,8 @@ PRINT 'Seed data cargado exitosamente.';
 PRINT 'Workflow configurado: ORDEN_COMPRA con 5 firmas';
 PRINT '- 12 pasos definidos';
 PRINT '- 18 acciones de transición';
+PRINT '- 9 handlers dinámicos por acción';
+PRINT '- 4 campos configurables para UI dinámica';
 PRINT '- 2 condiciones dinámicas (Total > $100,000)';
 PRINT '- 11 plantillas de notificación';
 PRINT '- 10 participantes asignados';

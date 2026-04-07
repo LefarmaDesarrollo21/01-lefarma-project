@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Lefarma.API.Domain.Entities.Operaciones;
 using Lefarma.API.Domain.Entities.Config;
 using Lefarma.API.Domain.Interfaces.Operaciones;
@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Features.OrdenesCompra.Captura
 {
-public class OrdenCompraService : BaseService, IOrdenCompraService
+    public class OrdenCompraService : BaseService, IOrdenCompraService
     {
         private readonly IOrdenCompraRepository _repo;
         private readonly IWorkflowRepository _workflowRepo;
@@ -36,7 +36,7 @@ public class OrdenCompraService : BaseService, IOrdenCompraService
         {
             try
             {
-                var q = _repo.GetQueryable().Include(o => o.Partidas).AsQueryable();
+                var q = _repo.GetQueryable().Include(o => o.Partidas).Include(o => o.CentroCosto).Include(o => o.CuentaContable).AsQueryable();
 
                 if (query.IdEmpresa.HasValue) q = q.Where(o => o.IdEmpresa == query.IdEmpresa.Value);
                 if (query.IdSucursal.HasValue) q = q.Where(o => o.IdSucursal == query.IdSucursal.Value);
@@ -64,7 +64,7 @@ public class OrdenCompraService : BaseService, IOrdenCompraService
             catch (Exception ex)
             {
                 EnrichWideEvent("GetAll", exception: ex);
-                return CommonErrors.DatabaseError("obtener las �rdenes de compra");
+                return CommonErrors.DatabaseError("obtener las órdenes de compra");
             }
         }
 
@@ -129,7 +129,7 @@ public class OrdenCompraService : BaseService, IOrdenCompraService
                     .FirstOrDefault();
 
                 if (accionInicial is null)
-                    return CommonErrors.Conflict("Workflow", "El paso inicial no tiene acciones configuradas para registrar bit�cora.");
+                    return CommonErrors.Conflict("Workflow", "El paso inicial no tiene acciones configuradas para registrar bitácora.");
 
                 var orden = new OrdenCompra
                 {
@@ -175,7 +175,7 @@ public class OrdenCompraService : BaseService, IOrdenCompraService
                 {
                     IdOrden = result.IdOrden,
                     IdWorkflow = workflow.IdWorkflow,
-                    IdPaso = pasoInicio!.IdPaso,
+                    IdPaso = pasoInicio.IdPaso,
                     IdAccion = accionInicial.IdAccion,
                     IdUsuario = idUsuario,
                     Comentario = "Orden de compra creada",
@@ -214,7 +214,7 @@ public class OrdenCompraService : BaseService, IOrdenCompraService
                 }
 
                 if (orden.Estado != EstadoOC.Creada)
-                    return CommonErrors.Conflict("OrdenCompra", "Solo se pueden eliminar �rdenes en estado Creada.");
+                    return CommonErrors.Conflict("OrdenCompra", "Solo se pueden eliminar órdenes en estado Creada.");
 
                 var eliminado = await _repo.DeleteAsync(orden);
                 if (!eliminado)
@@ -255,7 +255,10 @@ public class OrdenCompraService : BaseService, IOrdenCompraService
             NotaFormaPago = o.NotaFormaPago,
             NotasGenerales = o.NotasGenerales,
             IdCentroCosto = o.IdCentroCosto,
+            CentroCostoNombre = o.CentroCosto?.Nombre,
             IdCuentaContable = o.IdCuentaContable,
+            CuentaContableNumero = o.CuentaContable?.Cuenta,
+            CuentaContableDescripcion = o.CuentaContable?.Descripcion,
             RequiereComprobacionPago = o.RequiereComprobacionPago,
             RequiereComprobacionGasto = o.RequiereComprobacionGasto,
             FechaSolicitud = o.FechaSolicitud,

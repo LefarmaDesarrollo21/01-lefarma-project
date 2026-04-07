@@ -1,5 +1,8 @@
-namespace Lefarma.API.Domain.Entities.Operaciones {
-public class OrdenCompra
+﻿using Lefarma.API.Domain.Entities.Catalogos;
+
+namespace Lefarma.API.Domain.Entities.Operaciones
+{
+    public class OrdenCompra
     {
         public int IdOrden { get; set; }
         public string Folio { get; set; } = null!;  // OC-2026-00001
@@ -27,6 +30,10 @@ public class OrdenCompra
         // Asignado en Firma 3 - CxP
         public int? IdCentroCosto { get; set; }
         public int? IdCuentaContable { get; set; }
+
+        // Navegación a catálogos (resueltos en queries)
+        public virtual CentroCosto? CentroCosto { get; set; }
+        public virtual CuentaContable? CuentaContable { get; set; }
 
         // Configurado en Firma 4 - GAF
         public bool RequiereComprobacionPago { get; set; } = true;

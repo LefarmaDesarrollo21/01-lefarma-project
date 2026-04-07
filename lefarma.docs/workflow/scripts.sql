@@ -74,7 +74,6 @@ CREATE TABLE config.workflow_pasos (
     nombre_paso VARCHAR(100) NOT NULL,
     codigo_estado VARCHAR(50) UNIQUE NULL, -- Mapea al enum del dominio: 'EN_REVISION_F2', 'AUTORIZADA', etc.
     descripcion_ayuda VARCHAR(255) NULL,   -- Texto guía para el usuario en el UI
-    handler_key VARCHAR(50) NULL,          -- Step-handler específico: 'Firma3Handler', 'Firma4Handler'
 
     -- Reglas de Validación en el paso
     es_inicio BIT DEFAULT 0,
@@ -134,7 +133,40 @@ CREATE TABLE config.workflow_notificaciones (
     CONSTRAINT FK_workflow_notificaciones_paso_destino FOREIGN KEY (id_paso_destino) REFERENCES config.workflow_pasos(id_paso)
 );
 
--- 7. REGLAS Y CONDICIONES (Para saltos dinámicos, ej: Si monto > 50k ir a paso X)
+-- 7. CAMPOS CONFIGURABLES POR WORKFLOW (metadatos para UI dinámica)
+-- Actúa como "diccionario" de campos que el workflow puede solicitar/validar.
+-- propiedad_entidad: nombre exacto de la propiedad C# en OrdenCompra (para reflexión en FieldUpdater).
+-- validar_fiscal:    solo relevante para tipo_control='Archivo'; si 1, se verificará con webservice CFDI.
+CREATE TABLE config.workflow_campos (
+    id_workflow_campo INT IDENTITY(1,1) PRIMARY KEY,
+    id_workflow INT NOT NULL,
+    nombre_tecnico VARCHAR(100) NOT NULL,    -- Ej: 'id_centro_costo'
+    etiqueta_usuario VARCHAR(120) NOT NULL,  -- Ej: 'Centro de costo'
+    tipo_control VARCHAR(30) NOT NULL,       -- Texto | Selector | Checkbox | Archivo | Numero | Fecha
+    source_catalog VARCHAR(120) NULL,        -- Ej: 'catalogos/CentrosCosto' (solo para Selector)
+    propiedad_entidad NVARCHAR(100) NULL,    -- Nombre C# en OrdenCompra, ej: 'IdCentroCosto' (NULL para Archivo)
+    validar_fiscal BIT NOT NULL DEFAULT 0,  -- 1 = validar con webservice CFDI al recibir (solo Archivo)
+    activo BIT DEFAULT 1,
+    CONSTRAINT FK_workflow_campos_workflow FOREIGN KEY (id_workflow) REFERENCES config.workflows(id_workflow),
+    CONSTRAINT UX_workflow_campos_workflow_nombre UNIQUE (id_workflow, nombre_tecnico)
+);
+
+-- 8. HANDLERS DINÁMICOS POR ACCIÓN (Funciones de negocio configurables)
+-- Dos tipos únicos: RequiredFields (valida presencia) y FieldUpdater (escribe en entidad).
+-- id_workflow_campo: enlaza directamente al campo del diccionario (reemplaza configuracion_json para campo).
+CREATE TABLE config.workflow_accion_handlers (
+    id_handler INT IDENTITY(1,1) PRIMARY KEY,
+    id_accion INT NOT NULL,
+    handler_key VARCHAR(100) NOT NULL,       -- 'RequiredFields' | 'FieldUpdater'
+    configuracion_json NVARCHAR(MAX) NULL,   -- Reservado para parámetros adicionales futuros
+    orden_ejecucion INT NOT NULL DEFAULT 1,  -- Secuencia de ejecución
+    activo BIT DEFAULT 1,
+    id_workflow_campo INT NULL,              -- FK al campo vinculado (diccionario)
+    CONSTRAINT FK_workflow_accion_handlers_accion FOREIGN KEY (id_accion) REFERENCES config.workflow_acciones(id_accion),
+    CONSTRAINT FK_handler_workflow_campo FOREIGN KEY (id_workflow_campo) REFERENCES config.workflow_campos(id_workflow_campo) ON DELETE SET NULL
+);
+
+-- 9. REGLAS Y CONDICIONES (Para saltos dinámicos, ej: Si monto > 50k ir a paso X)
 CREATE TABLE config.workflow_condiciones (
     id_condicion INT IDENTITY(1,1) PRIMARY KEY,
     id_paso INT NOT NULL,
@@ -146,7 +178,7 @@ CREATE TABLE config.workflow_condiciones (
     CONSTRAINT FK_workflow_condiciones_paso FOREIGN KEY (id_paso) REFERENCES config.workflow_pasos(id_paso)
 );
 
--- 8. BITÁCORA INMUTABLE DE EVENTOS (Auditoría de cambios de estado)
+-- 10. BITÁCORA INMUTABLE DE EVENTOS (Auditoría de cambios de estado)
 -- Cumple requisito no-funcional: "Cada cambio de estado debe registrarse en una bitácora inmutable"
 CREATE TABLE config.workflow_bitacora (
     id_evento       INT IDENTITY(1,1) PRIMARY KEY,
@@ -169,6 +201,7 @@ CREATE TABLE config.workflow_bitacora (
 CREATE INDEX IX_usuario_detalle_empresa_sucursal ON config.usuario_detalle (id_empresa, id_sucursal);
 CREATE INDEX IX_workflow_pasos_workflow_orden ON config.workflow_pasos (id_workflow, orden);
 CREATE INDEX IX_workflow_acciones_origen ON config.workflow_acciones (id_paso_origen);
+CREATE INDEX IX_workflow_accion_handlers_accion_orden_activo ON config.workflow_accion_handlers (id_accion, orden_ejecucion, activo);
 CREATE INDEX IX_workflow_bitacora_orden ON config.workflow_bitacora (id_orden);
 CREATE INDEX IX_workflow_bitacora_fecha ON config.workflow_bitacora (fecha_evento);
 
@@ -212,7 +245,7 @@ CREATE TABLE operaciones.ordenes_compra (
     
     -- Campos asignados en Firma 3 (CxP - Polo)
     id_centro_costo INT NULL,
-    cuenta_contable VARCHAR(50) NULL,
+    id_cuenta_contable INT NULL,            -- FK lógica a catalogos.cuentas_contables
     
     -- Campos configurados en Firma 4 (GAF - Diego)
     requiere_comprobacion_pago BIT NOT NULL DEFAULT 1,

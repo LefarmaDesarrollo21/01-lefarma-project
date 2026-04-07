@@ -19,6 +19,9 @@ public interface IWorkflowService
         Task<ErrorOr<WorkflowAccionResponse>> CreateAccionAsync(int idWorkflow, int idPaso, CreateAccionRequest request);
         Task<ErrorOr<WorkflowAccionResponse>> UpdateAccionAsync(int idWorkflow, int idPaso, int idAccion, UpdateAccionRequest request);
         Task<ErrorOr<bool>> DeleteAccionAsync(int idWorkflow, int idPaso, int idAccion);
+        Task<ErrorOr<WorkflowAccionHandlerResponse>> CreateAccionHandlerAsync(int idWorkflow, int idAccion, CreateAccionHandlerRequest request);
+        Task<ErrorOr<WorkflowAccionHandlerResponse>> UpdateAccionHandlerAsync(int idWorkflow, int idAccion, int idHandler, UpdateAccionHandlerRequest request);
+        Task<ErrorOr<bool>> DeleteAccionHandlerAsync(int idWorkflow, int idAccion, int idHandler);
 
         // Condiciones
         Task<ErrorOr<CondicionResponse>> CreateCondicionAsync(int idWorkflow, int idPaso, CreateCondicionRequest request);
@@ -34,5 +37,10 @@ public interface IWorkflowService
         Task<ErrorOr<NotificacionResponse>> CreateNotificacionAsync(int idWorkflow, int idAccion, CreateNotificacionRequest request);
         Task<ErrorOr<NotificacionResponse>> UpdateNotificacionAsync(int idWorkflow, int idAccion, int idNotificacion, UpdateNotificacionRequest request);
         Task<ErrorOr<bool>> DeleteNotificacionAsync(int idWorkflow, int idAccion, int idNotificacion);
+
+        // Campos configurables
+        Task<ErrorOr<WorkflowCampoResponse>> CreateCampoAsync(int idWorkflow, CreateWorkflowCampoRequest request);
+        Task<ErrorOr<WorkflowCampoResponse>> UpdateCampoAsync(int idWorkflow, int idWorkflowCampo, UpdateWorkflowCampoRequest request);
+        Task<ErrorOr<bool>> DeleteCampoAsync(int idWorkflow, int idWorkflowCampo);
     }
 }

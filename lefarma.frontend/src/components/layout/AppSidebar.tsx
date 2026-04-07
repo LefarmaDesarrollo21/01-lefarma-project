@@ -126,11 +126,6 @@ const menuItems: SidebarMenuItem[] = [
     path: '/notificaciones',
   },
   {
-    title: 'Autorizaciones OC',
-    icon: FileCheck2,
-    path: '/ordenes/autorizaciones',
-  },
-  {
     title: 'Workflows',
     icon: GitBranch,
     path: '/workflows',

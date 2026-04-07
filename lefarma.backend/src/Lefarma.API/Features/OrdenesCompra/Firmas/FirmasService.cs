@@ -12,12 +12,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lefarma.API.Features.OrdenesCompra.Firmas
 {
-public class FirmasService : BaseService, IFirmasService
+    public class FirmasService : BaseService, IFirmasService
     {
         private readonly IOrdenCompraRepository _ordenRepo;
         private readonly IWorkflowEngine _engine;
-        private readonly IServiceProvider _serviceProvider;
         private readonly IWorkflowRepository _workflowRepo;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ApplicationDbContext _context;
         private readonly AsokamDbContext _asokamContext;
         protected override string EntityName => "Firma";
@@ -54,7 +54,7 @@ public class FirmasService : BaseService, IFirmasService
                 }
 
                 if (orden.Estado is EstadoOC.Cerrada or EstadoOC.Cancelada)
-                    return CommonErrors.Conflict("OrdenCompra", $"La orden {orden.Folio} ya est� cerrada o cancelada.");
+                    return CommonErrors.Conflict("OrdenCompra", $"La orden {orden.Folio} ya est\u00e1 cerrada o cancelada.");
 
                 // Cargar paso actual para verificar requisitos del paso
                 WorkflowPasoInfo? pasoActual = null;
@@ -70,7 +70,7 @@ public class FirmasService : BaseService, IFirmasService
                 if (pasoActual?.RequiereComentario == true && string.IsNullOrWhiteSpace(request.Comentario))
                     return CommonErrors.Validation("Comentario", "El comentario es obligatorio en este paso.");
 
-                // Ejecutar step handler espec�fico (Firma3Handler, Firma4Handler, etc.)
+                // Ejecutar step handler espec\u00edfico (Firma3Handler, Firma4Handler, etc.)
                 if (!string.IsNullOrEmpty(pasoActual?.HandlerKey))
                 {
                     var handler = _serviceProvider.GetKeyedService<IStepHandler>(pasoActual.HandlerKey);
@@ -96,13 +96,14 @@ public class FirmasService : BaseService, IFirmasService
                     IdOrden: idOrden,
                     IdAccion: request.IdAccion,
                     IdUsuario: idUsuario,
+                    Orden: orden,
                     Comentario: request.Comentario,
                     DatosAdicionales: datosAdicionales
                 );
 
                 var resultado = await _engine.EjecutarAccionAsync(ctx);
                 if (!resultado.Exitoso)
-                    return CommonErrors.Conflict("Workflow", resultado.Error ?? "Error en el motor de workflow.");
+                    return CommonErrors.Validation("Workflow", resultado.Error ?? "Error en el motor de workflow.");
 
                 // Actualizar estado de la orden
                 if (TryMapEstado(resultado.NuevoCodigoEstado, out var nuevoEstado))
@@ -116,7 +117,7 @@ public class FirmasService : BaseService, IFirmasService
                 orden.FechaModificacion = DateTime.UtcNow;
                 await _ordenRepo.UpdateAsync(orden);
 
-                // Selecci�n de plantilla por destino: (id_accion + id_paso_destino) con fallback gen�rico.
+                // Selecci\u00f3n de plantilla por destino: (id_accion + id_paso_destino) con fallback gen\u00e9rico.
                 var notificacionSeleccionada = ResolveWorkflowNotification(workflowConfig, request.IdAccion, resultado.NuevoIdPaso);
 
                 EnrichWideEvent("Firmar", entityId: idOrden, nombre: orden.Folio,
@@ -135,7 +136,7 @@ public class FirmasService : BaseService, IFirmasService
                     Folio = orden.Folio,
                     EstadoAnterior = estadoAnterior,
                     NuevoEstado = orden.Estado.ToString(),
-                    Mensaje = $"Acci�n ejecutada exitosamente. Estado: {orden.Estado}"
+                    Mensaje = $"Acci\u00f3n ejecutada exitosamente. Estado: {orden.Estado}"
                 };
             }
             catch (Exception ex)
@@ -165,6 +166,71 @@ public class FirmasService : BaseService, IFirmasService
             {
                 EnrichWideEvent("GetAcciones", entityId: idOrden, exception: ex);
                 return CommonErrors.DatabaseError("obtener las acciones disponibles");
+            }
+        }
+
+        public async Task<ErrorOr<AccionMetadataResponse>> GetAccionMetadataAsync(int idOrden, int idAccion, int idUsuario)
+        {
+            try
+            {
+                var orden = await _ordenRepo.GetWithPartidasAsync(idOrden);
+                if (orden is null)
+                    return CommonErrors.NotFound("orden de compra", idOrden.ToString());
+
+                var workflow = await _workflowRepo.GetByCodigoProcesoAsync(CODIGO_PROCESO);
+                if (workflow is null)
+                    return CommonErrors.NotFound("workflow", CODIGO_PROCESO);
+
+                if (!orden.IdPasoActual.HasValue)
+                    return CommonErrors.Conflict("orden", "La orden no tiene paso actual configurado.");
+
+                var pasoActual = workflow.Pasos.FirstOrDefault(p => p.IdPaso == orden.IdPasoActual.Value && p.Activo);
+                if (pasoActual is null)
+                    return CommonErrors.NotFound("paso actual", orden.IdPasoActual.Value.ToString());
+
+                var accion = pasoActual.AccionesOrigen.FirstOrDefault(a => a.IdAccion == idAccion && a.Activo);
+                if (accion is null)
+                    return CommonErrors.NotFound("acci\u00f3n", idAccion.ToString());
+
+                var handlers = (await _workflowRepo.GetAccionHandlersAsync(idAccion)).ToList();
+                var campos = (await _workflowRepo.GetCamposByWorkflowAsync(workflow.IdWorkflow)).ToList();
+
+                // CamposRequeridos: nombres t\u00e9cnicos de campos vinculados a RequiredFields activos
+                var camposRequeridos = handlers
+                    .Where(h => h.HandlerKey == "RequiredFields" && h.Campo != null)
+                    .Select(h => h.Campo!.NombreTecnico)
+                    .ToList();
+
+                return new AccionMetadataResponse
+                {
+                    IdOrden = idOrden,
+                    IdAccion = accion.IdAccion,
+                    NombreAccion = accion.NombreAccion,
+                    TipoAccion = accion.TipoAccion,
+                    RequiereComentario = pasoActual.RequiereComentario,
+                    RequiereAdjunto = pasoActual.RequiereAdjunto,
+                    Handlers = handlers.Select(h => new AccionHandlerMetadataResponse
+                    {
+                        IdHandler = h.IdHandler,
+                        HandlerKey = h.HandlerKey,
+                        ConfiguracionJson = h.ConfiguracionJson,
+                        OrdenEjecucion = h.OrdenEjecucion
+                    }).ToList(),
+                    CamposWorkflow = campos.Select(c => new WorkflowCampoMetadataResponse
+                    {
+                        IdWorkflowCampo = c.IdWorkflowCampo,
+                        NombreTecnico = c.NombreTecnico,
+                        EtiquetaUsuario = c.EtiquetaUsuario,
+                        TipoControl = c.TipoControl,
+                        SourceCatalog = c.SourceCatalog
+                    }).ToList(),
+                    CamposRequeridos = camposRequeridos.ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                EnrichWideEvent("GetAccionMetadata", entityId: idOrden, exception: ex, additionalContext: new Dictionary<string, object> { ["idAccion"] = idAccion });
+                return CommonErrors.DatabaseError("obtener metadatos de acci\u00f3n");
             }
         }
 

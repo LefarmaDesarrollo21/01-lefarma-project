@@ -1,6 +1,5 @@
 ﻿// ─── Partida (Response) ──────────────────────────────────────────────────────
 
-
 export interface OrdenCompraPartidaResponse {
   idPartida: number;
   numeroPartida: number;
@@ -36,7 +35,10 @@ export interface OrdenCompraResponse {
   notaFormaPago?: string | null;
   notasGenerales?: string | null;
   idCentroCosto?: number | null;
+  centroCostoNombre?: string | null;
   cuentaContable?: number | null;
+  cuentaContableNumero?: string | null;
+  cuentaContableDescripcion?: string | null;
   requiereComprobacionPago: boolean;
   requiereComprobacionGasto: boolean;
   fechaSolicitud: string;
