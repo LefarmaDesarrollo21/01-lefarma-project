@@ -437,8 +437,9 @@ export default function CrearOrdenCompra() {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [buscandoProveedor, setBuscandoProveedor] = useState(false);
   const [proveedorNoExiste, setProveedorNoExiste] = useState(false);
-  const [mostrarDialogoProveedor, setMostrarDialogoProveedor] = useState(false);
-  const [valuesPendientes, setValuesPendientes] = useState<FormValues | null>(null);
+  // [COMENTADO] Dialogo proveedor nuevo - ya no se usa en el flujo de ordenes
+  // const [mostrarDialogoProveedor, setMostrarDialogoProveedor] = useState(false);
+  // const [valuesPendientes, setValuesPendientes] = useState<FormValues | null>(null);
   const catalogFetched = useRef(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(ordenCompraSchema),
@@ -688,7 +689,12 @@ export default function CrearOrdenCompra() {
             idsCuentasBancarias: orden.idsCuentasBancarias || [],
             notaFormaPago: orden.notaFormaPago || '',
             notasGenerales: orden.notasGenerales || '',
-            agregarProveedorPorPartida: false,
+            // Auto-detectar modo proveedor por partida:
+            // Si el proveedor en el cabecero está vacío Y hay proveedores en las partidas,
+            // marcar como checked (sin ejecutar el onChange del checkbox para no limpiar lo cargado)
+            agregarProveedorPorPartida:
+              !orden.idProveedor &&
+              orden.partidas.some((p) => p.idProveedor && p.idProveedor > 0),
             partidas: orden.partidas.length > 0 ? orden.partidas.map(p => ({
               descripcion: p.descripcion,
               cantidad: Number(p.cantidad),
@@ -859,47 +865,37 @@ export default function CrearOrdenCompra() {
     }
   };
 
+  // [COMENTADO] Ya no se usa - El diálogo de crear proveedor inline se eliminó del flujo
+  // Se mantiene por si se necesita en el futuro
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const confirmarGuardarProveedorNuevo = async () => {
-    console.log('🟠 [confirmarGuardarProveedorNuevo] ===== INICIO confirmarGuardarProveedorNuevo =====');
-    console.log('🟠 [confirmarGuardarProveedorNuevo] valuesPendientes:', JSON.stringify(valuesPendientes, null, 2));
-    
-    setMostrarDialogoProveedor(false);
-    if (!valuesPendientes) {
-      console.warn('🟠 [confirmarGuardarProveedorNuevo] ❌ valuesPendientes es null!');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      console.log('🟠 [confirmarGuardarProveedorNuevo] Creando proveedor...');
-      const createProveedorPayload = {
-        razonSocial: valuesPendientes.razonSocialProveedor,
-        rfc: valuesPendientes.rfcProveedor || null,
-        codigoPostal: valuesPendientes.codigoPostalProveedor || null,
-        regimenFiscalId: valuesPendientes.idRegimenFiscal || null,
-        usoCfdi: valuesPendientes.usoCFDI || null,
-        sinDatosFiscales: valuesPendientes.sinDatosFiscales,
-      };
-      const provResponse = await API.post<ApiResponse<Proveedor>>('/catalogos/Proveedores', createProveedorPayload);
-      console.log('🟠 [confirmarGuardarProveedorNuevo] Response crear proveedor:', JSON.stringify(provResponse.data, null, 2));
-      
-      if (!provResponse.data.success || !provResponse.data.data) {
-        console.error('🟠 [confirmarGuardarProveedorNuevo] ❌ Error al crear proveedor:', provResponse.data.message);
-        toast.error(provResponse.data.message ?? 'Error al registrar el proveedor');
-        setIsSaving(false);
-        return;
-      }
-      const newProveedorId = provResponse.data.data.idProveedor;
-      console.log('🟠 [confirmarGuardarProveedorNuevo] ✅ Proveedor creado con id:', newProveedorId);
-      setSelectedProveedorId(newProveedorId);
-      valuesPendientes.idProveedor = newProveedorId;
-      await guardarOrden(valuesPendientes);
-    } catch (error) {
-      console.error('🟠 [confirmarGuardarProveedorNuevo] 🔴 ERROR:', error);
-      const apiError = error as { errors?: Array<{ description: string }>; message?: string };
-      toast.error(apiError.message ?? 'Error al registrar el proveedor');
-      setIsSaving(false);
-    }
+    // setMostrarDialogoProveedor(false);
+    // if (!valuesPendientes) return;
+    // setIsSaving(true);
+    // try {
+    //   const createProveedorPayload = {
+    //     razonSocial: valuesPendientes.razonSocialProveedor,
+    //     rfc: valuesPendientes.rfcProveedor || null,
+    //     codigoPostal: valuesPendientes.codigoPostalProveedor || null,
+    //     regimenFiscalId: valuesPendientes.idRegimenFiscal || null,
+    //     usoCfdi: valuesPendientes.usoCFDI || null,
+    //     sinDatosFiscales: valuesPendientes.sinDatosFiscales,
+    //   };
+    //   const provResponse = await API.post<ApiResponse<Proveedor>>('/catalogos/Proveedores', createProveedorPayload);
+    //   if (!provResponse.data.success || !provResponse.data.data) {
+    //     toast.error(provResponse.data.message ?? 'Error al registrar el proveedor');
+    //     setIsSaving(false);
+    //     return;
+    //   }
+    //   const newProveedorId = provResponse.data.data.idProveedor;
+    //   setSelectedProveedorId(newProveedorId);
+    //   valuesPendientes.idProveedor = newProveedorId;
+    //   await guardarOrden(valuesPendientes);
+    // } catch (error) {
+    //   const apiError = error as { errors?: Array<{ description: string }>; message?: string };
+    //   toast.error(apiError.message ?? 'Error al registrar el proveedor');
+    //   setIsSaving(false);
+    // }
   };
   if (loadingCatalogs) {
     return (
@@ -2002,6 +1998,8 @@ export default function CrearOrdenCompra() {
         </form>
       </Form>
 
+      {/*
+      [COMENTADO] Dialogo crear proveedor inline - ya no se usa
       <Dialog open={mostrarDialogoProveedor} onOpenChange={setMostrarDialogoProveedor}>
         <DialogContent>
           <DialogHeader>
@@ -2025,6 +2023,7 @@ export default function CrearOrdenCompra() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      */}
     </div>
   );
 }

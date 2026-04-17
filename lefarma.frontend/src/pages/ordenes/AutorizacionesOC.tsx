@@ -39,7 +39,7 @@ import {
   XCircle,
   AlertTriangle,
   UserRound,
-  MessageSquare,
+  Printer,
   MoveRight,
   Send,
   RotateCcw,
