@@ -105,7 +105,6 @@ const partidaSchema = z.object({
   porcentajeIva: z.number().min(0).max(100),
   totalRetenciones: z.number().min(0),
   otrosImpuestos: z.number().min(0),
-  tipoOtrosImpuestos: z.enum(['MXN', 'PERCENTAGE']),
   deducible: z.boolean(),
   requiereFactura: z.boolean(),
   proveedorPartida: z.string().optional(),
@@ -197,7 +196,6 @@ const emptyPartida: PartidaFormValues = {
   porcentajeIva: 16,
   totalRetenciones: 0,
   otrosImpuestos: 0,
-  tipoOtrosImpuestos: 'MXN',
   deducible: true,
   requiereFactura: true,
   proveedorPartida: '',
@@ -516,10 +514,7 @@ export default function CrearOrdenCompra() {
       subtotal += base;
       totalIva += base * ((p.porcentajeIva || 0) / 100);
       totalRetenciones += p.totalRetenciones || 0;
-      const otrosImpuestosValor =
-        p.tipoOtrosImpuestos === 'PERCENTAGE'
-          ? base * ((p.otrosImpuestos || 0) / 100)
-          : p.otrosImpuestos || 0;
+      const otrosImpuestosValor = p.otrosImpuestos || 0;
       totalOtrosImpuestos += otrosImpuestosValor;
       totalDescuentos += p.descuento || 0;
     }
@@ -731,7 +726,6 @@ export default function CrearOrdenCompra() {
               porcentajeIva: Number(p.porcentajeIva),
               totalRetenciones: Number(p.totalRetenciones),
               otrosImpuestos: Number(p.otrosImpuestos),
-              tipoOtrosImpuestos: 'MXN' as const,
               deducible: p.deducible,
               requiereFactura: p.requiereFactura,
               proveedorPartida: '',
@@ -1734,10 +1728,7 @@ export default function CrearOrdenCompra() {
                 const lineBase =
                   (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
                 const lineIva = lineBase * ((p?.porcentajeIva || 0) / 100);
-                const otrosImpuestosValor =
-                  p?.tipoOtrosImpuestos === 'PERCENTAGE'
-                    ? lineBase * ((p?.otrosImpuestos || 0) / 100)
-                    : p?.otrosImpuestos || 0;
+                const otrosImpuestosValor = p?.otrosImpuestos || 0;
                 const lineTotal =
                   lineBase + lineIva - (p?.totalRetenciones || 0) + otrosImpuestosValor;
                 return (
@@ -1784,7 +1775,7 @@ export default function CrearOrdenCompra() {
                           )}
                           {(p?.otrosImpuestos || 0) > 0 && (
                             <span className="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-600 dark:bg-purple-950 dark:text-purple-400">
-                              Otros{p?.tipoOtrosImpuestos === 'PERCENTAGE' ? ' %' : ''}{' '}
+                              Otros{' '}
                               <span className="ml-1 font-semibold tabular-nums">
                                 {fmt(otrosImpuestosValor)}
                               </span>
@@ -1949,42 +1940,20 @@ export default function CrearOrdenCompra() {
                         />
                         <FormField
                           control={form.control}
-                          name={`partidas.${index}.tipoOtrosImpuestos`}
-                          render={({ field: tipoField }) => (
-                            <FormField
-                              control={form.control}
-                              name={`partidas.${index}.otrosImpuestos`}
-                              render={({ field: valorField }) => (
-                                <FormItem className="col-span-2 md:col-span-4">
-                                  <FormLabel>Otros Impuestos</FormLabel>
-                                  <div className="flex">
-                                    <FormControl className="flex-1">
-                                      <NumericInput
-                                        id={`otros-impuestos-${index}`}
-                                        value={valorField.value}
-                                        onChange={valorField.onChange}
-                                        className="rounded-r-none border-r-0"
-                                      />
-                                    </FormControl>
-                                    <Select
-                                      value={tipoField.value}
-                                      onValueChange={(val) =>
-                                        tipoField.onChange(val as 'MXN' | 'PERCENTAGE')
-                                      }
-                                    >
-                                      <SelectTrigger className="w-20 rounded-l-none border-l-0 bg-muted px-2 focus:ring-0 focus:ring-offset-0">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="MXN">MXN</SelectItem>
-                                        <SelectItem value="PERCENTAGE">%</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                          name={`partidas.${index}.otrosImpuestos`}
+                          render={({ field }) => (
+                            <FormItem className="col-span-2 md:col-span-4">
+                              <FormLabel>Otros Impuestos</FormLabel>
+                              <FormControl>
+                                <NumericInput
+                                  id={`otros-impuestos-${index}`}
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  suffix="MXN"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
                           )}
                         />
                         <FormField
@@ -2189,10 +2158,7 @@ export default function CrearOrdenCompra() {
                 {watchedPartidas?.map((p, idx) => {
                   const base = (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
                   const iva = base * ((p?.porcentajeIva || 0) / 100);
-                  const otrosImpuestosValor =
-                    p?.tipoOtrosImpuestos === 'PERCENTAGE'
-                      ? base * ((p?.otrosImpuestos || 0) / 100)
-                      : p?.otrosImpuestos || 0;
+                  const otrosImpuestosValor = p?.otrosImpuestos || 0;
                   const partTotal = base + iva - (p?.totalRetenciones || 0) + otrosImpuestosValor;
                   const pDesc = p?.descripcion?.slice(0, 25) || `Partida ${idx + 1}`;
                   return (
@@ -2231,7 +2197,7 @@ export default function CrearOrdenCompra() {
                         )}
                         {(p?.otrosImpuestos || 0) > 0 && (
                           <div className="flex justify-between">
-                            <span>Otros{p?.tipoOtrosImpuestos === 'PERCENTAGE' ? ' %' : ''}</span>
+                            <span>Otros</span>
                             <span className="tabular-nums">{fmt(otrosImpuestosValor)}</span>
                           </div>
                         )}
