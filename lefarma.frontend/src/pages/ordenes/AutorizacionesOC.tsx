@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useCallback, useRef, useState } from 'react';
+
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import {useNavigate, useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { API } from '@/services/api';
 import type { ApiResponse } from '@/types/api.types';
@@ -44,7 +45,7 @@ import {
   RotateCcw,
   Receipt,
   Upload,
-  Printer,
+  Pencil,
 } from 'lucide-react';
 import type { Archivo, ArchivoListItem } from '@/types/archivo.types';
 import { FileUploader } from '@/components/archivos/FileUploader';
@@ -218,7 +219,7 @@ function getCamposParaAccion(accionConfig: WorkflowAccionConfig | null): CampoFo
 }
 export default function AutorizacionesOC() {
   usePageTitle('Autorizaciones OC', 'Bandeja de firmas y detalle de autorización');
-
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const idOrdenParam = searchParams.get('idOrden') ? Number(searchParams.get('idOrden')) : null;
 
@@ -772,15 +773,28 @@ export default function AutorizacionesOC() {
       id: 'actions',
       header: 'Acción',
       cell: ({ row }) => (
-        <Button
-          size="sm"
-          variant="outline"
-          className="gap-1.5"
-          onClick={(e) => { e.stopPropagation(); setSelectedId(row.original.idOrden); }}
-        >
-          <Eye className="h-3.5 w-3.5" />
-          Revisar
-        </Button>
+        <div className="flex gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            onClick={(e) => { e.stopPropagation(); setSelectedId(row.original.idOrden); }}
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Revisar
+          </Button>
+          {row.original.estado === 'Creada' && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={(e) => { e.stopPropagation(); navigate(`/ordenes/editar/${row.original.idOrden}`); }}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Editar
+            </Button>
+          )}
+        </div>
       ),
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -58,6 +58,10 @@ public class ProveedorService : BaseService, IProveedorService
             var result = await orderedQuery
                 .Include(p => p.RegimenFiscal!)
                 .Include(p => p.Detalle)
+                .Include(p => p.CuentasFormaPago)
+                    .ThenInclude(c => c.FormaPago)
+                .Include(p => p.CuentasFormaPago)
+                    .ThenInclude(c => c.Banco)
                 .ToListAsync();
 
             if (!result.Any())
@@ -158,6 +162,24 @@ public class ProveedorService : BaseService, IProveedorService
                 } : null
             };
 
+            if (request.CuentasFormaPago != null && request.CuentasFormaPago.Any())
+            {
+                foreach (var cuenta in request.CuentasFormaPago)
+                {
+                    newProveedor.CuentasFormaPago.Add(new ProveedorFormaPagoCuenta
+                    {
+                        IdFormaPago = cuenta.IdFormaPago,
+                        IdBanco = cuenta.IdBanco,
+                        NumeroCuenta = cuenta.NumeroCuenta,
+                        Clabe = cuenta.Clabe,
+                        NumeroTarjeta = cuenta.NumeroTarjeta,
+                        Beneficiario = cuenta.Beneficiario,
+                        CorreoNotificacion = cuenta.CorreoNotificacion,
+                        FechaCreacion = DateTime.UtcNow
+                    });
+                }
+            }
+
             var result = await _proveedorRepository.AddAsync(newProveedor);
             EnrichWideEvent(action: "Create", entityId: result.IdProveedor, nombre: result.RazonSocial);
             return result.ToResponse();
@@ -227,6 +249,32 @@ public class ProveedorService : BaseService, IProveedorService
                 proveedor.Detalle.ContactoTelefono = request.Detalle.ContactoTelefono;
                 proveedor.Detalle.ContactoEmail = request.Detalle.ContactoEmail;
                 proveedor.Detalle.FechaModificacion = DateTime.UtcNow;
+            }
+
+            // Actualizar cuentas: eliminar existentes y crear las nuevas
+            if (request.CuentasFormaPago != null)
+            {
+                var cuentasExistentes = proveedor.CuentasFormaPago.ToList();
+                foreach (var cuenta in cuentasExistentes)
+                {
+                    _proveedorRepository.RemoveCuenta(cuenta);
+                }
+
+                foreach (var cuenta in request.CuentasFormaPago)
+                {
+                    proveedor.CuentasFormaPago.Add(new ProveedorFormaPagoCuenta
+                    {
+                        IdProveedor = proveedor.IdProveedor,
+                        IdFormaPago = cuenta.IdFormaPago,
+                        IdBanco = cuenta.IdBanco,
+                        NumeroCuenta = cuenta.NumeroCuenta,
+                        Clabe = cuenta.Clabe,
+                        NumeroTarjeta = cuenta.NumeroTarjeta,
+                        Beneficiario = cuenta.Beneficiario,
+                        CorreoNotificacion = cuenta.CorreoNotificacion,
+                        FechaCreacion = DateTime.UtcNow
+                    });
+                }
             }
 
             var result = await _proveedorRepository.UpdateAsync(proveedor);

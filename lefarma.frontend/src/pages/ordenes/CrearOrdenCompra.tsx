@@ -2,10 +2,11 @@
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { API } from '@/services/api';
 import { ApiResponse } from '@/types/api.types';
+import type { OrdenCompraResponse } from '@/types/ordenCompra.types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { toast } from 'sonner';
 import { authService } from '@/services/authService';
@@ -104,9 +105,9 @@ const partidaSchema = z.object({
   porcentajeIva: z.number().min(0).max(100),
   totalRetenciones: z.number().min(0),
   otrosImpuestos: z.number().min(0),
-  tipoOtrosImpuestos: z.enum(['MXN', 'PERCENTAGE']),
   deducible: z.boolean(),
   requiereFactura: z.boolean(),
+  proveedorPartida: z.string().optional(),
 });
 
 const ordenCompraSchema = z
@@ -126,38 +127,53 @@ const ordenCompraSchema = z
     personaContacto: z.string(),
     notaFormaPago: z.string(),
     notasGenerales: z.string(),
+    agregarProveedorPorPartida: z.boolean(),
     partidas: z.array(partidaSchema).min(1, 'Debe incluir al menos una partida'),
   })
   .superRefine((data, ctx) => {
-    if (!data.sinDatosFiscales) {
-      if (!data.rfcProveedor || data.rfcProveedor.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El RFC es requerido',
-          path: ['rfcProveedor'],
-        });
+    if (!data.agregarProveedorPorPartida) {
+      // Validación a nivel orden cuando NO hay proveedores por partida
+      if (!data.sinDatosFiscales) {
+        if (!data.rfcProveedor || data.rfcProveedor.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El RFC es requerido',
+            path: ['rfcProveedor'],
+          });
+        }
+        if (!data.codigoPostalProveedor || data.codigoPostalProveedor.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El código postal es requerido',
+            path: ['codigoPostalProveedor'],
+          });
+        }
+        if (!data.idRegimenFiscal || data.idRegimenFiscal === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El régimen fiscal es requerido',
+            path: ['idRegimenFiscal'],
+          });
+        }
+        if (!data.usoCFDI || data.usoCFDI.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El uso del CFDI es requerido',
+            path: ['usoCFDI'],
+          });
+        }
       }
-      if (!data.codigoPostalProveedor || data.codigoPostalProveedor.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El código postal es requerido',
-          path: ['codigoPostalProveedor'],
-        });
-      }
-      if (!data.idRegimenFiscal || data.idRegimenFiscal === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El régimen fiscal es requerido',
-          path: ['idRegimenFiscal'],
-        });
-      }
-      if (!data.usoCFDI || data.usoCFDI.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El uso del CFDI es requerido',
-          path: ['usoCFDI'],
-        });
-      }
+    } else {
+      // Validación por partida cuando SÍ hay proveedores por partida
+      data.partidas.forEach((partida, idx) => {
+        if (!partida.proveedorPartida || partida.proveedorPartida.trim().length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El proveedor por partida es requerido',
+            path: ['partidas', idx, 'proveedorPartida'],
+          });
+        }
+      });
     }
   });
 
@@ -180,9 +196,9 @@ const emptyPartida: PartidaFormValues = {
   porcentajeIva: 16,
   totalRetenciones: 0,
   otrosImpuestos: 0,
-  tipoOtrosImpuestos: 'MXN',
   deducible: true,
   requiereFactura: true,
+  proveedorPartida: '',
 };
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
@@ -401,8 +417,10 @@ function UnidadMedidaSelector({
 
 // @lat: [[lat.md\frontend#Frontend#Pages#Ordenes]]
 export default function CrearOrdenCompra() {
-  usePageTitle('Orden de compra', 'Captura de orden de compra');
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditing = Boolean(id);
+  usePageTitle('Orden de compra', isEditing ? 'Edición de orden de compra' : 'Captura de orden de compra');
   const { empresa: empresaSession, sucursal: sucursalSession, area: areaSession, user } = useAuthStore();
   const userDomain = user?.dominio;
   const [isSaving, setIsSaving] = useState(false);
@@ -441,6 +459,7 @@ export default function CrearOrdenCompra() {
       personaContacto: '',
       notaFormaPago: '',
       notasGenerales: '',
+      agregarProveedorPorPartida: false,
       partidas: [emptyPartida],
     },
   });
@@ -467,6 +486,7 @@ export default function CrearOrdenCompra() {
   }, [areas, selectedEmpresaId]);
 
   const sinDatosFiscales = form.watch('sinDatosFiscales');
+  const agregarProveedorPorPartida = form.watch('agregarProveedorPorPartida');
   useEffect(() => {
     if (sinDatosFiscales) {
       form.setValue('rfcProveedor', '');
@@ -476,6 +496,12 @@ export default function CrearOrdenCompra() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sinDatosFiscales]);
+  useEffect(() => {
+    if (agregarProveedorPorPartida) {
+      form.setValue('sinDatosFiscales', false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agregarProveedorPorPartida]);
   const watchedPartidas = useWatch({ control: form.control, name: 'partidas' });
   const totales = useMemo(() => {
     let subtotal = 0;
@@ -488,10 +514,7 @@ export default function CrearOrdenCompra() {
       subtotal += base;
       totalIva += base * ((p.porcentajeIva || 0) / 100);
       totalRetenciones += p.totalRetenciones || 0;
-      const otrosImpuestosValor =
-        p.tipoOtrosImpuestos === 'PERCENTAGE'
-          ? base * ((p.otrosImpuestos || 0) / 100)
-          : p.otrosImpuestos || 0;
+      const otrosImpuestosValor = p.otrosImpuestos || 0;
       totalOtrosImpuestos += otrosImpuestosValor;
       totalDescuentos += p.descuento || 0;
     }
@@ -667,6 +690,60 @@ export default function CrearOrdenCompra() {
     fetchCatalogs();
   }, []);
 
+  // Cargar orden existente para edición
+  useEffect(() => {
+    if (!isEditing || !id) return;
+
+    async function loadOrden() {
+      try {
+        const response = await API.get<ApiResponse<OrdenCompraResponse>>(`/ordenes/${id}`);
+        if (response.data.success && response.data.data) {
+          const orden = response.data.data;
+          const mapped: FormValues = {
+            idEmpresa: orden.idEmpresa,
+            idSucursal: orden.idSucursal,
+            idArea: orden.idArea,
+            idTipoGasto: orden.idTipoGasto,
+            idFormaPago: orden.idFormaPago,
+            fechaLimitePago: orden.fechaLimitePago.split('T')[0],
+            sinDatosFiscales: orden.sinDatosFiscales,
+            razonSocialProveedor: orden.razonSocialProveedor,
+            rfcProveedor: orden.rfcProveedor || '',
+            codigoPostalProveedor: orden.codigoPostalProveedor || '',
+            idRegimenFiscal: orden.idRegimenFiscal || 0,
+            usoCFDI: '',
+            personaContacto: orden.personaContacto || '',
+            notaFormaPago: orden.notaFormaPago || '',
+            notasGenerales: orden.notasGenerales || '',
+            agregarProveedorPorPartida: false,
+            partidas: orden.partidas.length > 0 ? orden.partidas.map(p => ({
+              descripcion: p.descripcion,
+              cantidad: Number(p.cantidad),
+              idUnidadMedida: p.idUnidadMedida,
+              precioUnitario: Number(p.precioUnitario),
+              descuento: Number(p.descuento),
+              idTipoImpuesto: 0,
+              porcentajeIva: Number(p.porcentajeIva),
+              totalRetenciones: Number(p.totalRetenciones),
+              otrosImpuestos: Number(p.otrosImpuestos),
+              deducible: p.deducible,
+              requiereFactura: p.requiereFactura,
+              proveedorPartida: '',
+            })) : [emptyPartida],
+          };
+          form.reset(mapped);
+        }
+      } catch (error) {
+        toast.error('Error al cargar la orden');
+      }
+    }
+
+    if (!loadingCatalogs) {
+      loadOrden();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing, id, loadingCatalogs]);
+
   const handleSave = async (values: FormValues) => {
     setIsSaving(true);
     try {
@@ -684,6 +761,12 @@ export default function CrearOrdenCompra() {
           setIsSaving(false);
           return;
         }
+      }
+
+      // Si agregarProveedorPorPartida está activo, no necesita proveedor a nivel orden
+      if (values.agregarProveedorPorPartida) {
+        await guardarOrden(values, 0);
+        return;
       }
 
       // Si ya tenemos el ID del proveedor (seleccionado del catálogo), proceder directamente
@@ -756,11 +839,14 @@ export default function CrearOrdenCompra() {
           otrosImpuestos: p.otrosImpuestos,
           deducible: p.deducible,
           requiereFactura: p.requiereFactura,
+          proveedorPartida: p.proveedorPartida || null,
         })),
       };
-      const response = await API.post<ApiResponse<void>>('/ordenes', payload);
+      const response = isEditing
+        ? await API.put<ApiResponse<void>>(`/ordenes/${id}`, payload)
+        : await API.post<ApiResponse<void>>('/ordenes', payload);
       if (response.data.success) {
-        toast.success('Orden de compra creada correctamente.');
+        toast.success(isEditing ? 'Orden de compra actualizada correctamente.' : 'Orden de compra creada correctamente.');
         navigate('/ordenes/autorizaciones');
       } else {
         toast.error(response.data.message ?? 'Error al crear la orden de compra');
@@ -938,133 +1024,6 @@ export default function CrearOrdenCompra() {
               </CollapsibleContent>
             </Card>
           </Collapsible>
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                <Tag className="h-5 w-5" />
-                Detalles de la Orden
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <FormField
-                  control={form.control}
-                  name="idTipoGasto"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Gasto *</FormLabel>
-                      <Select
-                        onValueChange={(val) => field.onChange(Number(val))}
-                        value={field.value ? String(field.value) : ''}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona tipo de gasto..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {tiposGasto.map((g) => (
-                            <SelectItem key={g.idGasto} value={String(g.idGasto)}>
-                              {g.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="idFormaPago"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Forma de Pago *</FormLabel>
-                      <Select
-                        onValueChange={(val) => field.onChange(Number(val))}
-                        value={field.value ? String(field.value) : ''}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona forma de pago..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {formasPago.map((fp) => (
-                            <SelectItem key={fp.idFormaPago} value={String(fp.idFormaPago)}>
-                              {fp.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="fechaLimitePago"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2 lg:col-span-2">
-                      <FormLabel className="flex items-center gap-2">
-                        <Calendar className="h-3.5 w-3.5" />
-                        Fecha Límite de Pago *
-                      </FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormDescription className="text-xs">
-                        Fecha máxima para realizar el pago al proveedor
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                <FormField
-                  control={form.control}
-                  name="notaFormaPago"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <CreditCard className="h-3.5 w-3.5" />
-                        Nota de Forma de Pago
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Instrucciones especiales de pago" {...field} />
-                      </FormControl>
-                      <FormDescription className="text-xs">
-                        Instrucciones específicas sobre cómo realizar el pago al proveedor
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="notasGenerales"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notas Generales</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Información adicional relevante para esta orden de compra..."
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription className="text-xs">
-                        Cualquier información adicional sobre la orden que deba ser considerada
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Card: Datos del Proveedor */}
           <Card>
             <CardHeader className="pb-4">
@@ -1074,26 +1033,52 @@ export default function CrearOrdenCompra() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {!agregarProveedorPorPartida && (
+                <FormField
+                  control={form.control}
+                  name="sinDatosFiscales"
+                  render={({ field }) => (
+                    <FormItem className="bg-muted/30 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="!mt-0 font-medium">Sin Datos Fiscales</FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          Marcar si el proveedor no cuenta con RFC ni información fiscal completa (ej.
+                          persona física sin actividad empresarial)
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={form.control}
-                name="sinDatosFiscales"
+                name="agregarProveedorPorPartida"
                 render={({ field }) => (
-                  <FormItem className="bg-muted/30 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="bg-muted/30 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
                     <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="!mt-0 font-medium">Sin Datos Fiscales</FormLabel>
+                      <FormLabel className="!mt-0 font-medium">
+                        Agregar proveedor por partida
+                      </FormLabel>
                       <p className="text-xs text-muted-foreground">
-                        Marcar si el proveedor no cuenta con RFC ni información fiscal completa (ej.
-                        persona física sin actividad empresarial)
+                        Permite especificar un proveedor diferente para cada partida de la orden
                       </p>
                     </div>
                   </FormItem>
                 )}
               />
 
-              <FormSection icon={Building2} title="Información General">
+              {!agregarProveedorPorPartida && (
+                <FormSection icon={Building2} title="Información General">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <FormField
                     control={form.control}
@@ -1284,8 +1269,9 @@ export default function CrearOrdenCompra() {
                   />
                 </div>
               </FormSection>
+              )}
 
-              {!sinDatosFiscales && (
+              {!agregarProveedorPorPartida && !sinDatosFiscales && (
                 <FormSection icon={FileText} title="Datos Fiscales">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <FormField
@@ -1569,7 +1555,8 @@ export default function CrearOrdenCompra() {
                 </FormSection>
               )}
 
-              <FormSection icon={User} title="Contacto">
+              {!agregarProveedorPorPartida && (
+                <FormSection icon={User} title="Contacto">
                 <div className="grid grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
@@ -1586,33 +1573,162 @@ export default function CrearOrdenCompra() {
                   />
                 </div>
               </FormSection>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Tag className="h-5 w-5" />
+                Detalles de la Orden
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <FormField
+                  control={form.control}
+                  name="idTipoGasto"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Gasto *</FormLabel>
+                      <Select
+                        onValueChange={(val) => field.onChange(Number(val))}
+                        value={field.value ? String(field.value) : ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona tipo de gasto..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {tiposGasto.map((g) => (
+                            <SelectItem key={g.idGasto} value={String(g.idGasto)}>
+                              {g.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="idFormaPago"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma de Pago *</FormLabel>
+                      <Select
+                        onValueChange={(val) => field.onChange(Number(val))}
+                        value={field.value ? String(field.value) : ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona forma de pago..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {formasPago.map((fp) => (
+                            <SelectItem key={fp.idFormaPago} value={String(fp.idFormaPago)}>
+                              {fp.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fechaLimitePago"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2 lg:col-span-2">
+                      <FormLabel className="flex items-center gap-2">
+                        <Calendar className="h-3.5 w-3.5" />
+                        Fecha Límite de Pago *
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Fecha máxima para realizar el pago al proveedor
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="notaFormaPago"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Nota de Forma de Pago
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Instrucciones especiales de pago" {...field} />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Instrucciones específicas sobre cómo realizar el pago al proveedor
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="notasGenerales"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notas Generales</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Información adicional relevante para esta orden de compra..."
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Cualquier información adicional sobre la orden que deba ser considerada
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 
           {/* Card: Partidas */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-lg font-semibold">Partidas</CardTitle>
-              <Button
-                type="button"
-                variant="default"
-                size="default"
-                onClick={() => append(emptyPartida)}
-                className="text-base font-semibold shadow-sm"
-              >
-                <Plus className="mr-2 h-5 w-5" /> Agregar Partida
-              </Button>
+            <CardHeader className="pb-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-lg font-semibold">Partidas</CardTitle>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="default"
+                    onClick={() => append(emptyPartida)}
+                    className="text-base font-semibold shadow-sm"
+                  >
+                    <Plus className="mr-2 h-5 w-5" /> Agregar Partida
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {fields.map((item, index) => {
                 const p = watchedPartidas?.[index];
+                const agregarProveedor = form.watch('agregarProveedorPorPartida');
                 const lineBase =
                   (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
                 const lineIva = lineBase * ((p?.porcentajeIva || 0) / 100);
-                const otrosImpuestosValor =
-                  p?.tipoOtrosImpuestos === 'PERCENTAGE'
-                    ? lineBase * ((p?.otrosImpuestos || 0) / 100)
-                    : p?.otrosImpuestos || 0;
+                const otrosImpuestosValor = p?.otrosImpuestos || 0;
                 const lineTotal =
                   lineBase + lineIva - (p?.totalRetenciones || 0) + otrosImpuestosValor;
                 return (
@@ -1659,7 +1775,7 @@ export default function CrearOrdenCompra() {
                           )}
                           {(p?.otrosImpuestos || 0) > 0 && (
                             <span className="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-600 dark:bg-purple-950 dark:text-purple-400">
-                              Otros{p?.tipoOtrosImpuestos === 'PERCENTAGE' ? ' %' : ''}{' '}
+                              Otros{' '}
                               <span className="ml-1 font-semibold tabular-nums">
                                 {fmt(otrosImpuestosValor)}
                               </span>
@@ -1824,42 +1940,20 @@ export default function CrearOrdenCompra() {
                         />
                         <FormField
                           control={form.control}
-                          name={`partidas.${index}.tipoOtrosImpuestos`}
-                          render={({ field: tipoField }) => (
-                            <FormField
-                              control={form.control}
-                              name={`partidas.${index}.otrosImpuestos`}
-                              render={({ field: valorField }) => (
-                                <FormItem className="col-span-2 md:col-span-4">
-                                  <FormLabel>Otros Impuestos</FormLabel>
-                                  <div className="flex">
-                                    <FormControl className="flex-1">
-                                      <NumericInput
-                                        id={`otros-impuestos-${index}`}
-                                        value={valorField.value}
-                                        onChange={valorField.onChange}
-                                        className="rounded-r-none border-r-0"
-                                      />
-                                    </FormControl>
-                                    <Select
-                                      value={tipoField.value}
-                                      onValueChange={(val) =>
-                                        tipoField.onChange(val as 'MXN' | 'PERCENTAGE')
-                                      }
-                                    >
-                                      <SelectTrigger className="w-20 rounded-l-none border-l-0 bg-muted px-2 focus:ring-0 focus:ring-offset-0">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="MXN">MXN</SelectItem>
-                                        <SelectItem value="PERCENTAGE">%</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                          name={`partidas.${index}.otrosImpuestos`}
+                          render={({ field }) => (
+                            <FormItem className="col-span-2 md:col-span-4">
+                              <FormLabel>Otros Impuestos</FormLabel>
+                              <FormControl>
+                                <NumericInput
+                                  id={`otros-impuestos-${index}`}
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  suffix="MXN"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
                           )}
                         />
                         <FormField
@@ -1887,6 +1981,166 @@ export default function CrearOrdenCompra() {
                           )}
                         />
                       </div>
+                      {agregarProveedor && (
+                        <div className="rounded-lg border bg-slate-50 p-3">
+                          <div className="mb-2 flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-muted-foreground">
+                              Proveedor específico para esta partida
+                            </span>
+                          </div>
+                          <FormField
+                            control={form.control}
+                            name={`partidas.${index}.proveedorPartida`}
+                            render={({ field }) => {
+                              const [open, setOpen] = useState(false);
+                              const [busqueda, setBusqueda] = useState('');
+                              const [buscado, setBuscado] = useState(false);
+                              const [selectedIndex, setSelectedIndex] = useState(0);
+                              const partidaProveedores = useMemo(() => {
+                                if (!busqueda || busqueda.length < 1) return [];
+                                return proveedores.filter(
+                                  (prov) =>
+                                    prov.razonSocial.toLowerCase().includes(busqueda.toLowerCase()) ||
+                                    (prov.rfc && prov.rfc.toLowerCase().includes(busqueda.toLowerCase()))
+                                );
+                              }, [busqueda, proveedores]);
+
+                              const handleKeyDown = (e: React.KeyboardEvent) => {
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const total = partidaProveedores.length + (busqueda.length > 0 ? 1 : 0);
+                                  setSelectedIndex((prev) => (prev + 1) % total);
+                                } else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  const total = partidaProveedores.length + (busqueda.length > 0 ? 1 : 0);
+                                  setSelectedIndex((prev) => (prev - 1 + total) % total);
+                                } else if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  if (selectedIndex < partidaProveedores.length && partidaProveedores.length > 0) {
+                                    field.onChange(partidaProveedores[selectedIndex].razonSocial);
+                                    setOpen(false);
+                                    setBusqueda('');
+                                    setBuscado(false);
+                                  } else if (busqueda.length > 0) {
+                                    field.onChange(busqueda);
+                                    setOpen(false);
+                                    setBusqueda('');
+                                    setBuscado(false);
+                                  }
+                                }
+                              };
+
+                              return (
+                                <FormItem className="flex flex-col">
+                                  <Popover open={open} onOpenChange={setOpen}>
+                                    <PopoverTrigger asChild>
+                                      <FormControl>
+                                        <Button
+                                          variant="outline"
+                                          role="combobox"
+                                          aria-expanded={open}
+                                          className="w-full justify-between border-slate-200 bg-white hover:bg-slate-50"
+                                        >
+                                          <span className={cn('truncate', !field.value && 'text-muted-foreground')}>
+                                            {field.value || 'Seleccionar o buscar proveedor...'}
+                                          </span>
+                                          <Search className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
+                                        </Button>
+                                      </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[350px] p-0" align="start">
+                                      <Command shouldFilter={false}>
+                                        <div className="flex items-center border-b bg-slate-50 px-3 py-2">
+                                          <Search className="mr-2 h-4 w-4 text-slate-400" />
+                                          <CommandInput
+                                            placeholder="Buscar proveedor..."
+                                            value={busqueda}
+                                            onValueChange={(val) => {
+                                              setBusqueda(val);
+                                              setBuscado(false);
+                                              setSelectedIndex(0);
+                                              if (val.length >= 1) {
+                                                setBuscado(true);
+                                                buscarProveedores(val, 'razonSocial');
+                                              }
+                                            }}
+                                            onKeyDown={handleKeyDown}
+                                            className="flex-1 bg-transparent outline-none placeholder:text-slate-400"
+                                          />
+                                        </div>
+                                        <CommandList className="max-h-[200px] overflow-auto">
+                                          {busqueda.length === 0 ? (
+                                            <div className="py-4 text-center text-sm text-muted-foreground">
+                                              Escribe para buscar proveedores
+                                            </div>
+                                          ) : partidaProveedores.length > 0 ? (
+                                            <>
+                                              <CommandGroup heading="Proveedores">
+                                                {partidaProveedores.map((prov, idx) => (
+                                                  <CommandItem
+                                                    key={prov.idProveedor}
+                                                    value={String(prov.idProveedor)}
+                                                    onSelect={() => {
+                                                      field.onChange(prov.razonSocial);
+                                                      setOpen(false);
+                                                      setBusqueda('');
+                                                      setBuscado(false);
+                                                    }}
+                                                    className={cn(
+                                                      'flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100',
+                                                      idx === selectedIndex && 'bg-slate-100'
+                                                    )}
+                                                  >
+                                                    <span className="font-medium">{prov.razonSocial}</span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                      RFC: {prov.rfc || 'N/A'}
+                                                    </span>
+                                                  </CommandItem>
+                                                ))}
+                                              </CommandGroup>
+                                              <CommandItem
+                                                value="__nuevo__"
+                                                onSelect={() => {
+                                                  field.onChange(busqueda);
+                                                  setOpen(false);
+                                                  setBusqueda('');
+                                                  setBuscado(false);
+                                                }}
+                                                className="flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100"
+                                              >
+                                                <span className="font-medium text-primary">
+                                                  + Usar "{busqueda}"
+                                                </span>
+                                              </CommandItem>
+                                            </>
+                                          ) : (
+                                            <CommandItem
+                                              value="__nuevo__"
+                                              onSelect={() => {
+                                                field.onChange(busqueda);
+                                                setOpen(false);
+                                                setBusqueda('');
+                                                setBuscado(false);
+                                              }}
+                                              className="flex cursor-pointer flex-col items-start rounded-md px-2 py-2 hover:bg-slate-100"
+                                            >
+                                              <span className="font-medium text-primary">
+                                                + Usar "{busqueda}"
+                                              </span>
+                                            </CommandItem>
+                                          )}
+                                        </CommandList>
+                                      </Command>
+                                    </PopoverContent>
+                                  </Popover>
+                                  <FormMessage />
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -1904,10 +2158,7 @@ export default function CrearOrdenCompra() {
                 {watchedPartidas?.map((p, idx) => {
                   const base = (p?.precioUnitario || 0) * (p?.cantidad || 0) - (p?.descuento || 0);
                   const iva = base * ((p?.porcentajeIva || 0) / 100);
-                  const otrosImpuestosValor =
-                    p?.tipoOtrosImpuestos === 'PERCENTAGE'
-                      ? base * ((p?.otrosImpuestos || 0) / 100)
-                      : p?.otrosImpuestos || 0;
+                  const otrosImpuestosValor = p?.otrosImpuestos || 0;
                   const partTotal = base + iva - (p?.totalRetenciones || 0) + otrosImpuestosValor;
                   const pDesc = p?.descripcion?.slice(0, 25) || `Partida ${idx + 1}`;
                   return (
@@ -1946,7 +2197,7 @@ export default function CrearOrdenCompra() {
                         )}
                         {(p?.otrosImpuestos || 0) > 0 && (
                           <div className="flex justify-between">
-                            <span>Otros{p?.tipoOtrosImpuestos === 'PERCENTAGE' ? ' %' : ''}</span>
+                            <span>Otros</span>
                             <span className="tabular-nums">{fmt(otrosImpuestosValor)}</span>
                           </div>
                         )}

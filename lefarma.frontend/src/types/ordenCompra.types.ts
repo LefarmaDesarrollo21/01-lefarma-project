@@ -73,6 +73,7 @@ export interface CreatePartidaRequest {
   idProveedor?: number | null;
   requiereFactura?: boolean;
   tipoComprobante?: string | null;
+  proveedorPartida?: string | null;
 }
 
 // ─── Create Orden de Compra (Request) ────────────────────────────────────────
