@@ -970,6 +970,29 @@ export default function CrearOrdenCompra() {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="agregarProveedorPorPartida"
+                render={({ field }) => (
+                  <FormItem className="bg-muted/30 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="!mt-0 font-medium">
+                        Agregar proveedor por partida
+                      </FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        Permite especificar un proveedor diferente para cada partida de la orden
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
               <FormSection icon={Building2} title="Información General">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <FormField
@@ -1608,28 +1631,6 @@ export default function CrearOrdenCompra() {
                     <Plus className="mr-2 h-5 w-5" /> Agregar Partida
                   </Button>
                 </div>
-                <FormField
-                  control={form.control}
-                  name="agregarProveedorPorPartida"
-                  render={({ field }) => (
-                    <FormItem className="bg-muted/30 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="!mt-0 font-medium">
-                          Agregar proveedor por partida
-                        </FormLabel>
-                        <p className="text-xs text-muted-foreground">
-                          Permite especificar un proveedor diferente para cada partida de la orden
-                        </p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
