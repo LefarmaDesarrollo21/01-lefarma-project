@@ -347,7 +347,7 @@ export function OrdenCompraPDF({ orden, historial = [], proveedoresMap, firmasMa
         <div className="pdf-section">
           <div className="pdf-section-title">Firmas y Autorizaciones</div>
           <div className="pdf-firmas-grid">
-            {firmas.map((firma) => {
+            {firmas.slice(1).map((firma) => {
               const firmaUrl = firmasMap?.get(firma.idUsuario);
               return (
                 <div key={firma.idEvento} className="pdf-firma-box">
