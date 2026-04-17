@@ -2,10 +2,11 @@
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { API } from '@/services/api';
 import { ApiResponse } from '@/types/api.types';
+import type { OrdenCompraResponse } from '@/types/ordenCompra.types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { toast } from 'sonner';
 import { authService } from '@/services/authService';
@@ -131,35 +132,49 @@ const ordenCompraSchema = z
     partidas: z.array(partidaSchema).min(1, 'Debe incluir al menos una partida'),
   })
   .superRefine((data, ctx) => {
-    if (!data.sinDatosFiscales) {
-      if (!data.rfcProveedor || data.rfcProveedor.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El RFC es requerido',
-          path: ['rfcProveedor'],
-        });
+    if (!data.agregarProveedorPorPartida) {
+      // Validación a nivel orden cuando NO hay proveedores por partida
+      if (!data.sinDatosFiscales) {
+        if (!data.rfcProveedor || data.rfcProveedor.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El RFC es requerido',
+            path: ['rfcProveedor'],
+          });
+        }
+        if (!data.codigoPostalProveedor || data.codigoPostalProveedor.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El código postal es requerido',
+            path: ['codigoPostalProveedor'],
+          });
+        }
+        if (!data.idRegimenFiscal || data.idRegimenFiscal === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El régimen fiscal es requerido',
+            path: ['idRegimenFiscal'],
+          });
+        }
+        if (!data.usoCFDI || data.usoCFDI.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El uso del CFDI es requerido',
+            path: ['usoCFDI'],
+          });
+        }
       }
-      if (!data.codigoPostalProveedor || data.codigoPostalProveedor.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El código postal es requerido',
-          path: ['codigoPostalProveedor'],
-        });
-      }
-      if (!data.idRegimenFiscal || data.idRegimenFiscal === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El régimen fiscal es requerido',
-          path: ['idRegimenFiscal'],
-        });
-      }
-      if (!data.usoCFDI || data.usoCFDI.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El uso del CFDI es requerido',
-          path: ['usoCFDI'],
-        });
-      }
+    } else {
+      // Validación por partida cuando SÍ hay proveedores por partida
+      data.partidas.forEach((partida, idx) => {
+        if (!partida.proveedorPartida || partida.proveedorPartida.trim().length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El proveedor por partida es requerido',
+            path: ['partidas', idx, 'proveedorPartida'],
+          });
+        }
+      });
     }
   });
 
@@ -404,8 +419,10 @@ function UnidadMedidaSelector({
 
 // @lat: [[lat.md\frontend#Frontend#Pages#Ordenes]]
 export default function CrearOrdenCompra() {
-  usePageTitle('Orden de compra', 'Captura de orden de compra');
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditing = Boolean(id);
+  usePageTitle('Orden de compra', isEditing ? 'Edición de orden de compra' : 'Captura de orden de compra');
   const { empresa: empresaSession, sucursal: sucursalSession, area: areaSession, user } = useAuthStore();
   const userDomain = user?.dominio;
   const [isSaving, setIsSaving] = useState(false);
@@ -471,6 +488,7 @@ export default function CrearOrdenCompra() {
   }, [areas, selectedEmpresaId]);
 
   const sinDatosFiscales = form.watch('sinDatosFiscales');
+  const agregarProveedorPorPartida = form.watch('agregarProveedorPorPartida');
   useEffect(() => {
     if (sinDatosFiscales) {
       form.setValue('rfcProveedor', '');
@@ -480,6 +498,12 @@ export default function CrearOrdenCompra() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sinDatosFiscales]);
+  useEffect(() => {
+    if (agregarProveedorPorPartida) {
+      form.setValue('sinDatosFiscales', false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agregarProveedorPorPartida]);
   const watchedPartidas = useWatch({ control: form.control, name: 'partidas' });
   const totales = useMemo(() => {
     let subtotal = 0;
@@ -671,6 +695,61 @@ export default function CrearOrdenCompra() {
     fetchCatalogs();
   }, []);
 
+  // Cargar orden existente para edición
+  useEffect(() => {
+    if (!isEditing || !id) return;
+
+    async function loadOrden() {
+      try {
+        const response = await API.get<ApiResponse<OrdenCompraResponse>>(`/ordenes/${id}`);
+        if (response.data.success && response.data.data) {
+          const orden = response.data.data;
+          const mapped: FormValues = {
+            idEmpresa: orden.idEmpresa,
+            idSucursal: orden.idSucursal,
+            idArea: orden.idArea,
+            idTipoGasto: orden.idTipoGasto,
+            idFormaPago: orden.idFormaPago,
+            fechaLimitePago: orden.fechaLimitePago.split('T')[0],
+            sinDatosFiscales: orden.sinDatosFiscales,
+            razonSocialProveedor: orden.razonSocialProveedor,
+            rfcProveedor: orden.rfcProveedor || '',
+            codigoPostalProveedor: orden.codigoPostalProveedor || '',
+            idRegimenFiscal: orden.idRegimenFiscal || 0,
+            usoCFDI: '',
+            personaContacto: orden.personaContacto || '',
+            notaFormaPago: orden.notaFormaPago || '',
+            notasGenerales: orden.notasGenerales || '',
+            agregarProveedorPorPartida: false,
+            partidas: orden.partidas.length > 0 ? orden.partidas.map(p => ({
+              descripcion: p.descripcion,
+              cantidad: Number(p.cantidad),
+              idUnidadMedida: p.idUnidadMedida,
+              precioUnitario: Number(p.precioUnitario),
+              descuento: Number(p.descuento),
+              idTipoImpuesto: 0,
+              porcentajeIva: Number(p.porcentajeIva),
+              totalRetenciones: Number(p.totalRetenciones),
+              otrosImpuestos: Number(p.otrosImpuestos),
+              tipoOtrosImpuestos: 'MXN' as const,
+              deducible: p.deducible,
+              requiereFactura: p.requiereFactura,
+              proveedorPartida: '',
+            })) : [emptyPartida],
+          };
+          form.reset(mapped);
+        }
+      } catch (error) {
+        toast.error('Error al cargar la orden');
+      }
+    }
+
+    if (!loadingCatalogs) {
+      loadOrden();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing, id, loadingCatalogs]);
+
   const handleSave = async (values: FormValues) => {
     setIsSaving(true);
     try {
@@ -688,6 +767,12 @@ export default function CrearOrdenCompra() {
           setIsSaving(false);
           return;
         }
+      }
+
+      // Si agregarProveedorPorPartida está activo, no necesita proveedor a nivel orden
+      if (values.agregarProveedorPorPartida) {
+        await guardarOrden(values, 0);
+        return;
       }
 
       // Si ya tenemos el ID del proveedor (seleccionado del catálogo), proceder directamente
@@ -760,11 +845,14 @@ export default function CrearOrdenCompra() {
           otrosImpuestos: p.otrosImpuestos,
           deducible: p.deducible,
           requiereFactura: p.requiereFactura,
+          proveedorPartida: p.proveedorPartida || null,
         })),
       };
-      const response = await API.post<ApiResponse<void>>('/ordenes', payload);
+      const response = isEditing
+        ? await API.put<ApiResponse<void>>(`/ordenes/${id}`, payload)
+        : await API.post<ApiResponse<void>>('/ordenes', payload);
       if (response.data.success) {
-        toast.success('Orden de compra creada correctamente.');
+        toast.success(isEditing ? 'Orden de compra actualizada correctamente.' : 'Orden de compra creada correctamente.');
         navigate('/ordenes/autorizaciones');
       } else {
         toast.error(response.data.message ?? 'Error al crear la orden de compra');
@@ -951,24 +1039,26 @@ export default function CrearOrdenCompra() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <FormField
-                control={form.control}
-                name="sinDatosFiscales"
-                render={({ field }) => (
-                  <FormItem className="bg-muted/30 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="!mt-0 font-medium">Sin Datos Fiscales</FormLabel>
-                      <p className="text-xs text-muted-foreground">
-                        Marcar si el proveedor no cuenta con RFC ni información fiscal completa (ej.
-                        persona física sin actividad empresarial)
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
+              {!agregarProveedorPorPartida && (
+                <FormField
+                  control={form.control}
+                  name="sinDatosFiscales"
+                  render={({ field }) => (
+                    <FormItem className="bg-muted/30 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="!mt-0 font-medium">Sin Datos Fiscales</FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          Marcar si el proveedor no cuenta con RFC ni información fiscal completa (ej.
+                          persona física sin actividad empresarial)
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
@@ -993,7 +1083,8 @@ export default function CrearOrdenCompra() {
                 )}
               />
 
-              <FormSection icon={Building2} title="Información General">
+              {!agregarProveedorPorPartida && (
+                <FormSection icon={Building2} title="Información General">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <FormField
                     control={form.control}
@@ -1184,8 +1275,9 @@ export default function CrearOrdenCompra() {
                   />
                 </div>
               </FormSection>
+              )}
 
-              {!sinDatosFiscales && (
+              {!agregarProveedorPorPartida && !sinDatosFiscales && (
                 <FormSection icon={FileText} title="Datos Fiscales">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <FormField
@@ -1469,7 +1561,8 @@ export default function CrearOrdenCompra() {
                 </FormSection>
               )}
 
-              <FormSection icon={User} title="Contacto">
+              {!agregarProveedorPorPartida && (
+                <FormSection icon={User} title="Contacto">
                 <div className="grid grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
@@ -1486,6 +1579,7 @@ export default function CrearOrdenCompra() {
                   />
                 </div>
               </FormSection>
+              )}
             </CardContent>
           </Card>
           <Card>
