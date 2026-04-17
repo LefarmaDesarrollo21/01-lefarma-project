@@ -1569,6 +1569,7 @@ export default function AutorizacionesOC() {
                                                     size="sm"
                                                     variant={a.tipoAccion === 'RECHAZO' ? 'destructive' : 'default'}
                                                     onClick={(e) => { e.stopPropagation(); abrirModalFirma(a); }}
+                                                    className={a.nombreAccion.toLowerCase().includes('devolver') ? 'hidden' : undefined}
                                                   >
                                                     {a.nombreAccion}
                                                   </Button>
@@ -2436,6 +2437,7 @@ export default function AutorizacionesOC() {
         <OrdenCompraPDF
           orden={selectedOrden}
           historial={historial}
+          proveedoresMap={proveedoresMap}
         />,
         document.body
       )}

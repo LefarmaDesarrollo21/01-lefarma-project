@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
 import type { OrdenCompraResponse } from '@/types/ordenCompra.types';
-import { API } from '@/services/api';
 import logoImage from '@/assets/logo.png';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -26,6 +24,7 @@ interface ProveedorInfo {
 interface Props {
   orden: OrdenCompraResponse;
   historial?: HistorialWorkflowItem[];
+  proveedoresMap?: Map<number, ProveedorInfo>;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -62,65 +61,8 @@ function fmtMoney(n: number) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function OrdenCompraPDF({ orden, historial = [] }: Props) {
-  const [proveedores, setProveedores] = useState<Map<number, ProveedorInfo>>(new Map());
-  
-  // Fetch proveedores para las partidas y el encabezado
-  useEffect(() => {
-    const fetchProveedores = async () => {
-      console.log('Fetching proveedores for orden:', orden.idOrden);
-      const ids = new Set<number>();
-
-      // Agregar proveedor del encabezado
-      if (orden.idProveedor) {
-        ids.add(Number(orden.idProveedor));
-        console.log('Added header provider:', orden.idProveedor);
-      }
-
-      // Agregar proveedores de las partidas
-      orden.partidas?.forEach(p => {
-        if (p.idProveedor) {
-          ids.add(Number(p.idProveedor));
-          console.log('Added partida provider:', p.idProveedor);
-        }
-      });
-
-      if (ids.size === 0) {
-        console.log('No provider IDs to fetch');
-        return;
-      }
-
-      console.log('Fetching IDs:', Array.from(ids));
-      const proveedoresMap = new Map<number, ProveedorInfo>();
-
-      // Fetch cada proveedor
-      for (const id of ids) {
-        try {
-          console.log(`Fetching proveedor ${id}...`);
-          const response = await API.get(`/api/catalogos/proveedores/${id}`);
-          console.log(`Response for ${id}:`, response.data);
-          if (response.data?.Data) {
-            const p = response.data.Data;
-            proveedoresMap.set(Number(id), {
-              idProveedor: Number(p.IdProveedor),
-              razonSocial: p.RazonSocial,
-              rfc: p.RFC
-            });
-            console.log(`Stored proveedor ${id}:`, p.RazonSocial);
-          } else {
-            console.warn(`No data for proveedor ${id}`);
-          }
-        } catch (error) {
-          console.error(`Error fetching proveedor ${id}:`, error);
-        }
-      }
-
-      console.log('Final proveedores map:', proveedoresMap);
-      setProveedores(proveedoresMap);
-    };
-
-    fetchProveedores();
-  }, [orden.idOrden]);
+export function OrdenCompraPDF({ orden, historial = [], proveedoresMap }: Props) {
+  const proveedores = proveedoresMap || new Map<number, ProveedorInfo>();
 
   const now = new Date().toLocaleString('es-MX', {
     day: '2-digit',
@@ -320,7 +262,9 @@ export function OrdenCompraPDF({ orden, historial = [] }: Props) {
                     {p.idProveedor && (
                       <div style={{ marginTop: '4px', fontSize: '7.5pt', color: '#6b7280' }}>
                         {(() => {
-                          const prov = proveedores.get(Number(p.idProveedor));
+                          const provId = Number(p.idProveedor);
+                          const prov = proveedores.get(provId);
+                          console.log(`[PDF Render] Partida ${p.numeroPartida} - proveedor ID: ${provId}, encontrado:`, prov);
                           return (
                             <>
                               <span style={{ fontWeight: 600 }}>Proveedor:</span> {prov?.razonSocial || `#${p.idProveedor}`}
