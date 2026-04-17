@@ -42,6 +42,8 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 
 const ENDPOINT = '/catalogos/Proveedores';
 const REGIMENES_ENDPOINT = '/catalogos/RegimenesFiscales';
+const FORMAS_PAGO_ENDPOINT = '/catalogos/FormasPago';
+const BANCOS_ENDPOINT = '/catalogos/Bancos';
 
 const proveedorSchema = z.object({
   razonSocial: z.string().min(3, 'La razón social debe tener al menos 3 caracteres'),
@@ -49,6 +51,7 @@ const proveedorSchema = z.object({
   codigoPostal: z.string().optional(),
   regimenFiscalId: z.number().optional(),
   usoCfdi: z.string().optional(),
+  formaPagoId: z.number().optional(),
 });
 
 interface ProveedorMetadata {
@@ -72,11 +75,14 @@ interface Proveedor {
   regimenFiscalId?: number;
   regimenFiscalDescripcion?: string;
   usoCfdi?: string;
+  formaPagoId?: number;
+  formaPagoDescripcion?: string;
   fechaRegistro: string;
   fechaModificacion?: string;
   estatus: number;
   cambioEstatusPor?: number;
   detalle?: ProveedorDetalle;
+  cuentasFormaPago?: ProveedorFormaPagoCuenta[];
 }
 
 const ESTATUS = {
@@ -106,6 +112,37 @@ interface RegimenFiscal {
   activo: boolean;
 }
 
+interface FormaPago {
+  idFormaPago: number;
+  nombre: string;
+  descripcion?: string;
+  clave?: string;
+  activo: boolean;
+  requiereCuenta?: boolean;
+}
+
+interface ProveedorFormaPagoCuenta {
+  idCuen?: number;
+  idProveedor?: number;
+  idFormaPago: number;
+  formaPagoNombre?: string;
+  idBanco?: number;
+  bancoNombre?: string;
+  numeroCuenta?: string;
+  clabe?: string;
+  numeroTarjeta?: string;
+  beneficiario?: string;
+  correoNotificacion?: string;
+  activo?: boolean;
+}
+
+interface Banco {
+  idBanco: number;
+  nombre: string;
+  clave?: string;
+  codigoSwift?: string;
+}
+
 type ProveedorFormValues = z.infer<typeof proveedorSchema>;
 type ProveedorRequest = ProveedorFormValues & { idProveedor: number };
 
@@ -113,6 +150,8 @@ export default function ProveedoresList() {
   usePageTitle('Proveedores', 'Catálogo de proveedores CxP');
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [regimenesFiscales, setRegimenesFiscales] = useState<RegimenFiscal[]>([]);
+  const [formasPago, setFormasPago] = useState<FormaPago[]>([]);
+  const [bancos, setBancos] = useState<Banco[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [search, setSearch] = useState('');
@@ -121,6 +160,7 @@ export default function ProveedoresList() {
   const [modalOpen, setModalOpen] = useState(false);
   const [rejectModal, setRejectModal] = useState<{ open: boolean; proveedorId: number | null }>({ open: false, proveedorId: null });
   const [rejectMotivo, setRejectMotivo] = useState('');
+  const [cuentasFormaPago, setCuentasFormaPago] = useState<ProveedorFormaPagoCuenta[]>([]);
 
   const form = useForm<ProveedorFormValues>({
     resolver: zodResolver(proveedorSchema),
@@ -130,6 +170,7 @@ export default function ProveedoresList() {
       codigoPostal: '',
       regimenFiscalId: undefined,
       usoCfdi: '',
+      formaPagoId: undefined,
     },
   });
 
@@ -164,9 +205,33 @@ export default function ProveedoresList() {
     }
   };
 
+  const fetchFormasPago = async () => {
+    try {
+      const response = await API.get<ApiResponse<FormaPago[]>>(FORMAS_PAGO_ENDPOINT);
+      if (response.data.success) {
+        setFormasPago(response.data.data || []);
+      }
+    } catch {
+      // silencioso — el select quedará vacío
+    }
+  };
+
+  const fetchBancos = async () => {
+    try {
+      const response = await API.get<ApiResponse<Banco[]>>(BANCOS_ENDPOINT);
+      if (response.data.success) {
+        setBancos(response.data.data || []);
+      }
+    } catch {
+      // silencioso — el select quedará vacío
+    }
+  };
+
   useEffect(() => {
     fetchProveedores();
     fetchRegimenesFiscales();
+    fetchFormasPago();
+    fetchBancos();
     // Reset table config to show all columns including new ones (Contacto, Comentario, Estatus)
     resetConfig('proveedores');
   }, []);
@@ -179,7 +244,9 @@ export default function ProveedoresList() {
       codigoPostal: '',
       regimenFiscalId: undefined,
       usoCfdi: '',
+      formaPagoId: undefined,
     });
+    setCuentasFormaPago([]);
     setIsEditing(false);
     setModalOpen(true);
   };
@@ -194,7 +261,9 @@ export default function ProveedoresList() {
         codigoPostal: proveedor.codigoPostal || '',
         regimenFiscalId: proveedor.regimenFiscalId,
         usoCfdi: proveedor.usoCfdi || '',
+        formaPagoId: proveedor.formaPagoId,
       });
+      setCuentasFormaPago(proveedor.cuentasFormaPago || []);
       setIsEditing(true);
       setModalOpen(true);
     }
@@ -203,7 +272,11 @@ export default function ProveedoresList() {
   const handleSaveProveedor = async (values: ProveedorFormValues) => {
     setIsSaving(true);
     try {
-      const payload: ProveedorRequest = { idProveedor: proveedorId, ...values };
+      const payload: ProveedorRequest & { cuentasFormaPago: ProveedorFormaPagoCuenta[] } = {
+        idProveedor: proveedorId,
+        ...values,
+        cuentasFormaPago,
+      };
 
       const response = isEditing
         ? await API.put(`${ENDPOINT}/${proveedorId}`, payload)
@@ -311,6 +384,24 @@ export default function ProveedoresList() {
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">{row.original.regimenFiscalDescripcion || '—'}</span>
       ),
+    },
+    {
+      id: 'formaPago',
+      header: 'Forma de Pago',
+      cell: ({ row }) => {
+        const fp = row.original.formaPagoDescripcion;
+        if (!fp) return <span className="text-xs text-muted-foreground">—</span>;
+        return <span className="text-xs">{fp}</span>;
+      },
+    },
+    {
+      id: 'cuentas',
+      header: 'Ctas',
+      cell: ({ row }) => {
+        const count = row.original.cuentasFormaPago?.length ?? 0;
+        if (count === 0) return <span className="text-xs text-muted-foreground">—</span>;
+        return <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">{count}</Badge>;
+      },
     },
     {
       id: 'detalle',
@@ -611,6 +702,174 @@ export default function ProveedoresList() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="formaPagoId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Forma de Pago</FormLabel>
+                    <Select
+                      onValueChange={(val) => field.onChange(Number(val))}
+                      value={field.value ? String(field.value) : ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona forma de pago..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {formasPago.map((fp) => (
+                          <SelectItem key={fp.idFormaPago} value={String(fp.idFormaPago)}>
+                            {fp.clave ? `${fp.clave} - ${fp.nombre}` : fp.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Cuentas Forma de Pago */}
+            <div className="space-y-3 pt-2 border-t mt-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Cuentas Bancarias</label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCuentasFormaPago((prev) => [
+                      ...prev,
+                      { idCuen: 0, idFormaPago: 0, activo: true },
+                    ]);
+                  }}
+                >
+                  <Plus className="mr-1 h-3 w-3" /> Agregar Cuenta
+                </Button>
+              </div>
+
+              {cuentasFormaPago.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-2">
+                  Sin cuentas registradas. Usa "Agregar Cuenta" para añadir cuentas bancarias.
+                </p>
+              ) : (
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {cuentasFormaPago.map((cuenta, index) => (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-2 p-3 border rounded-lg bg-gray-50/50">
+                      {/* Forma de Pago */}
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Forma de Pago</label>
+                        <Select
+                          value={String(cuenta.idFormaPago || '')}
+                          onValueChange={(val) => {
+                            const updated = [...cuentasFormaPago];
+                            updated[index].idFormaPago = Number(val);
+                            updated[index].formaPagoNombre = formasPago.find((fp) => fp.idFormaPago === Number(val))?.nombre || '';
+                            setCuentasFormaPago(updated);
+                          }}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Forma" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {formasPago.map((fp) => (
+                              <SelectItem key={fp.idFormaPago} value={String(fp.idFormaPago)}>
+                                {fp.clave ? `${fp.clave} - ${fp.nombre}` : fp.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Banco */}
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Banco</label>
+                        <Select
+                          value={String(cuenta.idBanco || '')}
+                          onValueChange={(val) => {
+                            const updated = [...cuentasFormaPago];
+                            updated[index].idBanco = Number(val);
+                            updated[index].bancoNombre = bancos.find((b) => b.idBanco === Number(val))?.nombre || '';
+                            setCuentasFormaPago(updated);
+                          }}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Banco" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {bancos.map((b) => (
+                              <SelectItem key={b.idBanco} value={String(b.idBanco)}>
+                                {b.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Número de Cuenta */}
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">No. Cuenta</label>
+                        <Input
+                          className="h-8 text-xs"
+                          placeholder="****1234"
+                          value={cuenta.numeroCuenta || ''}
+                          onChange={(e) => {
+                            const updated = [...cuentasFormaPago];
+                            updated[index].numeroCuenta = e.target.value;
+                            setCuentasFormaPago(updated);
+                          }}
+                        />
+                      </div>
+
+                      {/* CLABE */}
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">CLABE</label>
+                        <Input
+                          className="h-8 text-xs"
+                          placeholder="CLABE 18 dígitos"
+                          value={cuenta.clabe || ''}
+                          onChange={(e) => {
+                            const updated = [...cuentasFormaPago];
+                            updated[index].clabe = e.target.value;
+                            setCuentasFormaPago(updated);
+                          }}
+                        />
+                      </div>
+
+                      {/* Beneficiario */}
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Beneficiario</label>
+                        <div className="flex gap-1">
+                          <Input
+                            className="h-8 text-xs flex-1"
+                            placeholder="Nombre"
+                            value={cuenta.beneficiario || ''}
+                            onChange={(e) => {
+                              const updated = [...cuentasFormaPago];
+                              updated[index].beneficiario = e.target.value;
+                              setCuentasFormaPago(updated);
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => {
+                              setCuentasFormaPago((prev) => prev.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </form>
         </Form>

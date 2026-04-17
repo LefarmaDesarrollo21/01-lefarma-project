@@ -10,6 +10,8 @@ public class ProveedorResponse
     public int? RegimenFiscalId { get; set; }
     public string? RegimenFiscalDescripcion { get; set; }
     public string? UsoCfdi { get; set; }
+    public int? FormaPagoId { get; set; }
+    public string? FormaPagoDescripcion { get; set; }
     public bool SinDatosFiscales { get; set; }
     public int Estatus { get; set; }
     public int? CambioEstatusPor { get; set; }
@@ -17,6 +19,7 @@ public class ProveedorResponse
     public DateTime? FechaModificacion { get; set; }
 
     public ProveedorDetalleResponse? Detalle { get; set; }
+    public List<ProveedorFormaPagoCuentaResponse> CuentasFormaPago { get; set; } = new();
 }
 
 public class ProveedorDetalleResponse
@@ -36,8 +39,10 @@ public class CreateProveedorRequest
     public string? CodigoPostal { get; set; }
     public int? RegimenFiscalId { get; set; }
     public string? UsoCfdi { get; set; }
+    public int? FormaPagoId { get; set; }
     public bool SinDatosFiscales { get; set; }
     public CreateProveedorDetalleRequest? Detalle { get; set; }
+    public List<CreateProveedorFormaPagoCuentaRequest>? CuentasFormaPago { get; set; }
 }
 
 public class CreateProveedorDetalleRequest
@@ -48,6 +53,17 @@ public class CreateProveedorDetalleRequest
     public string? Comentario { get; set; }
 }
 
+public class CreateProveedorFormaPagoCuentaRequest
+{
+    public int IdFormaPago { get; set; }
+    public int? IdBanco { get; set; }
+    public string? NumeroCuenta { get; set; }
+    public string? Clabe { get; set; }
+    public string? NumeroTarjeta { get; set; }
+    public string? Beneficiario { get; set; }
+    public string? CorreoNotificacion { get; set; }
+}
+
 public class UpdateProveedorRequest
 {
     public required int IdProveedor { get; set; }
@@ -56,8 +72,10 @@ public class UpdateProveedorRequest
     public string? CodigoPostal { get; set; }
     public int? RegimenFiscalId { get; set; }
     public string? UsoCfdi { get; set; }
+    public int? FormaPagoId { get; set; }
     public bool SinDatosFiscales { get; set; }
     public UpdateProveedorDetalleRequest? Detalle { get; set; }
+    public List<CreateProveedorFormaPagoCuentaRequest>? CuentasFormaPago { get; set; }
 }
 
 public class UpdateProveedorDetalleRequest
@@ -66,6 +84,22 @@ public class UpdateProveedorDetalleRequest
     public string? ContactoTelefono { get; set; }
     public string? ContactoEmail { get; set; }
     public string? Comentario { get; set; }
+}
+
+public class ProveedorFormaPagoCuentaResponse
+{
+    public int IdCuen { get; set; }
+    public int IdProveedor { get; set; }
+    public int IdFormaPago { get; set; }
+    public string? FormaPagoNombre { get; set; }
+    public int? IdBanco { get; set; }
+    public string? BancoNombre { get; set; }
+    public string? NumeroCuenta { get; set; }
+    public string? Clabe { get; set; }
+    public string? NumeroTarjeta { get; set; }
+    public string? Beneficiario { get; set; }
+    public string? CorreoNotificacion { get; set; }
+    public bool Activo { get; set; }
 }
 
 public class ProveedorRequest

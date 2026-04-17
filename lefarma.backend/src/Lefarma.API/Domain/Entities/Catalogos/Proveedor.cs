@@ -11,6 +11,7 @@ public class Proveedor
     public string? CodigoPostal { get; set; }
     public int? RegimenFiscalId { get; set; }
     public string? UsoCfdi { get; set; }
+    public int? FormaPagoId { get; set; }
     public bool SinDatosFiscales { get; set; }
     public int Estatus { get; set; } = 1;
     public int? CambioEstatusPor { get; set; }
@@ -19,6 +20,11 @@ public class Proveedor
 
     [ForeignKey("RegimenFiscalId")]
     public virtual RegimenFiscal? RegimenFiscal { get; set; }
+
+    [ForeignKey("FormaPagoId")]
+    public virtual FormaPago? FormaPago { get; set; }
+
+    public virtual ICollection<ProveedorFormaPagoCuenta> CuentasFormaPago { get; set; } = new List<ProveedorFormaPagoCuenta>();
 
     public virtual ProveedorDetalle? Detalle { get; set; }
 }

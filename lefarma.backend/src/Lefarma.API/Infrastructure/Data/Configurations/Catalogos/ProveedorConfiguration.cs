@@ -40,6 +40,9 @@ public class ProveedorConfiguration : IEntityTypeConfiguration<Proveedor>
             .HasColumnName("uso_cfdi")
             .HasMaxLength(10);
 
+        builder.Property(e => e.FormaPagoId)
+            .HasColumnName("forma_pago_id");
+
         builder.Property(e => e.SinDatosFiscales)
             .HasColumnName("sin_datos_fiscales")
             .HasDefaultValue(false);
@@ -65,6 +68,16 @@ public class ProveedorConfiguration : IEntityTypeConfiguration<Proveedor>
             .WithMany()
             .HasForeignKey(e => e.RegimenFiscalId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.FormaPago)
+            .WithMany()
+            .HasForeignKey(e => e.FormaPagoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.CuentasFormaPago)
+            .WithOne(c => c.Proveedor)
+            .HasForeignKey(c => c.IdProveedor)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(e => e.Detalle)
             .WithOne(d => d.Proveedor)

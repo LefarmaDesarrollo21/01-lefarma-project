@@ -57,7 +57,12 @@ public class ProveedorService : BaseService, IProveedorService
 
             var result = await orderedQuery
                 .Include(p => p.RegimenFiscal!)
+                .Include(p => p.FormaPago!)
                 .Include(p => p.Detalle)
+                .Include(p => p.CuentasFormaPago)
+                    .ThenInclude(c => c.FormaPago)
+                .Include(p => p.CuentasFormaPago)
+                    .ThenInclude(c => c.Banco)
                 .ToListAsync();
 
             if (!result.Any())
@@ -147,6 +152,7 @@ public class ProveedorService : BaseService, IProveedorService
                 CodigoPostal = request.CodigoPostal,
                 RegimenFiscalId = request.RegimenFiscalId,
                 UsoCfdi = request.UsoCfdi,
+                FormaPagoId = request.FormaPagoId,
                 SinDatosFiscales = request.SinDatosFiscales,
                 FechaRegistro = DateTime.UtcNow,
                 Detalle = request.Detalle != null ? new ProveedorDetalle
@@ -157,6 +163,24 @@ public class ProveedorService : BaseService, IProveedorService
                     FechaCreacion = DateTime.UtcNow
                 } : null
             };
+
+            if (request.CuentasFormaPago != null && request.CuentasFormaPago.Any())
+            {
+                foreach (var cuenta in request.CuentasFormaPago)
+                {
+                    newProveedor.CuentasFormaPago.Add(new ProveedorFormaPagoCuenta
+                    {
+                        IdFormaPago = cuenta.IdFormaPago,
+                        IdBanco = cuenta.IdBanco,
+                        NumeroCuenta = cuenta.NumeroCuenta,
+                        Clabe = cuenta.Clabe,
+                        NumeroTarjeta = cuenta.NumeroTarjeta,
+                        Beneficiario = cuenta.Beneficiario,
+                        CorreoNotificacion = cuenta.CorreoNotificacion,
+                        FechaCreacion = DateTime.UtcNow
+                    });
+                }
+            }
 
             var result = await _proveedorRepository.AddAsync(newProveedor);
             EnrichWideEvent(action: "Create", entityId: result.IdProveedor, nombre: result.RazonSocial);
@@ -218,6 +242,7 @@ public class ProveedorService : BaseService, IProveedorService
             proveedor.CodigoPostal = request.CodigoPostal;
             proveedor.RegimenFiscalId = request.RegimenFiscalId;
             proveedor.UsoCfdi = request.UsoCfdi;
+            proveedor.FormaPagoId = request.FormaPagoId;
             proveedor.SinDatosFiscales = request.SinDatosFiscales;
             proveedor.FechaModificacion = DateTime.UtcNow;
 
@@ -227,6 +252,32 @@ public class ProveedorService : BaseService, IProveedorService
                 proveedor.Detalle.ContactoTelefono = request.Detalle.ContactoTelefono;
                 proveedor.Detalle.ContactoEmail = request.Detalle.ContactoEmail;
                 proveedor.Detalle.FechaModificacion = DateTime.UtcNow;
+            }
+
+            // Actualizar cuentas: eliminar existentes y crear las nuevas
+            if (request.CuentasFormaPago != null)
+            {
+                var cuentasExistentes = proveedor.CuentasFormaPago.ToList();
+                foreach (var cuenta in cuentasExistentes)
+                {
+                    _proveedorRepository.RemoveCuenta(cuenta);
+                }
+
+                foreach (var cuenta in request.CuentasFormaPago)
+                {
+                    proveedor.CuentasFormaPago.Add(new ProveedorFormaPagoCuenta
+                    {
+                        IdProveedor = proveedor.IdProveedor,
+                        IdFormaPago = cuenta.IdFormaPago,
+                        IdBanco = cuenta.IdBanco,
+                        NumeroCuenta = cuenta.NumeroCuenta,
+                        Clabe = cuenta.Clabe,
+                        NumeroTarjeta = cuenta.NumeroTarjeta,
+                        Beneficiario = cuenta.Beneficiario,
+                        CorreoNotificacion = cuenta.CorreoNotificacion,
+                        FechaCreacion = DateTime.UtcNow
+                    });
+                }
             }
 
             var result = await _proveedorRepository.UpdateAsync(proveedor);
