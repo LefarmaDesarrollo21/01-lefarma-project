@@ -296,10 +296,10 @@ public class ComprobanteService : IComprobanteService
                 .ToList();
         }
 
-        // Gasto: filtrar por RequiereFactura y EstadoFacturacion < 2
+        // Gasto: todas las partidas con importe pendiente (sin filtrar por RequiereFactura)
         var gastoPartidas = await _db.OrdenesCompraPartidas
             .Include(p => p.Orden)
-            .Where(p => p.IdOrden == idOrden && p.RequiereFactura && p.EstadoFacturacion < 2)
+            .Where(p => p.IdOrden == idOrden && p.EstadoFacturacion < 2)
             .ToListAsync(ct);
 
         return gastoPartidas.Select(p =>
