@@ -200,6 +200,7 @@ builder.Services.AddScoped<ITipoImpuestoService, TipoImpuestoService>();
 
 // Logging Services
 builder.Services.AddScoped<IErrorLogService, ErrorLogService>();
+builder.Services.AddScoped<IBusinessAuditLogService, BusinessAuditLogService>();
 
 builder.Services.AddActiveDirectoryServices(builder.Configuration);
 builder.Services.AddJwtTokenServices(builder.Configuration);

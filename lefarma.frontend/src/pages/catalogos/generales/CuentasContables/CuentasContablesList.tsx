@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import { FileText, Plus, Pencil, Trash2, Search, Loader2, RefreshCcw } from 'lucide-react';
@@ -98,7 +98,7 @@ export default function CuentasContablesList() {
         setCuentas(response.data.data || []);
       }
     } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'CuentasContables.NotFound');
+      const isNotFound = error?.statusCode === 404;
       if (isNotFound) {
         setCuentas([]);
         toast.warning('No se encontraron cuentas contables en el sistema');

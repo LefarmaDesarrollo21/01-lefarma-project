@@ -81,6 +81,7 @@ public class ApplicationDbContext : DbContext
 
         // DbSets - Logging
         public DbSet<ErrorLog> ErrorLogs { get; set; }
+        public DbSet<BusinessAuditLog> BusinessAuditLogs { get; set; }
 
         // DbSets - Notifications
         public DbSet<Notification> Notifications { get; set; }

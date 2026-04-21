@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import { MapPin, Plus, Pencil, Trash2, Search, Loader2, RefreshCcw } from 'lucide-react';
@@ -73,7 +73,7 @@ export default function CentrosCostoList() {
         setCentrosCosto(response.data.data || []);
       }
     } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'CentrosCosto.NotFound');
+      const isNotFound = error?.statusCode === 404;
       if (isNotFound) {
         setCentrosCosto([]);
         toast.warning('No se encontraron centros de costo en el sistema');
