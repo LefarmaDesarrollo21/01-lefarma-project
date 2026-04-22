@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import { LayoutGrid, Plus, Pencil, Trash2, Search, Loader2, RefreshCcw, Building2 } from 'lucide-react';
@@ -83,7 +83,7 @@ export default function AreasList() {
         setAreas(response.data.data || []);
       }
     } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'Areas.NotFound');
+      const isNotFound = error?.statusCode === 404;
       if (isNotFound) {
         setAreas([]);
       } else {

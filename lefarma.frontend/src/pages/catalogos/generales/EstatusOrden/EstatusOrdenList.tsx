@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import { List, Search, Loader2, RefreshCcw, Lock } from 'lucide-react';
@@ -37,7 +37,7 @@ export default function EstatusOrdenList() {
         setEstatus(response.data.data || []);
       }
     } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'EstatusOrden.NotFound');
+      const isNotFound = error?.statusCode === 404;
       if (isNotFound) {
         setEstatus([]);
         toast.warning('No se encontraron estatus de orden en el sistema');

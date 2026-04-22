@@ -152,7 +152,7 @@ public class ProveedorService : BaseService, IProveedorService
                 if (!regimenFiscalExiste)
                 {
                     EnrichWideEvent(action: "Create", entityId: request.RegimenFiscalId.Value, notFound: true);
-                    return CommonErrors.NotFound("régimen fiscal", request.RegimenFiscalId.Value.ToString());
+                    return CommonErrors.NotFound("RegimenFiscal", request.RegimenFiscalId.Value.ToString());
                 }
             }
 
@@ -252,7 +252,7 @@ public class ProveedorService : BaseService, IProveedorService
                 if (!regimenFiscalExiste)
                 {
                     EnrichWideEvent(action: "Update", entityId: request.RegimenFiscalId.Value, notFound: true);
-                    return CommonErrors.NotFound("régimen fiscal", request.RegimenFiscalId.Value.ToString());
+                    return CommonErrors.NotFound("RegimenFiscal", request.RegimenFiscalId.Value.ToString());
                 }
             }
 
@@ -454,7 +454,7 @@ public class ProveedorService : BaseService, IProveedorService
         catch (DbUpdateException ex)
         {
             EnrichWideEvent(action: "Delete", entityId: id, error: ex.GetDetailedMessage());
-            return CommonErrors.DatabaseError($"eliminar el proveedor");
+            return CommonErrors.HasDependencies("Proveedor");
         }
         catch (Exception ex)
         {
@@ -475,10 +475,10 @@ public class ProveedorService : BaseService, IProveedorService
             }
 
             if (proveedor.Estatus == EstatusProveedor.Aprobado)
-                return Error.Conflict("El proveedor ya está aprobado");
+                return CommonErrors.Conflict("Proveedor", "El proveedor ya está aprobado");
 
             if (proveedor.Estatus == EstatusProveedor.Rechazado)
-                return Error.Conflict("El proveedor está rechazado y no se puede aprobar");
+                return CommonErrors.Conflict("Proveedor", "El proveedor está rechazado y no se puede aprobar");
 
             proveedor.Estatus = EstatusProveedor.Aprobado;
             proveedor.CambioEstatusPor = idUsuario;
@@ -510,10 +510,10 @@ public class ProveedorService : BaseService, IProveedorService
             }
 
             if (proveedor.Estatus == EstatusProveedor.Rechazado)
-                return Error.Conflict("El proveedor ya está rechazado");
+                return CommonErrors.Conflict("Proveedor", "El proveedor ya está rechazado");
 
             if (proveedor.Estatus == EstatusProveedor.Aprobado)
-                return Error.Conflict("El proveedor está aprobado y no se puede rechazar");
+                return CommonErrors.Conflict("Proveedor", "El proveedor está aprobado y no se puede rechazar");
 
             proveedor.Estatus = EstatusProveedor.Rechazado;
             proveedor.CambioEstatusPor = idUsuario;
@@ -547,7 +547,7 @@ public class ProveedorService : BaseService, IProveedorService
             if (string.IsNullOrWhiteSpace(caratulaPath) || caratulaPath.Contains("..") || caratulaPath.Contains("\\"))
             {
                 EnrichWideEvent(action: "UpdateCaratula", entityId: id, error: "Ruta de caratula invalida");
-                return Error.Validation("La ruta de la caratula contiene caracteres invalidos");
+                return CommonErrors.Validation("CaratulaPath", "La ruta de la caratula contiene caracteres invalidos");
             }
 
             var proveedor = await _proveedorRepository.GetByIdWithDetailsAsync(id);
@@ -560,7 +560,7 @@ public class ProveedorService : BaseService, IProveedorService
             if (proveedor.Detalle == null)
             {
                 EnrichWideEvent(action: "UpdateCaratula", entityId: id, error: "El proveedor no tiene detalle");
-                return Error.Conflict("El proveedor no tiene detalle");
+                return CommonErrors.Conflict("Proveedor", "El proveedor no tiene detalle");
             }
 
             proveedor.Detalle.CaratulaPath = caratulaPath;
@@ -592,7 +592,7 @@ public class ProveedorService : BaseService, IProveedorService
             if (proveedor.Detalle == null || string.IsNullOrEmpty(proveedor.Detalle.CaratulaPath))
             {
                 EnrichWideEvent(action: "DeleteCaratula", entityId: id, error: "No existe caratula");
-                return Error.Conflict("No existe caratula para eliminar");
+                return CommonErrors.Conflict("Proveedor", "No existe caratula para eliminar");
             }
 
             var basePath = _configuration["Archivos:BasePath"] ?? _configuration["ArchivosBasePath"] ?? "";
@@ -603,7 +603,7 @@ public class ProveedorService : BaseService, IProveedorService
             if (!fullPath.StartsWith(resolvedBasePath))
             {
                 EnrichWideEvent(action: "DeleteCaratula", entityId: id, error: "Ruta de caratula invalida");
-                return Error.Validation("La ruta de la caratula esta fuera del directorio permitido");
+                return CommonErrors.Validation("CaratulaPath", "La ruta de la caratula esta fuera del directorio permitido");
             }
 
             if (File.Exists(fullPath))
@@ -639,7 +639,7 @@ public class ProveedorService : BaseService, IProveedorService
 
             if (proveedor.Estatus != EstatusProveedor.EditadoPendiente)
             {
-                return Error.Conflict("El proveedor no tiene ediciones pendientes por autorizar");
+                return CommonErrors.Conflict("Proveedor", "El proveedor no tiene ediciones pendientes por autorizar");
             }
 
             var staging = await _dbContext.StagingProveedores
@@ -649,7 +649,7 @@ public class ProveedorService : BaseService, IProveedorService
 
             if (staging == null)
             {
-                return Error.Conflict("No se encontró el staging para este proveedor");
+                return CommonErrors.Conflict("Proveedor", "No se encontró el staging para este proveedor");
             }
 
             // Aplicar cambios del staging al proveedor original
@@ -730,7 +730,7 @@ public class ProveedorService : BaseService, IProveedorService
 
             if (proveedor.Estatus != EstatusProveedor.EditadoPendiente)
             {
-                return Error.Conflict("El proveedor no tiene ediciones pendientes por rechazar");
+                return CommonErrors.Conflict("Proveedor", "El proveedor no tiene ediciones pendientes por rechazar");
             }
 
             var staging = await _dbContext.StagingProveedores
@@ -738,7 +738,7 @@ public class ProveedorService : BaseService, IProveedorService
 
             if (staging == null)
             {
-                return Error.Conflict("No se encontró el staging para este proveedor");
+                return CommonErrors.Conflict("Proveedor", "No se encontró el staging para este proveedor");
             }
 
             // Restaurar estatus original (aprobado) y desvincular staging
@@ -776,7 +776,7 @@ public class ProveedorService : BaseService, IProveedorService
 
             if (staging == null)
             {
-                return CommonErrors.NotFound("staging de proveedor", idProveedor.ToString());
+                return CommonErrors.NotFound("ProveedorStaging", idProveedor.ToString());
             }
 
             var proveedor = await _proveedorRepository.GetByIdWithDetailsAsync(idProveedor);

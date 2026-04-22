@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import { Store, Plus, Pencil, Trash2, Search, Phone, MapPin, Loader2, RefreshCcw, Building2 } from 'lucide-react';
@@ -99,7 +99,7 @@ export default function SucursalesList() {
         setSucursales(response.data.data || []);
       }
     } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'Sucursales.NotFound');
+      const isNotFound = error?.statusCode === 404;
       if (isNotFound) {
         setSucursales([]);
       } else {

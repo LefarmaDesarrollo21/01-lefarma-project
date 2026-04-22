@@ -72,7 +72,7 @@ export default function TiposImpuestoList() {
         setTiposImpuesto(response.data.data || []);
       }
     } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'TiposImpuesto.NotFound');
+      const isNotFound = error?.statusCode === 404;
       if (isNotFound) {
         setTiposImpuesto([]);
       } else {

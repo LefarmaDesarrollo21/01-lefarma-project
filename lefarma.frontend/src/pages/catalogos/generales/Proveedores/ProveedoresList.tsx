@@ -192,7 +192,7 @@ export default function ProveedoresList() {
         setProveedores(response.data.data || []);
       }
     } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'Proveedores.NotFound');
+      const isNotFound = error?.statusCode === 404;
       if (isNotFound) {
         setProveedores([]);
         toast.warning('No se encontraron proveedores en el sistema');
