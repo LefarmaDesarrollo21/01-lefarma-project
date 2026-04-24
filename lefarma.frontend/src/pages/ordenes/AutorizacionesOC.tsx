@@ -684,16 +684,9 @@ export default function AutorizacionesOC() {
       cerrarModalFirma();
       await Promise.all([fetchOrdenes(), fetchDetalle(selectedOrden.idOrden)]);
     } catch (error: any) {
-      const responseData = error?.response?.data;
-      let errorMessage = 'No fue posible procesar la firma';
-      
-      if (responseData?.errors?.length > 0) {
-        errorMessage = responseData.errors[0].description || responseData.errors[0].code || responseData.message || errorMessage;
-      } else if (responseData?.message) {
-        errorMessage = responseData.message;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
+      const errorMessage =
+        error?.errors?.[0]?.description ?? error?.message ?? 'No fue posible procesar la firma';
+      toast.error(errorMessage);
       
       toast.error(errorMessage);
     } finally {

@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -120,10 +121,9 @@ export default function HelpEditor() {
         await helpService.create(formData);
       }
       navigate('/help');
-    } catch (error) {
-      console.error('Error saving article:', error);
-      alert(isEditMode ? 'Error al actualizar artículo' : 'Error al crear artículo');
-    } finally {
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? (isEditMode ? 'Error al actualizar artículo' : 'Error al crear artículo'));
+    }finally {
       setIsLoading(false);
     }
   };

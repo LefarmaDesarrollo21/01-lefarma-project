@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import { UserCircle, Plus, Pencil, Trash2, Search, Loader2, RefreshCcw } from 'lucide-react';
@@ -80,7 +80,7 @@ export default function RegimenesFiscalesList() {
         setRegimenes(response.data.data || []);
       }
     } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'RegimenesFiscales.NotFound');
+      const isNotFound = error?.statusCode === 404;
       if (isNotFound) {
         setRegimenes([]);
         toast.warning('No se encontraron regímenes fiscales en el sistema');

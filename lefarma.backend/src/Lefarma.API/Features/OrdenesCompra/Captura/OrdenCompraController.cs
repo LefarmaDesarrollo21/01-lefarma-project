@@ -33,7 +33,12 @@ namespace Lefarma.API.Features.OrdenesCompra.Captura
                 query = new OrdenCompraRequest();
             }
             var puedeVerTodas = TienePermiso("orden_compra.puede_ver_todas_las_ordenes");
-            var result = await _service.GetAllAsync(query, GetUserId(), puedeVerTodas);
+            var rolesUsuario = User.Claims
+                .Where(c => c.Type == ClaimTypes.Role)
+                .Select(c => int.TryParse(c.Value, out var r) ? r : 0)
+                .Where(r => r > 0)
+                .ToList();
+            var result = await _service.GetAllAsync(query, GetUserId(), rolesUsuario, puedeVerTodas);
             return result.ToActionResult(this, data => Ok(new ApiResponse<IEnumerable<OrdenCompraResponse>>
             { Success = true, Message = "�rdenes obtenidas exitosamente.", Data = data }));
         }

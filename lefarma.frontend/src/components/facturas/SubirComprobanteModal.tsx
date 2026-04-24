@@ -209,13 +209,7 @@ export function SubirComprobanteModal({
       
       if (responseData?.errors?.length > 0) {
         const firstError = responseData.errors[0];
-        if (firstError?.description) {
-          errorMessage = firstError.description;
-        } else if (firstError?.code === 'Comprobante.UuidDuplicado') {
-          errorMessage = 'Ya existe una factura registrada con este UUID CFDI';
-        } else {
-          errorMessage = firstError?.code || responseData.message || 'Error al subir comprobante';
-        }
+        errorMessage = firstError?.description || firstError?.code || responseData.message || 'Error al subir comprobante';
       } else if (responseData?.message) {
         errorMessage = responseData.message;
       } else if (typeof err === 'string') {

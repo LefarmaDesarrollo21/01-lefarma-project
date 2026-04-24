@@ -138,8 +138,7 @@ export function SubirComprobantePagoModal({
       setComprobanteSubido(comp);
       setStep('archivo');
     } catch (err: any) {
-      const data = err?.response?.data;
-      toast.error(data?.errors?.[0]?.description ?? data?.message ?? 'Error al crear comprobante');
+      toast.error(err?.errors?.[0]?.description ?? err?.message ?? 'Error al crear comprobante');
     } finally {
       setLoading(false);
     }
@@ -170,8 +169,7 @@ export function SubirComprobantePagoModal({
           );
           onComprobanteSubido(updated);
         } catch (err: any) {
-          const data = err?.response?.data;
-          toast.error(data?.errors?.[0]?.description ?? data?.message ?? 'Error al asignar el pago a la partida');
+          toast.error(err?.errors?.[0]?.description ?? err?.message ?? 'Error al asignar el pago a la partida');
           setLoading(false);
           return; // Stay in modal so user can fix
         } finally {
@@ -225,8 +223,7 @@ export function SubirComprobantePagoModal({
       onComprobanteSubido(updated);
       handleClose();
     } catch (err: any) {
-      const data = err?.response?.data;
-      toast.error(data?.errors?.[0]?.description ?? data?.message ?? 'Error al asignar partidas');
+      toast.error(err?.errors?.[0]?.description ?? err?.message ?? 'Error al asignar partidas');
     } finally {
       setLoading(false);
     }

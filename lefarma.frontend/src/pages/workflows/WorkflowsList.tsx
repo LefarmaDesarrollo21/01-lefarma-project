@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import type { ColumnDef } from '@/components/ui/data-table';
 import { 
@@ -93,7 +93,7 @@ export default function WorkflowsList() {
         setWorkflows(response.data.data || []);
       }
     } catch (error: any) {
-      const isNotFound = error?.errors?.some((e: any) => e.code === 'Workflows.NotFound');
+      const isNotFound = error?.statusCode === 404;
       if (isNotFound) {
         setWorkflows([]);
       } else {
@@ -167,9 +167,8 @@ export default function WorkflowsList() {
         toast.success('Workflow eliminado correctamente');
         fetchWorkflows();
       }
-    } catch (error) {
-      toast.error('Error al eliminar el workflow');
-      console.error(error);
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? 'Error al eliminar el workflow');
     }
   };
 

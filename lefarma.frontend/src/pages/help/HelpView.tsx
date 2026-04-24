@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ChevronLeft, Edit, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -49,10 +50,9 @@ export default function HelpView() {
       setIsEditing(false);
       // Refetch to get updated data
       await fetchArticleById(parseInt(id));
-    } catch (error) {
-      console.error('Error saving article:', error);
-      alert('Error al guardar artículo');
-    } finally {
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? 'Error al guardar artículo');
+    }finally {
       setIsSaving(false);
     }
   };

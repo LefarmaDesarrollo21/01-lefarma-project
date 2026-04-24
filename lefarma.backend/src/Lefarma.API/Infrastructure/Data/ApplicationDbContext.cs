@@ -66,6 +66,7 @@ public class ApplicationDbContext : DbContext
         public DbSet<Banco> Bancos { get; set; }
         public DbSet<MedioPago> MediosPago { get; set; }
         public DbSet<TipoImpuesto> TiposImpuesto { get; set; }
+        public DbSet<Moneda> Monedas { get; set; }
 
         // DbSets - Auth/Identity
         public DbSet<Usuario> Usuarios { get; set; }
@@ -81,6 +82,7 @@ public class ApplicationDbContext : DbContext
 
         // DbSets - Logging
         public DbSet<ErrorLog> ErrorLogs { get; set; }
+        public DbSet<BusinessAuditLog> BusinessAuditLogs { get; set; }
 
         // DbSets - Notifications
         public DbSet<Notification> Notifications { get; set; }

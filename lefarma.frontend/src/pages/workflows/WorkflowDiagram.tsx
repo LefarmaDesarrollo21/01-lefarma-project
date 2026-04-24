@@ -596,9 +596,8 @@ function WorkflowEditorModal({ workflow, open = false, embedded = false, onClose
       } else {
         toast.error(isCreatingPaso ? 'Error al crear el paso' : 'Error al actualizar el paso');
       }
-    } catch (error) {
-      console.error('Error saving paso:', error);
-      toast.error(isCreatingPaso ? 'Error al crear el paso' : 'Error al actualizar el paso');
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? (isCreatingPaso ? 'Error al crear el paso' : 'Error al actualizar el paso'));
     }
   };
 
@@ -1660,8 +1659,8 @@ function StepEditForm({ paso, open, onClose, onSave }: StepEditFormProps) {
     setIsSaving(true);
     try {
       await onSave(formData);
-    } catch (error) {
-      toast.error('Error al guardar el paso');
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? 'Error al guardar el paso');
     } finally {
       setIsSaving(false);
     }
@@ -1993,8 +1992,8 @@ function ActionEditModal({ workflow, accion, open, setOpen, onSave }: ActionEdit
       }
       await onSave();
       toast.success(accion ? 'Acción actualizada' : 'Acción creada');
-    } catch (error) {
-      toast.error('Error al guardar la acción');
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? 'Error al guardar la acción');
     } finally {
       setIsSaving(false);
     }
@@ -2631,8 +2630,8 @@ function CondicionEditModal({ workflow, condicion, open, setOpen, onSave }: Cond
       }
       await onSave();
       toast.success(condicion ? 'Condición actualizada' : 'Condición creada');
-    } catch (error) {
-      toast.error('Error al guardar la condición');
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? 'Error al guardar la condición');
     } finally {
       setIsSaving(false);
     }
@@ -2884,8 +2883,8 @@ function ParticipanteEditModal({ workflow, participante, open, setOpen, onSave }
       }
       await onSave();
       toast.success(participante ? 'Participante actualizado' : 'Participante agregado');
-    } catch (error) {
-      toast.error('Error al guardar el participante');
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? 'Error al guardar el participante');
     } finally {
       setIsSaving(false);
     }
@@ -3152,8 +3151,8 @@ function NotificacionEditModal({ workflow, notificacion, open, setOpen, onSave }
       }
       await onSave();
       toast.success(notificacion ? 'Notificación actualizada' : 'Notificación creada');
-    } catch (error) {
-      toast.error('Error al guardar la notificación');
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? 'Error al guardar la notificación');
     } finally {
       setIsSaving(false);
     }
