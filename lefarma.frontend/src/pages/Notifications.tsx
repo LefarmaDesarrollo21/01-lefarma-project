@@ -71,10 +71,9 @@ export default function NotificationsPage() {
       // Limpiar selección después de enviar
       setSelectedUserIds([]);
       setSelectedRoleNames([]);
-    } catch (error) {
-      console.error('Error sending test notification:', error);
-      toast.error('Error al enviar notificación');
-    } finally {
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? 'Error al enviar notificación');
+    }finally {
       setIsSending(false);
     }
   };

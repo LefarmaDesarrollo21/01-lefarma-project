@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import { FilePenLine, Save, FileText, Menu } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { HelpSidebar } from '@/components/help/HelpSidebar';
@@ -140,10 +141,9 @@ export default function HelpList() {
       } else {
         fetchForUser();
       }
-    } catch (error) {
-      console.error('Error saving help article:', error);
-      alert('Error al guardar el contenido de ayuda');
-    } finally {
+    } catch (error: any) {
+      toast.error(error?.errors?.[0]?.description ?? error?.message ?? 'Error al guardar el contenido de ayuda');
+    }finally {
       setIsSaving(false);
     }
   };

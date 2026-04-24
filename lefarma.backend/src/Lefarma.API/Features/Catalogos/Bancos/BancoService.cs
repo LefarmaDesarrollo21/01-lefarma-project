@@ -209,7 +209,7 @@ public class BancoService : BaseService, IBancoService
             catch (DbUpdateException ex)
             {
                 EnrichWideEvent(action: "Delete", entityId: id, error: ex.Message);
-                return CommonErrors.DatabaseError("eliminar el banco");
+                return CommonErrors.HasDependencies("Banco");
             }
             catch (Exception ex)
             {
